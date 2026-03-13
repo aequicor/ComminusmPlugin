@@ -1,0 +1,4 @@
+name: ComminusmPlugin
+version: '1.0-SNAPSHOT'
+main: ru.kyamshanov.minecraft.comminusmPlugin.ComminusmPlugin
+api-version: '1.21'
