@@ -1,0 +1,70 @@
+config:
+  validation: true
+  warningsAsErrors: false
+
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+  allRules: false
+
+processors:
+  active: true
+  exclude:
+    - 'DetektProgressListener'
+
+console-reports:
+  active: true
+  exclude:
+    - 'ProjectStatisticsReport'
+    - 'FileBasedReport'
+
+output-reports:
+  active: true
+
+comments:
+  active: true
+  excludes:
+    - '**/test/**'
+  Deprecation:
+    active: true
+
+style:
+  active: true
+  excludes:
+    - '**/test/**'
+  ReturnCount:
+    max: 5
+  ThrowsCount:
+    max: 5
+  TooManyFunctions:
+    thresholdInClasses: 15
+    thresholdInFiles: 15
+  MagicNumber:
+    ignoreNumbers:
+      - '-1'
+      - '0'
+      - '1'
+      - '2'
+
+performance:
+  active: true
+  excludes:
+    - '**/test/**'
+  ForEachOnRange:
+    active: true
+  SpreadOperator:
+    active: true
+
+potential-bugs:
+  active: true
+  excludes:
+    - '**/test/**'
+  Deprecation:
+    active: true
+  IgnoredReturnValue:
+    active: true
+
+code-smell:
+  active: true
+  excludes:
+    - '**/test/**'
