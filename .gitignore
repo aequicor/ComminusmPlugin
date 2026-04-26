@@ -50,3 +50,5 @@ bin/
 /app/byCompose/desktop/app/database/mission_chat.db.lck
 /app/byCompose/desktop/app/database/mission_chat.db-shm
 /app/byCompose/desktop/app/database/mission_chat.db-wal
+/run/
+/.env

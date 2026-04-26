@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "rules/*.md"
+  ],
+  "plugin": [
+    ".opencode/plugins/index.js"
+  ],
+  "provider": {},
+  "permission": {
+    "edit": {}
+  },
+  "mcp": {
+    "knowledge-my-app": {
+      "url": "http://localhost:8081/mcp",
+      "type": "remote"
+    }
+  },
+  "tools": {
+    "github-triage": false,
+    "github-pr-search": false
+  }
+}
