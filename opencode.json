@@ -1,23 +1,144 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "ollama_cloud/moonshotai/kimi-k2.6",
+  "small_model": "ollama_cloud/qwen/qwen3-coder-next",
   "instructions": [
-    "rules/*.md"
+    "AGENTS.md",
+    ".opencode/_shared.md",
+    ".planning/CURRENT.md",
+    ".planning/DECISIONS.md"
   ],
   "plugin": [
-    ".opencode/plugins/index.js"
+    "opencode-pty",
+    "opencode-shell-strategy",
+    "superpowers@git+https://github.com/obra/superpowers.git"
   ],
-  "provider": {},
-  "permission": {
-    "edit": {}
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
   },
-  "mcp": {
-    "knowledge-my-app": {
-      "url": "http://localhost:8081/mcp",
-      "type": "remote"
+    "formatter": {
+    "gradle-detekt-format": {
+      "command": ["./gradlew", "detekt", "--auto-correct"],
+      "extensions": [".kt", ".kts"]
     }
   },
-  "tools": {
-    "github-triage": false,
-    "github-pr-search": false
+  "provider": {
+    "ollama_cloud": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "ollama-cloud",
+      "options": {
+        "baseURL": "https://api.ollama.com/v1",
+        "apiKey": "{env:OLLAMA_CLOUD_API_KEY}"
+      },
+      "models": {
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6"
+        },
+        "qwen/qwen3-coder-next": {
+          "name": "qwen/qwen3-coder-next"
+        },
+        "deepseek/deepseek-v4-pro": {
+          "name": "deepseek/deepseek-v4-pro"
+        },
+        "glm-5.1": {
+          "name": "glm-5.1"
+        }
+      }
+    }
+  },
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+      },
+      "enabled": false
+    },
+    "serena": {
+      "type": "local",
+      "command": [
+        "serena",
+        "start-mcp-server"
+      ],
+      "enabled": true
+    },
+    "knowledge-my-app": {
+      "type": "remote",
+      "url": "http://localhost:8085/mcp",
+      "enabled": true
+    }
+  },
+    "lsp": {
+    "kotlin": {
+      "command": [
+        "kotlin-lsp"
+      ],
+      "extensions": [
+        ".kt", ".kts"
+      ]
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "external_directory": "ask",
+    "doom_loop": "ask",
+    "bash": {
+      "./gradlew": "allow",
+      "./gradlew *": "allow",
+      "./gradlew * publish*": "ask",
+      "./gradlew * release*": "ask",
+      "git status": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "git branch*": "allow",
+      "git checkout -- *": "deny",
+      "git checkout .": "deny",
+      "git checkout *": "ask",
+      "git add *": "allow",
+      "git commit *": "allow",
+      "git push --force*": "deny",
+      "git push -f*": "deny",
+      "git push --force-with-lease*": "ask",
+      "git push*": "ask",
+      "git reset --hard*": "deny",
+      "git reset*": "ask",
+      "git rebase --abort": "allow",
+      "git rebase*": "ask",
+      "git merge --abort": "allow",
+      "git merge*": "ask",
+      "git clean -f*": "deny",
+      "git clean*": "ask",
+      "git branch -D*": "deny",
+      "git branch -d*": "ask",
+      "git worktree remove*": "ask",
+      "git worktree *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "grep *": "allow",
+      "rg *": "allow",
+      "find *": "allow",
+      "echo *": "allow",
+      "pwd": "allow",
+      "wc *": "allow",
+      "jq *": "allow",
+      "mkdir *": "allow",
+      "rm -rf*": "deny",
+      "rm -fr*": "deny",
+      "rm -r*": "ask",
+      "rm *": "ask",
+      "sudo *": "deny",
+      "curl *": "ask",
+      "wget *": "ask",
+      "npm install*": "ask",
+      "npm publish*": "deny",
+      "pip install*": "ask",
+      "pip uninstall*": "ask"
+    }
   }
 }

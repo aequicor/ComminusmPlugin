@@ -10,7 +10,7 @@ services:
   mcp:
     image: aequicor/knowledgeos:latest
     ports:
-      - "8081:8080"
+      - "8010:8080"
     env_file: .env
     environment:
       - CHROMA_URL=http://chromadb:8000
