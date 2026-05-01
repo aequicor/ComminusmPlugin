@@ -2,3 +2,15 @@ name: ComminusmPlugin
 version: '1.0-SNAPSHOT'
 main: ru.kyamshanov.comminusm.plugin.ComminusmPlugin
 api-version: '1.21'
+commands:
+  party:
+    description: Открыть партийное меню
+    usage: /<command>
+    aliases: [партия, party, partiya]
+permissions:
+  comminusm.admin:
+    description: Доступ к админ-панели
+    default: op
+  comminusm.party:
+    description: Доступ к /партия
+    default: true

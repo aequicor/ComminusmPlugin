@@ -1,9 +1,16 @@
 package ru.kyamshanov.comminusm.plugin
 
 import org.bukkit.plugin.java.JavaPlugin
+import ru.kyamshanov.comminusm.command.PartyCommand
 import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.event.PlayerJoinHandler
+import ru.kyamshanov.comminusm.gui.FrontMenu
+import ru.kyamshanov.comminusm.gui.OrderMenu
+import ru.kyamshanov.comminusm.gui.PartyMenu
+import ru.kyamshanov.comminusm.gui.TreasuryMenu
 import ru.kyamshanov.comminusm.listener.PlayerListener
+import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService
 import ru.kyamshanov.comminusm.storage.DatabaseManager
 import ru.kyamshanov.comminusm.storage.OrderRepository
@@ -41,10 +48,22 @@ class ComminusmPlugin : JavaPlugin() {
 
         // Services
         val workdaysService = WorkdaysService(workdaysRepo)
+        val orderService = OrderService(orderRepo, pluginConfig.orderLevels, workdaysService, pluginConfig.minDistanceBetweenCenters)
+        val workFrontService = WorkFrontService(frontRepo, pluginConfig.frontRadius)
 
         // Register listeners
         server.pluginManager.registerEvents(PlayerJoinHandler(), this)
         server.pluginManager.registerEvents(PlayerListener(workdaysService, pluginConfig), this)
+
+        // Register GUI listeners
+        server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService), this)
+        server.pluginManager.registerEvents(OrderMenu(orderService, workdaysService, pluginConfig), this)
+        server.pluginManager.registerEvents(FrontMenu(workFrontService), this)
+        server.pluginManager.registerEvents(TreasuryMenu(pluginConfig, workdaysService), this)
+
+        // Register command
+        val partyCmd = checkNotNull(getCommand("party")) { "Команда 'party' не объявлена в plugin.yml" }
+        partyCmd.setExecutor(PartyCommand(pluginConfig, workdaysService, orderService, workFrontService))
 
         logger.info("☭ Плагин активирован! Трудодни начисляются, Ордера выдаются.")
     }
