@@ -13,10 +13,37 @@ import ru.kyamshanov.comminusm.service.WorkFrontService
 class FrontMenu(
     private val workFrontService: WorkFrontService
 ) : Listener {
+    private val infoSlot = 20
+    private val radiusSlot = 22
+    private val moveSlot = 24
+    private val backSlot = 39
 
     fun open(player: Player, front: WorkFront) {
-        val inv = Bukkit.createInventory(null, 45, Component.text("\u00a78\u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0439 \u0424\u0440\u043e\u043d\u0442"))
+        val inv = Bukkit.createInventory(null, 45, Component.text("§8Трудовой Фронт"))
         GuiUtils.fillBorder(inv)
+
+        inv.setItem(infoSlot, GuiUtils.namedItem(
+            "§6Трудовой Фронт",
+            Material.RED_BANNER,
+            "§7Владелец: §e${player.name}",
+            "§7Мир: §e${front.centerWorld}"
+        ))
+
+        inv.setItem(radiusSlot, GuiUtils.namedItem(
+            "§aРадиус добычи",
+            Material.COMPASS,
+            "§7Радиус: §e${front.radius} §7блоков",
+            "§7Размер: §e${front.size}×${front.size}×${front.size}"
+        ))
+
+        inv.setItem(moveSlot, GuiUtils.namedItem(
+            "§cПеренести Фронт",
+            Material.TNT,
+            "§7Выдаст новый флаг для переноса",
+            "§7Текущий фронт будет закрыт"
+        ))
+
+        inv.setItem(backSlot, GuiUtils.namedItem("§cНазад", Material.BARRIER))
 
         player.openInventory(inv)
     }
@@ -24,7 +51,29 @@ class FrontMenu(
     @EventHandler
     fun onClick(event: InventoryClickEvent) {
         val title = event.view.title().toString()
-        if (!title.contains("\u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0439 \u0424\u0440\u043e\u043d\u0442")) return
+        if (!title.contains("Трудовой Фронт")) return
         event.isCancelled = true
+
+        val player = event.whoClicked as Player
+
+        when (event.slot) {
+            moveSlot -> {
+                workFrontService.deactivate(player.uniqueId)
+                val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
+                val meta = flag.itemMeta
+                meta.displayName(Component.text("§6Флаг Трудового Фронта"))
+                meta.lore(listOf(
+                    Component.text("§7Установите в новом месте"),
+                    Component.text("§7Радиус добычи: §e${workFrontService.getByOwner(player.uniqueId)?.radius ?: 25} §7блоков")
+                ))
+                flag.itemMeta = meta
+                player.inventory.addItem(flag)
+                player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                player.closeInventory()
+            }
+            backSlot -> {
+                player.closeInventory()
+            }
+        }
     }
 }
