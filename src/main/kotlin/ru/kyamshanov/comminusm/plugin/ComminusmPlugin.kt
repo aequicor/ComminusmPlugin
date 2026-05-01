@@ -16,6 +16,7 @@ import ru.kyamshanov.comminusm.listener.PlayerListener
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService
+import ru.kyamshanov.comminusm.storage.ChunkCacheManager
 import ru.kyamshanov.comminusm.storage.DatabaseManager
 import ru.kyamshanov.comminusm.storage.OrderRepository
 import ru.kyamshanov.comminusm.storage.WorkFrontRepository
@@ -51,9 +52,10 @@ class ComminusmPlugin : JavaPlugin() {
         val workdaysRepo = WorkdaysRepository(db.connection)
 
         // Services
+        val chunkCache = ChunkCacheManager()
         val workdaysService = WorkdaysService(workdaysRepo)
-        val orderService = OrderService(orderRepo, pluginConfig.orderLevels, workdaysService, pluginConfig.minDistanceBetweenCenters)
-        val workFrontService = WorkFrontService(frontRepo, pluginConfig.frontRadius)
+        val orderService = OrderService(orderRepo, pluginConfig.orderLevels, workdaysService, pluginConfig.minDistanceBetweenCenters, chunkCache)
+        val workFrontService = WorkFrontService(frontRepo, pluginConfig.frontRadius, chunkCache)
 
         // Register listeners
         server.pluginManager.registerEvents(PlayerJoinHandler(), this)

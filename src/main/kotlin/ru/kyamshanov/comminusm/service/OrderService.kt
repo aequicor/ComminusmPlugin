@@ -3,6 +3,7 @@ package ru.kyamshanov.comminusm.service
 import org.bukkit.Location
 import ru.kyamshanov.comminusm.config.OrderLevelConfig
 import ru.kyamshanov.comminusm.model.Order
+import ru.kyamshanov.comminusm.storage.ChunkCacheManager
 import ru.kyamshanov.comminusm.storage.OrderRepository
 import java.util.UUID
 import kotlin.math.abs
@@ -11,7 +12,8 @@ class OrderService(
     private val orderRepository: OrderRepository,
     private val levels: List<OrderLevelConfig>,
     private val workdaysService: WorkdaysService?,
-    private val minDistanceBetweenCenters: Int
+    private val minDistanceBetweenCenters: Int,
+    private val chunkCacheManager: ChunkCacheManager? = null
 ) {
 
     fun create(uuid: UUID): Order? {
@@ -36,6 +38,8 @@ class OrderService(
         }
 
         orderRepository.activate(uuid, world, location.blockX, location.blockY, location.blockZ)
+
+        chunkCacheManager?.markOrderChunk(location.chunk, uuid)
         return true
     }
 
@@ -82,6 +86,14 @@ class OrderService(
     }
 
     fun deleteByOwner(uuid: UUID) {
+        val order = orderRepository.findByOwner(uuid)
+        if (order != null && order.centerWorld != null) {
+            val world = org.bukkit.Bukkit.getWorld(order.centerWorld)
+            if (world != null) {
+                val chunk = world.getChunkAt(order.centerX shr 4, order.centerZ shr 4)
+                chunkCacheManager?.removeOrderChunk(chunk)
+            }
+        }
         orderRepository.deleteByOwner(uuid)
     }
 }
