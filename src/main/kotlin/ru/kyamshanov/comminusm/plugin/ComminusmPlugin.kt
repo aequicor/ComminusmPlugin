@@ -8,6 +8,7 @@ import ru.kyamshanov.comminusm.gui.FrontMenu
 import ru.kyamshanov.comminusm.gui.OrderMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
 import ru.kyamshanov.comminusm.gui.TreasuryMenu
+import ru.kyamshanov.comminusm.listener.OrderFlagListener
 import ru.kyamshanov.comminusm.listener.PlayerListener
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
@@ -54,6 +55,9 @@ class ComminusmPlugin : JavaPlugin() {
         // Register listeners
         server.pluginManager.registerEvents(PlayerJoinHandler(), this)
         server.pluginManager.registerEvents(PlayerListener(workdaysService, pluginConfig), this)
+
+        // Register order flag listener
+        server.pluginManager.registerEvents(OrderFlagListener(orderService, workdaysService, pluginConfig), this)
 
         // Register GUI listeners
         server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService), this)
