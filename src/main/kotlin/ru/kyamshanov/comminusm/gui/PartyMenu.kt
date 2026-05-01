@@ -86,8 +86,12 @@ class PartyMenu(
                                 Component.text("\u00a77\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446: \u00a7e${player.name}")
                             ))
                             flag.itemMeta = meta
-                            player.inventory.addItem(flag)
-                            player.sendMessage(Component.text("\u00a7a\u262d \u041f\u0430\u0440\u0442\u0438\u044f \u0432\u044b\u0434\u0435\u043b\u0438\u043b\u0430 \u0432\u0430\u043c \u0436\u0438\u043b\u043f\u043b\u043e\u0449\u0430\u0434\u044c! \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u043d\u0430 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0439 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0438."))
+                            if (player.inventory.firstEmpty() == -1) {
+                                player.sendMessage(Component.text("\u00a7c\u0422\u043e\u0432\u0430\u0440\u0438\u0449, \u043e\u0441\u0432\u043e\u0431\u043e\u0434\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b 1 \u0441\u043b\u043e\u0442 \u0432 \u0438\u043d\u0432\u0435\u043d\u0442\u0430\u0440\u0435 \u0434\u043b\u044f \u0444\u043b\u0430\u0433\u0430 \u041e\u0440\u0434\u0435\u0440\u0430!"))
+                            } else {
+                                player.inventory.addItem(flag)
+                                player.sendMessage(Component.text("\u00a7a\u262d \u041f\u0430\u0440\u0442\u0438\u044f \u0432\u044b\u0434\u0435\u043b\u0438\u043b\u0430 \u0432\u0430\u043c \u0436\u0438\u043b\u043f\u043b\u043e\u0449\u0430\u0434\u044c! \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u043d\u0430 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0439 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0438."))
+                            }
                             player.closeInventory()
                         } else {
                             player.sendMessage(Component.text("\u00a7c\u0423 \u0432\u0430\u0441 \u0443\u0436\u0435 \u0435\u0441\u0442\u044c \u041e\u0440\u0434\u0435\u0440, \u0442\u043e\u0432\u0430\u0440\u0438\u0449."))
@@ -110,8 +114,12 @@ class PartyMenu(
                             Component.text("\u00a77\u0420\u0430\u0434\u0438\u0443\u0441 \u0434\u043e\u0431\u044b\u0447\u0438: \u00a7e${config.frontRadius} \u00a77\u0431\u043b\u043e\u043a\u043e\u0432")
                         ))
                         flag.itemMeta = meta
-                        player.inventory.addItem(flag)
-                        player.sendMessage(Component.text("\u00a76\u262d \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u0434\u043b\u044f \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438 \u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0433\u043e \u0424\u0440\u043e\u043d\u0442\u0430, \u0442\u043e\u0432\u0430\u0440\u0438\u0449!"))
+                        if (player.inventory.firstEmpty() == -1) {
+                            player.sendMessage(Component.text("\u00a7c\u0422\u043e\u0432\u0430\u0440\u0438\u0449, \u043e\u0441\u0432\u043e\u0431\u043e\u0434\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b 1 \u0441\u043b\u043e\u0442 \u0432 \u0438\u043d\u0432\u0435\u043d\u0442\u0430\u0440\u0435 \u0434\u043b\u044f \u0444\u043b\u0430\u0433\u0430 \u0424\u0440\u043e\u043d\u0442\u0430!"))
+                        } else {
+                            player.inventory.addItem(flag)
+                            player.sendMessage(Component.text("\u00a76\u262d \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u0434\u043b\u044f \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438 \u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0433\u043e \u0424\u0440\u043e\u043d\u0442\u0430, \u0442\u043e\u0432\u0430\u0440\u0438\u0449!"))
+                        }
                         player.closeInventory()
                     }
                 } else {

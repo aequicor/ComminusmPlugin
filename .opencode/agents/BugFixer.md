@@ -165,7 +165,8 @@ Focus: security implications + unhandled edge cases."
 ## Step 7 — Build
 
 ```bash
-./gradlew ::build
+./gradlew compileKotlin
+./gradlew :plugin:test
 ```
 
 If build fails after **2** attempts — **STOP**, escalate to main agent.

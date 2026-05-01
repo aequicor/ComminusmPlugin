@@ -42,9 +42,7 @@ Consider these when composing the test approach (adjust for the actual test fram
 | UI (component) | Component test rule + node assertions |
 
 Test files mirror `src/main/` structure:
-| Module | Test root |
-|--------|----------|
-| `plugin` | `src/test/kotlin/ru/kyamshanov/comminusm/` |
+- `plugin` — `src/test/kotlin/ru/kyamshanov/comminusm/`
 
 ## Pipeline — DRAFT
 

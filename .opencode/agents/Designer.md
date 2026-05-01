@@ -29,12 +29,12 @@ UI/UX designer for Minecraft Paper (Server). Creates screen / component / flow d
 
 ## Color Palette
 
-| Color | HEX | Purpose |
-|-------|-----|------------------|
-| Primary Background | `#REPLACE_ME` | Main background color |
-| Primary Accent | `#REPLACE_ME` | CTA buttons, highlights |
-| Primary Text | `#FFFFFF` | Main text on dark background |
-| Secondary Text | `#9BA0AB` | Labels, hints |
+| Name | Hex | Purpose |
+|------|-----|---------|
+| Primary Background | #REPLACE_ME | Main background color |
+| Primary Accent | #REPLACE_ME | CTA buttons, highlights |
+| Primary Text | #FFFFFF | Main text on dark background |
+| Secondary Text | #9BA0AB | Labels, hints |
 
 ## Step 0 — Clarify (R-C-T-F)
 
@@ -115,7 +115,7 @@ Record reasoning, do not skip to the result. This is output in `## Design Ration
 
 ## Platform Variants
 | Element | Server |
-|---------|---------------|
+|---------|--------|
 | Navigation | ... |
 | Input | ... |
 ```

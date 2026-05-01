@@ -11,6 +11,8 @@ import ru.kyamshanov.comminusm.gui.PartyMenu
 import ru.kyamshanov.comminusm.gui.TreasuryMenu
 import ru.kyamshanov.comminusm.listener.BlockListener
 import ru.kyamshanov.comminusm.listener.ExplosionListener
+import ru.kyamshanov.comminusm.listener.FlagDeletionConfirmListener
+import ru.kyamshanov.comminusm.listener.FlagItemProtectionListener
 import ru.kyamshanov.comminusm.listener.FrontFlagListener
 import ru.kyamshanov.comminusm.listener.OrderFlagListener
 import ru.kyamshanov.comminusm.listener.PlayerListener
@@ -73,6 +75,12 @@ class ComminusmPlugin : JavaPlugin() {
 
         // Register front flag listener
         server.pluginManager.registerEvents(FrontFlagListener(workFrontService), this)
+
+        // Register flag deletion confirmation listener
+        server.pluginManager.registerEvents(FlagDeletionConfirmListener(orderService, workFrontService), this)
+
+        // Flag item protection (no dropping, no chesting)
+        server.pluginManager.registerEvents(FlagItemProtectionListener(), this)
 
         // Register GUI listeners
         server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService), this)

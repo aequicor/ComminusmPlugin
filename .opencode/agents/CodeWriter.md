@@ -129,7 +129,8 @@ After each logically complete block:
 ## Step 5 — Build
 
 ```bash
-./gradlew ::build
+./gradlew compileKotlin
+./gradlew :plugin:test
 ```
 
 If build fails — read the error, fix, rebuild. **Do not move forward until successful.**

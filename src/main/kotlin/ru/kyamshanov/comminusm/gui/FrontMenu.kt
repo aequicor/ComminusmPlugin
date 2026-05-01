@@ -67,8 +67,12 @@ class FrontMenu(
                     Component.text("§7Радиус добычи: §e${workFrontService.getByOwner(player.uniqueId)?.radius ?: 25} §7блоков")
                 ))
                 flag.itemMeta = meta
-                player.inventory.addItem(flag)
-                player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                if (player.inventory.firstEmpty() == -1) {
+                    player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Фронта!"))
+                } else {
+                    player.inventory.addItem(flag)
+                    player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                }
                 player.closeInventory()
             }
             backSlot -> {

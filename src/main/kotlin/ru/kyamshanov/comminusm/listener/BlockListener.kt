@@ -7,6 +7,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import ru.kyamshanov.comminusm.gui.GuiUtils
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import kotlin.math.abs
@@ -37,8 +38,8 @@ class BlockListener(
                         player.sendMessage(Component.text("§cНельзя сломать чужой флаг Ордера, товарищ!"))
                         return
                     } else {
-                        orderService.deleteByOwner(uuid)
-                        player.sendMessage(Component.text("§c☭ Ордер аннулирован. Флаг удалён."))
+                        event.isCancelled = true
+                        showDeleteOrderConfirmation(player)
                         return
                     }
                 }
@@ -193,5 +194,24 @@ class BlockListener(
         val dy = abs(front.centerY - loc.blockY)
         val dz = abs(front.centerZ - loc.blockZ)
         return dx <= front.radius && dy <= front.radius && dz <= front.radius
+    }
+
+    private fun showDeleteOrderConfirmation(player: org.bukkit.entity.Player) {
+        val inv = org.bukkit.Bukkit.createInventory(null, 9, Component.text("§cПодтверждение удаления"))
+
+        inv.setItem(2, GuiUtils.namedItem(
+            "§aДа, удалить Ордер",
+            Material.LIME_CONCRETE,
+            "§7Это действие необратимо!",
+            "§7Флаг будет уничтожен."
+        ))
+
+        inv.setItem(6, GuiUtils.namedItem(
+            "§cНет, оставить",
+            Material.RED_CONCRETE,
+            "§7Вернуться без изменений"
+        ))
+
+        player.openInventory(inv)
     }
 }
