@@ -58,7 +58,7 @@
     },
     "knowledge-my-app": {
       "type": "remote",
-      "url": "http://localhost:8081/mcp",
+      "url": "http://localhost:8010/mcp",
       "enabled": true
     }
   },

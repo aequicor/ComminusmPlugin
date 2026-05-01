@@ -35,3 +35,10 @@
 - DONE: all 19 tasks implemented (Stage 0-5), all tests passing, commits done
 - DONE: fixed BlockListener — placement + right-click interactions blocked outside order/front zones
 - NEXT: PO review / manual testing on Paper server
+
+## 2026-05-01T12:15:00Z
+- DONE: flag break confirmation menu (владелец ломает флаг → подтверждение Да/Нет)
+- DONE: flag items cannot be dropped or moved to chests (FlagItemProtectionListener)
+- DONE: inventory space check before giving flags
+- DONE: fixed restore flag — now works with proper error messages in all cases
+- NEXT: PO manual testing
