@@ -23,6 +23,48 @@ class BlockListener(
         val loc = block.location
         val world = loc.world ?: return
 
+        // Prevent breaking Order flags
+        if (block.type == Material.WHITE_BANNER) {
+            val allOrders = orderService.findAllInWorld(world.name)
+            for (order in allOrders) {
+                if (order.centerWorld == world.name
+                    && order.centerX == loc.blockX
+                    && order.centerY == loc.blockY
+                    && order.centerZ == loc.blockZ) {
+                    if (order.ownerUuid != uuid) {
+                        event.isCancelled = true
+                        player.sendMessage(Component.text("§cНельзя сломать чужой флаг Ордера, товарищ!"))
+                        return
+                    } else {
+                        orderService.deleteByOwner(uuid)
+                        player.sendMessage(Component.text("§c☭ Ордер аннулирован. Флаг удалён."))
+                        return
+                    }
+                }
+            }
+        }
+
+        // Prevent breaking Front flags
+        if (block.type == Material.RED_BANNER) {
+            val front = workFrontService?.getByOwner(uuid)
+            if (front != null && front.centerWorld == world.name
+                && front.centerX == loc.blockX && front.centerY == loc.blockY && front.centerZ == loc.blockZ) {
+                workFrontService?.deactivate(uuid)
+                player.sendMessage(Component.text("§6☭ Трудовой Фронт закрыт. Флаг удалён."))
+                return
+            }
+            val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
+            for (f in allFronts) {
+                if (f.centerWorld == world.name && f.centerX == loc.blockX
+                    && f.centerY == loc.blockY && f.centerZ == loc.blockZ
+                    && f.ownerUuid != uuid) {
+                    event.isCancelled = true
+                    player.sendMessage(Component.text("§cНельзя сломать чужой флаг Фронта, товарищ!"))
+                    return
+                }
+            }
+        }
+
         // 1. Check: inside player's OWN order? → ALLOW
         val myOrder = orderService.findByOwner(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
