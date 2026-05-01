@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.player.PlayerInteractEvent
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import kotlin.math.abs
@@ -108,13 +109,13 @@ class BlockListener(
         val loc = block.location
         val world = loc.world ?: return
 
-        // Allow placement inside own order
+        // 1. Check: inside player's OWN order? → ALLOW
         val myOrder = orderService.findByOwner(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
-            return
+            return // allowed
         }
 
-        // Deny placement inside someone else's order
+        // 2. Check: inside SOMEONE ELSE'S order? → DENY
         val allOrders = orderService.findAllInWorld(world.name)
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
@@ -123,7 +124,58 @@ class BlockListener(
                 return
             }
         }
-        // Allow placement everywhere else (building is allowed, only breaking is locked outside zones)
+
+        // 3. Check: inside ANY front (own or cooperative)? → ALLOW
+        if (workFrontService != null) {
+            val allFronts = workFrontService.getAllInWorld(world.name)
+            if (allFronts.any { isInsideFront(it, loc) }) {
+                return // allowed (building inside front zones is OK)
+            }
+        }
+
+        // 4. Outside all zones → DENY
+        event.isCancelled = true
+        player.sendMessage(Component.text("§cНесанкционированное строительство, товарищ! Стройте только на своей жилплощади или в зоне Трудового Фронта через §e/партия"))
+    }
+
+    @EventHandler
+    fun onPlayerInteract(event: org.bukkit.event.player.PlayerInteractEvent) {
+        // Only care about right-click on blocks (not air, not left-click)
+        if (event.action != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) return
+        val block = event.clickedBlock ?: return
+
+        val player = event.player
+        val uuid = player.uniqueId
+        val loc = block.location
+        val world = loc.world ?: return
+
+        // 1. Check: inside player's OWN order? → ALLOW
+        val myOrder = orderService.findByOwner(uuid)
+        if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
+            return // allowed
+        }
+
+        // 2. Check: inside SOMEONE ELSE'S order? → DENY
+        val allOrders = orderService.findAllInWorld(world.name)
+        for (order in allOrders) {
+            if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
+                event.isCancelled = true
+                player.sendMessage(Component.text("§cЧужая жилплощадь, товарищ!"))
+                return
+            }
+        }
+
+        // 3. Check: inside ANY front (cooperative)? → ALLOW
+        if (workFrontService != null) {
+            val allFronts = workFrontService.getAllInWorld(world.name)
+            if (allFronts.any { isInsideFront(it, loc) }) {
+                return // allowed
+            }
+        }
+
+        // 4. Outside all zones → DENY
+        event.isCancelled = true
+        player.sendMessage(Component.text("§cНесанкционированное взаимодействие, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия"))
     }
 
     private fun isInsideOrder(order: ru.kyamshanov.comminusm.model.Order, loc: org.bukkit.Location): Boolean {
