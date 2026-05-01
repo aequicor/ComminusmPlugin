@@ -98,25 +98,38 @@ class OrderMenu(
             }
             restoreSlot -> {
                 val order = orderService.findByOwner(player.uniqueId)
-                if (order != null && order.centerWorld != null) {
-                    val world = Bukkit.getWorld(order.centerWorld)
-                    if (world != null) {
-                        val flag = ItemStack(Material.WHITE_BANNER)
-                        val meta = flag.itemMeta
-                        meta.displayName(Component.text("\u00a7a\u0424\u043b\u0430\u0433 \u041e\u0440\u0434\u0435\u0440\u0430 \u2116${order.id}"))
-                        meta.lore(listOf(
-                            Component.text("\u00a77\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u0434\u043b\u044f \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438 \u041e\u0440\u0434\u0435\u0440\u0430"),
-                            Component.text("\u00a77\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446: \u00a7e${player.name}")
-                        ))
-                        flag.itemMeta = meta
-                        if (player.inventory.firstEmpty() == -1) {
-                            player.sendMessage(Component.text("\u00a7c\u0422\u043e\u0432\u0430\u0440\u0438\u0449, \u043e\u0441\u0432\u043e\u0431\u043e\u0434\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b 1 \u0441\u043b\u043e\u0442 \u0432 \u0438\u043d\u0432\u0435\u043d\u0442\u0430\u0440\u0435 \u0434\u043b\u044f \u0444\u043b\u0430\u0433\u0430 \u041e\u0440\u0434\u0435\u0440\u0430!"))
-                        } else {
-                            player.inventory.addItem(flag)
-                            player.sendMessage(Component.text("\u00a7a\u0424\u043b\u0430\u0433 \u041e\u0440\u0434\u0435\u0440\u0430 \u0432\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d, \u0442\u043e\u0432\u0430\u0440\u0438\u0449!"))
-                        }
-                    }
+                if (order == null) {
+                    player.sendMessage(Component.text("§cУ вас нет активного Ордера, товарищ."))
+                    player.closeInventory()
+                    return
                 }
+                if (order.centerWorld == null) {
+                    player.sendMessage(Component.text("§cВаш Ордер ещё не активирован. Установите флаг на территории, товарищ."))
+                    player.closeInventory()
+                    return
+                }
+                val world = Bukkit.getWorld(order.centerWorld)
+                if (world == null) {
+                    player.sendMessage(Component.text("§cМир §e${order.centerWorld} §cне найден. Обратитесь к администратору."))
+                    player.closeInventory()
+                    return
+                }
+
+                if (player.inventory.firstEmpty() == -1) {
+                    player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Ордера!"))
+                    return
+                }
+
+                val flag = ItemStack(Material.WHITE_BANNER)
+                val meta = flag.itemMeta
+                meta.displayName(Component.text("§aФлаг Ордера №${order.id}"))
+                meta.lore(listOf(
+                    Component.text("§7Установите флаг для активации Ордера"),
+                    Component.text("§7Владелец: §e${player.name}")
+                ))
+                flag.itemMeta = meta
+                player.inventory.addItem(flag)
+                player.sendMessage(Component.text("§a☭ Флаг Ордера восстановлен, товарищ! Установите его на своей территории."))
             }
             backSlot -> {
                 val wds = workdaysService
