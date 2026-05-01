@@ -1,0 +1,32 @@
+private-system:
+  order:
+    min-distance-between-centers: 30
+    levels:
+      - level: 1
+        radius: 2
+        cost: 0
+      - level: 2
+        radius: 3
+        cost: 30
+      - level: 3
+        radius: 4
+        cost: 80
+      - level: 4
+        radius: 5
+        cost: 150
+      - level: 5
+        radius: 7
+        cost: 300
+  front:
+    radius: 25
+  workdays:
+    passive-income-interval-minutes: 10
+    passive-income-amount: 1
+    resource-rates:
+      COBBLESTONE: 4
+      COAL: 6
+      IRON_INGOT: 12
+      GOLD_INGOT: 20
+      DIAMOND: 40
+      OAK_LOG: 4
+      DIRT: 1
