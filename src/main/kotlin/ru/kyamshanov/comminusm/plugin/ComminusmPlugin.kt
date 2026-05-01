@@ -8,6 +8,7 @@ import ru.kyamshanov.comminusm.gui.FrontMenu
 import ru.kyamshanov.comminusm.gui.OrderMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
 import ru.kyamshanov.comminusm.gui.TreasuryMenu
+import ru.kyamshanov.comminusm.listener.BlockListener
 import ru.kyamshanov.comminusm.listener.OrderFlagListener
 import ru.kyamshanov.comminusm.listener.PlayerListener
 import ru.kyamshanov.comminusm.service.OrderService
@@ -58,6 +59,9 @@ class ComminusmPlugin : JavaPlugin() {
 
         // Register order flag listener
         server.pluginManager.registerEvents(OrderFlagListener(orderService, workdaysService, pluginConfig), this)
+
+        // Register block protection
+        server.pluginManager.registerEvents(BlockListener(orderService, workFrontService), this)
 
         // Register GUI listeners
         server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService), this)
