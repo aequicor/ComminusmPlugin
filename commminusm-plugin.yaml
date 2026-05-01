@@ -4,17 +4,17 @@ kit_version: "1.4.0"
 
 project:
   name: "ComminusmPlugin"
-  description: "minecraft-paper-plugin"
+  description: "Minecraft Paper server plugin — communism satire mechanics"
 
 editors:
   - opencode
 
 stack:
   language: kotlin
-  profile: generic
+  profile: minecraft-paper-plugin
   build_command: "./gradlew"
   compile_command: "./gradlew compileKotlin"
-  lint_command: "./gradlew detekt"
+  lint_command: "./gradlew detekt ktlintCheck"
   test_command: "./gradlew :[module]:test"
 
 modules:
@@ -31,8 +31,8 @@ provider:
   api_key_env: OLLAMA_CLOUD_API_KEY
 
 models:
-  default: moonshotai/kimi-k2.6
-  coder: qwen/qwen3-coder-next
+  default: deepseek/deepseek-v4-pro
+  coder: deepseek/deepseek-v4-pro
   reviewer: deepseek/deepseek-v4-pro
   designer: glm-5.1
   small: qwen/qwen3-coder-next
@@ -43,7 +43,7 @@ mcp:
     api_key_env: CONTEXT7_API_KEY
   knowledge:
     enabled: true
-    url: http://localhost:8085/mcp
+    url: http://localhost:8010/mcp
   serena:
     enabled: true
 
@@ -81,6 +81,10 @@ code_quality:
     - "TODO() in production code without DECISIONS.md entry"
     - "Raw SQL string concatenation (use parameterized queries)"
     - "Logging tokens, passwords, PII data"
+    - "Hardcoded Bukkit ChatColor strings — use MiniMessage or component API"
+    - "Using deprecated Bukkit API (use Paper-adventure components, not legacy ChatColors)"
+    - "Blocking main thread — schedule async with Bukkit schedulers or coroutines"
+    - "Storing Player references past event scope (causes memory leaks)"
 
 formatter:
   enabled: true

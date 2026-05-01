@@ -1,0 +1,104 @@
+@AGENTS.md
+
+---
+
+# OpenCode Extended Rules — ComminusmPlugin
+
+> Claude Code / OpenCode additions to AGENTS.md.
+> These rules extend the universal rules above with OpenCode-specific orchestration,
+> session continuity, and anti-loop patterns.
+
+---
+
+## 0. SESSION STARTUP — DO THIS FIRST, EVERY TIME
+
+Before reading the user request, before any tool call:
+
+1. READ `.planning/CURRENT.md` — active task and where we stopped last session.
+2. READ `.planning/DECISIONS.md` — existing architectural decisions.
+3. If CURRENT.md references a `.vault/concepts/[module]/plans/` path — read that plan file.
+4. If those files contradict the user's new request → STOP, surface the conflict, ask.
+
+**Single entry point: always start work through `@Main`.** Do not invoke @CodeWriter,
+@BugFixer, or @CodeReviewer directly — always through @Main orchestration.
+
+If the user says **"continue"**, **"continue work"**, **"продолжай"**, **"go on"**
+→ invoke `/resume`:
+- `/resume` reads CURRENT.md + git state, shows resume context, waits for confirmation.
+- Do NOT act on bare "continue" — run `/resume` first, always.
+
+---
+
+## 1. CONTEXT DISCIPLINE (anti-loop, anti-rot)
+
+| Symptom | Response |
+|---------|----------|
+| Same tool call with same args 3× | STOP. Surface to user. Do not retry. |
+| Reasoning block > ~2000 tokens without progress | STOP. Write "BLOCKED" to CURRENT.md. Return. |
+| Same compile error after 2 fix attempts | STOP. Report root cause. Ask user. |
+| Same review issue raised 3× across stages | STOP. Escalate to user with full context. |
+
+- Never paste full file contents into your reply — reference by path + line range.
+- After every 5 tool calls OR every file edit batch → call `/checkpoint`.
+
+---
+
+## 2. EXTERNAL LIBRARIES — NO HALLUCINATIONS
+
+Before using any external library API, follow this pipeline (fastest → fallback):
+
+1. `knowledge-my-app_search_docs "external-apis <lib> <version>"` — vault cache (fastest).
+2. (cache miss) `context7_resolve_library_id` → `context7_get_library_docs` — rate-limited ~10 req/min.
+3. (rate-limited / not found) `webfetch` on the canonical source URL — see `_shared.md` for URLs.
+4. If all fail → say "I don't have current docs for X" and **ASK before guessing**.
+
+Cache result to `.vault/guidelines/libs/<lib>-<version>.md` via KnowledgeOS write.
+
+---
+
+## 3. EXECUTION LOOP — ATOMIC STEPS
+
+For any non-trivial change:
+
+```
+1. PLAN       → write/update .planning/plans/PLAN-NNN.md (paths + verification steps)
+2. TEST       → write failing test first (when feasible)
+3. CODE       → implement smallest complete unit
+4. VERIFY     → ./gradlew compileKotlin && ./gradlew :[module]:test
+5. LINT       → ./gradlew detekt ktlintCheck
+6. COMMIT     → git add + git commit (one logical change per commit)
+7. CHECKPOINT → update .planning/CURRENT.md
+```
+
+Skip steps only if the user explicitly says so. Document the skip in `CURRENT.md`.
+
+**Parallel write safety:**
+- 1–2 files: OK in one turn.
+- 3+ files: SEQUENTIAL — write → compress → checkpoint per file.
+
+---
+
+## 4. TOKEN BUDGET
+
+| Context usage | Action |
+|---------------|--------|
+| < 50% | Normal work |
+| 50–75% | Compress aggressively (trim verbose output, keep paths + solutions) |
+| 75–90% | **Mandatory** `compress` before next action |
+| > 90% | **STOP**, compress immediately, then continue |
+
+---
+
+## 5. END OF EVERY RESPONSE
+
+`@Main` appends to `.planning/CURRENT.md` after every significant step:
+
+```markdown
+## <ISO timestamp>
+- DONE: <what just happened, 1 line>
+- NEXT: <what should happen next, 1 line>
+- BLOCKED: <only if blocked, otherwise omit>
+```
+
+**Subagents** (@CodeWriter, @BugFixer, @debugger, @Designer, @QA, @CodeReviewer)
+do NOT write to CURRENT.md directly — they return output to @Main, who writes the checkpoint.
