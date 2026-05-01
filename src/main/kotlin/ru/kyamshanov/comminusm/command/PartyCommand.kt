@@ -6,6 +6,7 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.gui.AdminMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
@@ -29,7 +30,7 @@ class PartyCommand(
                 sender.sendMessage(Component.text("\u00a7c\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043f\u0440\u0430\u0432, \u0442\u043e\u0432\u0430\u0440\u0438\u0449!"))
                 return true
             }
-            sender.sendMessage(Component.text("\u00a7e\u0410\u0434\u043c\u0438\u043d-\u043c\u0435\u043d\u044e \u043f\u043e\u043a\u0430 \u043d\u0435 \u0440\u0435\u0430\u043b\u0438\u0437\u043e\u0432\u0430\u043d\u043e, \u0442\u043e\u0432\u0430\u0440\u0438\u0449."))
+            AdminMenu(config, orderService, workFrontService, workdaysService).open(sender)
             return true
         }
 

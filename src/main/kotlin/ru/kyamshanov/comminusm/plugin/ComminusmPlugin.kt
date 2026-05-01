@@ -4,6 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import ru.kyamshanov.comminusm.command.PartyCommand
 import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.event.PlayerJoinHandler
+import ru.kyamshanov.comminusm.gui.AdminMenu
 import ru.kyamshanov.comminusm.gui.FrontMenu
 import ru.kyamshanov.comminusm.gui.OrderMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
@@ -78,6 +79,7 @@ class ComminusmPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(OrderMenu(orderService, workdaysService, pluginConfig), this)
         server.pluginManager.registerEvents(FrontMenu(workFrontService), this)
         server.pluginManager.registerEvents(TreasuryMenu(pluginConfig, workdaysService), this)
+        server.pluginManager.registerEvents(AdminMenu(pluginConfig, orderService, workFrontService, workdaysService), this)
 
         // Register command
         val partyCmd = checkNotNull(getCommand("party")) { "Команда 'party' не объявлена в plugin.yml" }
