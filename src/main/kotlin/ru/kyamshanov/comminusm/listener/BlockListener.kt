@@ -121,6 +121,17 @@ class BlockListener(
         val loc = block.location
         val world = loc.world ?: return
 
+        // BUG-004 FIX: Allow flag placement outside zones - OrderFlagListener/FrontFlagListener will handle activation
+        val item = event.itemInHand
+        val meta = item.itemMeta
+        val displayName = meta?.displayName()?.toString() ?: ""
+        if (item.type == Material.WHITE_BANNER && displayName.contains("Флаг Ордера")) {
+            return // OrderFlagListener will handle activation
+        }
+        if (item.type == Material.RED_BANNER && displayName.contains("Флаг Трудового Фронта")) {
+            return // FrontFlagListener will handle activation
+        }
+
         // 1. Check: inside player's OWN order? → ALLOW
         val myOrder = orderService.findByOwner(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
@@ -194,9 +205,8 @@ class BlockListener(
         if (order.centerWorld == null) return false
         if (loc.world?.name != order.centerWorld) return false
         val dx = abs(order.centerX - loc.blockX)
-        val dy = abs(order.centerY - loc.blockY)
         val dz = abs(order.centerZ - loc.blockZ)
-        return dx <= order.radius && dy <= order.radius && dz <= order.radius
+        return dx <= order.radius && dz <= order.radius
     }
 
     private fun isInsideFront(front: ru.kyamshanov.comminusm.model.WorkFront, loc: org.bukkit.Location): Boolean {
