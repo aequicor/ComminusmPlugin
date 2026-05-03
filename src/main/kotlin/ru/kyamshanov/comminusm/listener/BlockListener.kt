@@ -39,7 +39,7 @@ class BlockListener(
                         return
                     } else {
                         event.isCancelled = true
-                        showDeleteOrderConfirmation(player)
+                        showDeleteOrderConfirmation(player, order.id)
                         return
                     }
                 }
@@ -51,8 +51,19 @@ class BlockListener(
             val front = workFrontService?.getByOwner(uuid)
             if (front != null && front.centerWorld == world.name
                 && front.centerX == loc.blockX && front.centerY == loc.blockY && front.centerZ == loc.blockZ) {
+                event.isCancelled = true
+                val frontRadius = front.radius
                 workFrontService?.deactivate(uuid)
-                player.sendMessage(Component.text("§6☭ Трудовой Фронт закрыт. Флаг удалён."))
+                val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
+                val meta = flag.itemMeta
+                meta.displayName(Component.text("§6Флаг Трудового Фронта"))
+                meta.lore(listOf(
+                    Component.text("§7Установите в новом месте"),
+                    Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
+                ))
+                flag.itemMeta = meta
+                world.dropItemNaturally(loc, flag)
+                player.sendMessage(Component.text("§6☭ Трудовой Фронт закрыт. Флаг подобран."))
                 return
             }
             val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
@@ -196,7 +207,7 @@ class BlockListener(
         return dx <= front.radius && dy <= front.radius && dz <= front.radius
     }
 
-    private fun showDeleteOrderConfirmation(player: org.bukkit.entity.Player) {
+    private fun showDeleteOrderConfirmation(player: org.bukkit.entity.Player, orderId: Long? = null) {
         val inv = org.bukkit.Bukkit.createInventory(null, 9, Component.text("§cПодтверждение удаления"))
 
         inv.setItem(2, GuiUtils.namedItem(
