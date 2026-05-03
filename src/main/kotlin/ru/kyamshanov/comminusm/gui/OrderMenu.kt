@@ -11,12 +11,14 @@ import org.bukkit.inventory.ItemStack
 import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService
 
 class OrderMenu(
     private val orderService: OrderService,
     private val workdaysService: WorkdaysService?,
-    private val config: PluginConfig
+    private val config: PluginConfig,
+    private val workFrontService: WorkFrontService? = null
 ) : Listener {
     private val infoSlot = 20
     private val sizeSlot = 22
@@ -134,7 +136,7 @@ class OrderMenu(
             backSlot -> {
                 val wds = workdaysService
                 if (wds != null) {
-                    PartyMenu(config, wds, orderService, null).open(player)
+                    PartyMenu(config, wds, orderService, workFrontService).open(player)
                 }
             }
         }

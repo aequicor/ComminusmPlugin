@@ -65,7 +65,7 @@ class ComminusmPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(PlayerListener(workdaysService, pluginConfig), this)
 
         // Register order flag listener
-        server.pluginManager.registerEvents(OrderFlagListener(orderService, workdaysService, pluginConfig), this)
+        server.pluginManager.registerEvents(OrderFlagListener(orderService, workdaysService, pluginConfig, workFrontService), this)
 
         // Register block protection
         server.pluginManager.registerEvents(BlockListener(orderService, workFrontService), this)
@@ -84,7 +84,7 @@ class ComminusmPlugin : JavaPlugin() {
 
         // Register GUI listeners
         server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService), this)
-        server.pluginManager.registerEvents(OrderMenu(orderService, workdaysService, pluginConfig), this)
+        server.pluginManager.registerEvents(OrderMenu(orderService, workdaysService, pluginConfig, workFrontService), this)
         server.pluginManager.registerEvents(FrontMenu(workFrontService), this)
         server.pluginManager.registerEvents(TreasuryMenu(pluginConfig, workdaysService), this)
         server.pluginManager.registerEvents(AdminMenu(pluginConfig, orderService, workFrontService, workdaysService), this)

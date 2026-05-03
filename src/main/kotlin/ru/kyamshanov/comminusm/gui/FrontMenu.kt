@@ -58,13 +58,14 @@ class FrontMenu(
 
         when (event.slot) {
             moveSlot -> {
+                val frontRadius = workFrontService.getByOwner(player.uniqueId)?.radius ?: 25
                 workFrontService.deactivate(player.uniqueId)
                 val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
                 val meta = flag.itemMeta
                 meta.displayName(Component.text("§6Флаг Трудового Фронта"))
                 meta.lore(listOf(
                     Component.text("§7Установите в новом месте"),
-                    Component.text("§7Радиус добычи: §e${workFrontService.getByOwner(player.uniqueId)?.radius ?: 25} §7блоков")
+                    Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
                 ))
                 flag.itemMeta = meta
                 if (player.inventory.firstEmpty() == -1) {

@@ -74,7 +74,7 @@ class PartyMenu(
                 if (orderService != null) {
                     val order = orderService.findByOwner(player.uniqueId)
                     if (order != null) {
-                        OrderMenu(orderService, workdaysService, config).open(player, order)
+                        OrderMenu(orderService, workdaysService, config, workFrontService).open(player, order)
                     } else {
                         val newOrder = orderService.create(player.uniqueId)
                         if (newOrder != null) {

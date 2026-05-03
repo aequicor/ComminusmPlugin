@@ -10,12 +10,14 @@ import org.bukkit.event.player.PlayerInteractEvent
 import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.gui.OrderMenu
 import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService
 
 class OrderFlagListener(
     private val orderService: OrderService,
     private val workdaysService: WorkdaysService?,
-    private val config: PluginConfig
+    private val config: PluginConfig,
+    private val workFrontService: WorkFrontService? = null
 ) : Listener {
 
     @EventHandler
@@ -70,6 +72,6 @@ class OrderFlagListener(
         if (loc.blockX != order.centerX || loc.blockY != order.centerY || loc.blockZ != order.centerZ) return
 
         event.isCancelled = true
-        OrderMenu(orderService, workdaysService, config).open(player, order)
+        OrderMenu(orderService, workdaysService, config, workFrontService).open(player, order)
     }
 }

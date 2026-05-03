@@ -15,16 +15,30 @@ class WorkFrontService(
         val front = WorkFront(uuid, world, x, y, z, frontRadius)
         repository.upsert(front)
 
-        val bukkitWorld = org.bukkit.Bukkit.getWorld(world) ?: return false
-        val chunk = bukkitWorld.getChunkAt(x shr 4, z shr 4)
-        chunkCacheManager?.markFrontChunk(chunk, uuid)
+        // PDC caching — only if available (not in tests)
+        chunkCacheManager?.let { cache ->
+            val bukkitWorld = org.bukkit.Bukkit.getWorld(world)
+            if (bukkitWorld != null) {
+                val chunk = bukkitWorld.getChunkAt(x shr 4, z shr 4)
+                cache.markFrontChunk(chunk, uuid)
+            }
+        }
         return true
     }
 
     fun getByOwner(uuid: UUID): WorkFront? = repository.findByOwner(uuid)
 
     fun deactivate(uuid: UUID) {
+        val front = repository.findByOwner(uuid)
         repository.deleteByOwner(uuid)
+        // Clean up PDC marker if cached
+        if (front != null && chunkCacheManager != null) {
+            val bukkitWorld = org.bukkit.Bukkit.getWorld(front.centerWorld)
+            if (bukkitWorld != null) {
+                val chunk = bukkitWorld.getChunkAt(front.centerX shr 4, front.centerZ shr 4)
+                chunkCacheManager.removeFrontChunk(chunk)
+            }
+        }
     }
 
     fun getAllInWorld(world: String): List<WorkFront> = repository.findAllInWorld(world)

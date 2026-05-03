@@ -41,4 +41,10 @@
 - DONE: flag items cannot be dropped or moved to chests (FlagItemProtectionListener)
 - DONE: inventory space check before giving flags
 - DONE: fixed restore flag — now works with proper error messages in all cases
+## 2026-05-03T12:00:00Z
+- DONE: all 30 tests passing — fixed WorkFrontService.activate() Bukkit dependency for testability
+- DONE: PDC cleanup added to WorkFrontService.deactivate()
+- DONE: FrontMenu moveSlot saves radius before deactivation
+- DONE: menu back-navigation preserves workFrontService reference (OrderMenu, OrderFlagListener, ComminusmPlugin)
+- DONE: removed unused `dy` variable in OrderService.checkOverlap
 - NEXT: PO manual testing

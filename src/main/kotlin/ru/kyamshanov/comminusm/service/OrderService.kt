@@ -51,7 +51,6 @@ class OrderService(
         return orders.any { existing ->
             if (existing.centerWorld == null) return@any false
             val dx = abs(existing.centerX - x)
-            val dy = abs(existing.centerY - y)
             val dz = abs(existing.centerZ - z)
             val distanceXZ = dx + dz
             distanceXZ <= existing.radius + radius + minDistanceBetweenCenters
