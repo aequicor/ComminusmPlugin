@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack
 import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
+import ru.kyamshanov.comminusm.listener.FlagItemProtectionListener
 import ru.kyamshanov.comminusm.service.WorkdaysService
 
 class PartyMenu(
@@ -76,6 +77,10 @@ class PartyMenu(
                     if (order != null) {
                         OrderMenu(orderService, workdaysService, config, workFrontService).open(player, order)
                     } else {
+                        if (FlagItemProtectionListener.hasOrderFlagInInventory(player)) {
+                            player.sendMessage(Component.text("§cУ вас уже есть флаг Ордера, товарищ! Установите его в мире или удалите из инвентаря."))
+                            return
+                        }
                         val newOrder = orderService.create(player.uniqueId)
                         if (newOrder != null) {
                             val flag = ItemStack(Material.WHITE_BANNER)
@@ -106,6 +111,10 @@ class PartyMenu(
                     if (front != null) {
                         FrontMenu(workFrontService).open(player, front)
                     } else {
+                        if (FlagItemProtectionListener.hasFrontFlagInInventory(player)) {
+                            player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его или удалите из инвентаря."))
+                            return
+                        }
                         val flag = ItemStack(Material.RED_BANNER)
                         val meta = flag.itemMeta
                         meta.displayName(Component.text("\u00a76\u0424\u043b\u0430\u0433 \u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0433\u043e \u0424\u0440\u043e\u043d\u0442\u0430"))

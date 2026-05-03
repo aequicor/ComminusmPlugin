@@ -7,6 +7,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import ru.kyamshanov.comminusm.listener.FlagItemProtectionListener
 import ru.kyamshanov.comminusm.model.WorkFront
 import ru.kyamshanov.comminusm.service.WorkFrontService
 
@@ -58,6 +59,10 @@ class FrontMenu(
 
         when (event.slot) {
             moveSlot -> {
+                if (FlagItemProtectionListener.hasFrontFlagInInventory(player)) {
+                    player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире или удалите из инвентаря."))
+                    return
+                }
                 val frontRadius = workFrontService.getByOwner(player.uniqueId)?.radius ?: 25
                 workFrontService.deactivate(player.uniqueId)
                 val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)

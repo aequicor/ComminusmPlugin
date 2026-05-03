@@ -117,21 +117,17 @@ class OrderMenu(
                     return
                 }
 
-                if (player.inventory.firstEmpty() == -1) {
-                    player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Ордера!"))
-                    return
+                // Place the banner block at the center coordinates directly
+                val bannerBlock = world.getBlockAt(order.centerX, order.centerY, order.centerZ)
+                bannerBlock.type = Material.WHITE_BANNER
+                // Set banner direction via BlockState - clear all patterns for a blank white banner
+                val state = bannerBlock.state
+                if (state is org.bukkit.block.Banner) {
+                    state.setPatterns(listOf())
+                    state.update()
                 }
 
-                val flag = ItemStack(Material.WHITE_BANNER)
-                val meta = flag.itemMeta
-                meta.displayName(Component.text("§aФлаг Ордера №${order.id}"))
-                meta.lore(listOf(
-                    Component.text("§7Установите флаг для активации Ордера"),
-                    Component.text("§7Владелец: §e${player.name}")
-                ))
-                flag.itemMeta = meta
-                player.inventory.addItem(flag)
-                player.sendMessage(Component.text("§a☭ Флаг Ордера восстановлен, товарищ! Установите его на своей территории."))
+                player.sendMessage(Component.text("§a☭ Флаг Ордера восстановлен на вашем участке, товарищ!"))
             }
             backSlot -> {
                 val wds = workdaysService
