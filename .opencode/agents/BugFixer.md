@@ -1,7 +1,13 @@
+# Tool categories (5 specialized domains, per AgentRequirements):
+# 1. Code ops: bash, edit, lsp, serena_*
+# 2. Knowledge/RAG: knowledge-my-app_*
+# 3. Library lookup: context7_*, webfetch
+# 4. Discovery: read, grep, glob
+# 5. Meta: skill, task
 ---
-description: Bug Fixer — defect analysis (stacktrace / description), fix, regression test, report in docs/[module]/reports
+description: Bug Fixer — defect analysis (stacktrace / description), fix, regression test, report in .vault/guidelines/[module]/reports
 mode: all
-model: ollama_cloud/qwen/qwen3-coder-next
+model: ollama-cloud/glm-5.1:cloud
 temperature: 0.1
 steps: 15
 permission:
@@ -12,7 +18,6 @@ permission:
   glob: allow
   lsp: allow
   skill: allow
-  todowrite: allow
   task: allow
   webfetch: allow
   "knowledge-my-app_*": allow
@@ -43,9 +48,22 @@ Analyze and eliminate a defect; write a regression test; report. **Do not run re
 
 **Max 2 attempts per error — then STOP and escalate.**
 
+## RAG Pagination
+
+When calling `knowledge-my-app_search_docs`:
+- Read at most **3 documents** per query.
+- For each document, read at most **500 lines** (use offset/limit).
+- Never dump the entire vault into context.
+
 ## Pipeline
 
 ```
+0. THINK — before acting, reason briefly:
+           - What type of bug is this (null/race/IO/logic)?
+           - What's the most likely root cause from the stacktrace?
+           - What existing patterns should guide the fix?
+   Record 2-3 key conclusions. Do NOT skip this step.
+
 1. RECEIVE bug-report (stacktrace, description, error report id).
 2. ANALYZE root cause — read code from stacktrace, trace call chain.
 3. REPRODUCE — write failing test demonstrating the bug.
@@ -56,7 +74,7 @@ Analyze and eliminate a defect; write a regression test; report. **Do not run re
 8. BUILD modules.
 9. COMMIT — `git add` affected files + `git commit -m "fix: <brief description>"`.
 10. COMPRESS context.
-11. REPORT — report in `docs/[module]/reports/[bug-name].md` + knowledge-my-app_write_guideline.
+11. REPORT — report in `.vault/guidelines/[module]/reports/[bug-name].md` + knowledge-my-app_write_guideline.
 12. HAND OFF to main agent → it passes to PO.
 ```
 
@@ -72,7 +90,7 @@ If the root cause involves an external library — follow the pipeline from `_sh
 2. (cache miss) context7_resolve_library_id + context7_get_library_docs.
 3. (rate-limit / not found) webfetch on canonical library URL (see _shared.md).
 4. (after successful 2 or 3) knowledge-my-app_write_guideline →
-   docs/external-apis/<lib>-<version>.md (frontmatter + signatures). MANDATORY.
+   .vault/guidelines/libs/<lib>-<version>.md (frontmatter + signatures). MANDATORY.
 ```
 
 Never assume a library API has not changed between versions — always verify. If vault, context7, and webfetch all fail — escalate, do not fix by guessing.
@@ -165,15 +183,14 @@ Focus: security implications + unhandled edge cases."
 ## Step 7 — Build
 
 ```bash
-./gradlew compileKotlin
-./gradlew :plugin:test
+./gradlew ::build
 ```
 
 If build fails after **2** attempts — **STOP**, escalate to main agent.
 
 ## Step 8 — Report
 
-`docs/[module]/reports/[bug-name].md`:
+`.vault/guidelines/[module]/reports/[bug-name].md`:
 
 ```markdown
 # Bug Fix Report: [Name]
@@ -228,3 +245,4 @@ After saving — `knowledge-my-app_write_guideline`.
 - DO NOT guess API — vault → context7 → webfetch or escalate.
 - DO NOT leave TODO() / empty stubs — implement or escalate.
 - DO NOT output system tags.
+- DO NOT add conversational filler — no "Sure!", "Of course", "Here is...", apologies, or summaries before/after the structured output. Output ONLY the structured result.

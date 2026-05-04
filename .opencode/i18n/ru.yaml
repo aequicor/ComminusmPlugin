@@ -18,11 +18,6 @@
 | `checkpoint` | "Checkpoint" | "Контрольная точка" |
 | `resume_work` | "Resume work" | "Продолжить работу" |
 | `new_feature` | "New feature" | "Новая функция" |
-| `lint` | "Lint" | "Линт" |
-| `fix` | "Fix" | "Исправить" |
-| `review` | "Review" | "Ревью" |
-| `update_deps` | "Update dependencies" | "Обновить зависимости" |
-| `deploy` | "Deploy" | "Деплой" |
 
 ## Модули (module → модуль)
 
@@ -44,11 +39,6 @@
 | `/new-feature` | `/новая-функция` |
 | `/resume` | `/продолжить` |
 | `/checkpoint` | `/контрольная-точка` |
-| `/lint` | `/линт` |
-| `/fix` | `/исправить` |
-| `/review` | `/ревью` |
-| `/update-deps` | `/обновить-зависимости` |
-| `/deploy` | `/деплой` |
 
 ## Статусы (statuses)
 

@@ -37,24 +37,37 @@ To add a new language:
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `plugin` | `:` | `vault/` | Minecraft Paper server plugin — communism satire mechanics |
+| `plugin` | `:` | `.vault/plugin/` | Minecraft Paper server plugin — communism satire mechanics |
 
 ## File Structure
 
 Central path reference: `.opencode/FILE_STRUCTURE.md`. Read it before creating any new file.
 
-## Documentation Layout
+## Documentation Layout — Knowledge Vault (.vault/)
 
-Each module uses the same structure under `docs/[module]/`:
+All documentation lives in `.vault/`, indexed by [KnowledgeOS](https://github.com/aequicor/KnowledgeOS).
+Structure follows [Diátaxis](https://diataxis.fr/) genre layout.
 
-| Subfolder | Contents | Who writes |
-|-----------|----------|------------|
-| `requirements/` | Business requirements | @Main |
-| `spec/` | Technical specifications | @Main, @CodeWriter |
-| `guidelines/` | Guidelines, patterns, library rules | @Main, @Designer, @CodeWriter |
-| `plans/` | Implementation plans (`*-plan.md`) and stage files (`*-stage-NN.md`) | @Main |
-| `reports/` | Bug fix reports | @BugFixer |
-| `documentation/` | General module docs | As needed |
+### Genre mapping
+
+| Genre | Question | Module Content | Who writes |
+|-------|----------|---------------|------------|
+| `concepts/<module>/` | **Why?** How is it structured? | requirements/, plans/ | @Main |
+| `reference/<module>/` | **What exists?** | spec/ (incl. test plans) | @Main, @CodeWriter, @QA |
+| `how-to/<module>/` | **How to do X?** | Implementation stage files | @Main |
+| `tutorials/<module>/` | **How to learn?** | Getting started, module docs | As needed |
+| `guidelines/<module>/` | **What rules to follow?** | Conventions, patterns, reports/ | @Main, @Designer, @CodeWriter, @BugFixer |
+| `guidelines/libs/` | **How to use library?** | External API cache | @CodeWriter, @BugFixer |
+
+Per-module path examples:
+- Requirements: `.vault/concepts/<module>/requirements/<feature>.md`
+- Spec: `.vault/reference/<module>/spec/<feature>.md`
+- Test plan: `.vault/reference/<module>/spec/<feature>-test-plan.md`
+- Implementation plan: `.vault/concepts/<module>/plans/<feature>-plan.md`
+- Stage files: `.vault/how-to/<module>/plans/<feature>-stage-NN.md`
+- Guidelines: `.vault/guidelines/<module>/<topic>.md`
+- Bug reports: `.vault/guidelines/<module>/reports/<bug-name>.md`
+- External API cache: `.vault/guidelines/libs/<lib>-<version>.md`
 
 **Indexing rule:** when creating or updating any document, immediately call `knowledge-my-app_write_guideline` (new) or `knowledge-my-app_update_doc` (update).
 
@@ -63,7 +76,7 @@ Each module uses the same structure under `docs/[module]/`:
 Always search `knowledge-my-app_search_docs` for documentation first, then full read of found documents. If vault returns nothing — `serena_search_symbols` for code, then `grep`/`glob`/`read` on the filesystem.
 
 ```
-1. knowledge-my-app_search_docs  → docs, guidelines, spec, requirements
+1. knowledge-my-app_search_docs  → .vault/ docs, guidelines, spec, requirements
 2. serena_find_symbol / serena_search_symbols → code symbols (classes, functions)
 3. grep / glob / read → filesystem (last resort)
 ```
@@ -85,7 +98,7 @@ Always search `knowledge-my-app_search_docs` for documentation first, then full 
 
 ## External API Lookup — KnowledgeOS-first, context7 conditional
 
-Documentation for external libraries is cached in the vault at `docs/external-apis/<lib>-<version>.md`. This reduces load on context7 (rate-limited) and gives deterministic results for the same versions.
+Documentation for external libraries is cached in the vault at `.vault/guidelines/libs/<lib>-<version>.md`. This reduces load on context7 (rate-limited) and gives deterministic results for the same versions.
 
 **Pipeline (in fallback order):**
 
@@ -97,7 +110,7 @@ Documentation for external libraries is cached in the vault at `docs/external-ap
       → rate-limit / not found / error → go to step 3.
 3. webfetch on canonical source URL (see project guidelines for URLs).
       → if none returns valid API → escalate to main agent.
-4. knowledge-my-app_write_guideline → docs/external-apis/<lib>-<version>.md
+4. knowledge-my-app_write_guideline → .vault/guidelines/libs/<lib>-<version>.md
       Frontmatter: lib, version, source, date.
       Body: imports, used API signatures, minimal example.
       This step is MANDATORY after successful step 2 or 3.
@@ -130,36 +143,114 @@ This reduces errors in multi-step tasks. For trivial actions (read known file, g
 
 ## Workflow
 
+### Standard development pipeline (`/new-feature`)
+
 ```
 PO ─► @Main (single entry point)
-        │   superpowers:writing-plans  → plan in docs/[module]/plans/
+        │
+        ├─► @RequirementsPipeline  — full automated requirements phase:
+        │       ├─► @BusinessAnalyst      — draft requirements
+        │       │       ↕ (loop, max 3)
+        │       ├─► @CornerCaseReviewer   — attack requirements (BUSINESS mode)
+        │       ├─► @RequirementsQA       — generate test cases
+        │       │       ↕ (loop, max 2)
+        │       ├─► @CoverageChecker      — verify coverage
+        │       ├─► @SystemAnalyst        — generate technical spec
+        │       │       ↕ (loop, max 3)
+        │       ├─► @CornerCaseReviewer   — attack spec (TECHNICAL mode)
+        │       ├─► @ConsistencyChecker   — final gate
+        │       │       ↕ (loop, max 2)
+        │       └─► PO sign-off (/approve → artifacts → /resume @Main)
+        │
+        │   superpowers:writing-plans   → plan + stage files
+        │                                 (requirements/spec come from @RequirementsPipeline)
         │   superpowers:executing-plans → stage-by-stage implementation
         │   superpowers:subagent-driven-development → dispatch executors
         │   checkpoint → .planning/CURRENT.md after each step
         │
-        ├─► @CodeWriter   (code + tests + build)
-        ├─► @CodeReviewer (pull-request style review)
-        ├─► @BugFixer     (defect analysis + fix + report)
-        ├─► @debugger     (reproduction + root cause, read-only)
-        ├─► @Designer     (UI/UX design)
-        ├─► @QA           (draft/final test plan)
+        ├─► @CodeWriter    (code + tests + build)
+        ├─► @CodeReviewer  (pull-request style review)
+        ├─► @BugFixer      (defect analysis + fix + report)
+        ├─► @debugger      (reproduction + root cause, read-only)
+        ├─► @Designer      (UI/UX design)
+        ├─► @QA            (draft/final implementation test plan)
+        ├─► @TestRunner    (generate test cases, guided execution, defect logging, transactional updates)
+        ├─► @AutoApprover  (automated plan gatekeeper — at CONFIRM step when AUTO_APPROVE=true)
         └─► @PromptEngineer (agent prompt maintenance)
 ```
 
+**Pipeline order:**
+1. `clarifying questions` (Step 0) — minimal: module, description, UI?, constraints
+2. `@RequirementsPipeline` — full BA/CCR/QA/SA pipeline; PO signs off → `/resume @Main`
+   (skipped if pre-made requirements package found in `.planning/CURRENT.md`)
+3. `writing-plans` — implementation plan + stage files using requirements/corner cases/spec as inputs
+4. `executing-plans` or `subagent-driven-development` — implements plan; no requirements discovery here
+
 **Single entry point — `@Main`.** Do not invoke other agents directly without @Main orchestration.
+
+### AI-driven requirements pipeline (`/requirements-pipeline`)
+
+Fully automated requirements phase. PO only needed at input and final sign-off.
+
+```
+PO ─► @RequirementsPipeline (entry point via /requirements-pipeline)
+        │
+        ├─► @BusinessAnalyst       — drafts business requirements from PO description
+        │       ↕ (loop, max 3)
+        ├─► @CornerCaseReviewer    — attacks requirements (BUSINESS mode), finds gaps
+        │
+        ├─► @RequirementsQA        — generates test cases from requirements + corner cases
+        │       ↕ (loop, max 2)
+        ├─► @CoverageChecker       — verifies all requirements/corner cases have test cases
+        │
+        ├─► @SystemAnalyst         — generates technical spec from requirements + test cases
+        │       ↕ (loop, max 3)
+        ├─► @CornerCaseReviewer    — attacks tech spec (TECHNICAL mode), finds gaps
+        │
+        ├─► @ConsistencyChecker    — verifies spec does not contradict requirements
+        │       ↕ (loop, max 2 — @SystemAnalyst resolves conflicts)
+        │
+        └─► PO sign-off (/approve) → artifacts ready for @Main /new-feature
+```
+
+**Artifacts produced:**
+- `.vault/concepts/[module]/requirements/[feature].md` — business requirements
+- `.vault/concepts/[module]/plans/[feature]-corner-cases.md` — corner case register
+- `.vault/reference/[module]/spec/[feature]-requirements-test-plan.md` — requirements test plan
+- `.vault/reference/[module]/spec/[feature].md` — technical spec
+
+### Requirements Pipeline → @Main Handoff
+
+`@RequirementsPipeline` writes four artifact paths to `.planning/CURRENT.md` on PO sign-off:
+
+```
+- requirements file: .vault/concepts/[module]/requirements/[feature].md
+- corner cases: .vault/concepts/[module]/plans/[feature]-corner-cases.md
+- test plan: .vault/reference/[module]/spec/[feature]-requirements-test-plan.md
+- spec: .vault/reference/[module]/spec/[feature].md
+```
+
+**Flow A — integrated (default):** `@RequirementsPipeline` is dispatched by `@Main` as step 1 of the FEATURE pipeline. After PO types `/approve` to `@RequirementsPipeline` and then `/resume`, `@Main` continues from step 2 (SEARCH).
+
+**Flow B — standalone:** PO first runs `/requirements-pipeline` separately, then `/new-feature`. `@Main` detects the pre-made package in `.planning/CURRENT.md` at step 0.5 and skips directly to step 3 (DESIGN).
+
+In both flows, `@Main` does **not** modify requirements, corner cases, or spec files — they are approved artifacts. If `@Main` finds a contradiction at planning time, it surfaces it to PO before starting implementation.
 
 ## File Access Matrix
 
 | Zone | Who writes | Who reads |
 |------|-----------|-----------|
 | `src/`, `*/src/test/` | @CodeWriter, @BugFixer | all |
-| `docs/[module]/requirements/` | @Main | all |
-| `docs/[module]/spec/` | @Main, @CodeWriter | all |
-| `docs/[module]/guidelines/` | @Main, @Designer, @CodeWriter | all |
-| `docs/[module]/plans/` | @Main | all |
-| `docs/[module]/reports/` | @BugFixer | all |
+| `.vault/concepts/<module>/requirements/` | @Main, @BusinessAnalyst | all |
+| `.vault/concepts/<module>/plans/` | @Main, @BusinessAnalyst, corner-case-refinement skill | all |
+| `.vault/reference/<module>/spec/` | @Main, @CodeWriter, @QA, @RequirementsQA, @SystemAnalyst | all |
+| `.vault/reference/<module>/test-cases/` | @Main, @TestRunner | all |
+| `.vault/how-to/<module>/plans/` | @Main | all |
+| `.vault/guidelines/<module>/` | @Main, @Designer, @CodeWriter | all |
+| `.vault/guidelines/<module>/reports/` | @BugFixer | all |
+| `.vault/guidelines/libs/` | @CodeWriter, @BugFixer | all |
 | `.opencode/agents/`, `.opencode/skills/` | @PromptEngineer | all |
-| `.planning/CURRENT.md` | @Main (checkpoint after each step) | all |
+| `.planning/CURRENT.md` | @Main, @RequirementsPipeline (checkpoint after each step) | all |
 | `opencode.json`, build files | human (PO) | all |
 
 ## Tool Naming — CRITICAL
@@ -177,6 +268,15 @@ KnowledgeOS tools use a **hyphen** in `my-app`, not underscore:
 **NEVER replace hyphen with underscore.** Models do this automatically — resist it.
 
 ## MCP and Skills
+
+**Built-in skills:**
+- `corner-case-refinement` — business-level corner case analysis. Runs BEFORE spec is written, during business requirements phase. Scans 6 categories: input integrity, process integrity, domain invariants, external dependency failures, scale/capacity, temporal/concurrency. Produces corner case register at `.vault/concepts/<module>/plans/<feature>-corner-cases.md`. Critical items become mandatory test tasks.
+- `code-review-checklist` — pre-commit systematic review checklist.
+- `test-execution` — AI-driven test execution and defect management. Generates test cases from spec/requirements, provides structured template for manual testing with defect logging, and supports transactional updates (re-run after fixes, add new test cases when defects reveal edge cases).
+- `bug-retro` — post-bug root cause analysis and prevention.
+- `knowledge-graph` — semantic document indexing and cross-reference.
+- `look-up` — proactive external API documentation lookup.
+- `session-replay` — past session analysis for patterns.
 
 **MCP:**
 - `knowledge-my-app` — KnowledgeOS vault: search, create, update documentation. **Primary source** for project docs and cached external library guidelines. Always check first.
@@ -233,11 +333,15 @@ Critical operations require explicit PO approval before execution. @Main enforce
 | EXTERNAL_API | New outbound 3rd-party API call | PO must approve | Adding new external HTTP calls |
 | COST_BREACH | Single operation > $5 estimated cost | PO must approve | Expensive model calls |
 
-**Approval flow:**
+**Approval flow — PLAN_CONFIRM gate:**
+- **Manual mode (default):** @Main pauses and presents summary to PO. PO types `/approve` to continue or `denied` to abort.
+- **AUTO_APPROVE=true mode:** @Main dispatches `@AutoApprover` which reviews plan/spec alignment and returns `APPROVED` or `NEEDS_CHANGES`. If approved — proceed. If not — @Main resolves BLOCKERs directly (plan files are @Main's domain) and retries, max 2 cycles, then escalates to PO.
+
+**Approval flow — all other gates (DEPLOY, DESTROY, SECRET_ROTATE, MIGRATION, EXTERNAL_API, COST_BREACH):**
 1. @Main detects gate condition.
 2. @Main writes `BLOCKED: <gate> — awaiting PO approval` to CURRENT.md.
 3. @Main presents the operation description, risk assessment, and impact scope to PO.
-4. PO replies `approved` or `denied`.
+4. PO types `/approve` to proceed or `denied` to abort. AUTO_APPROVE mode does **not** bypass these gates — only PLAN_CONFIRM is automated.
 5. @Main resumes from CURRENT.md `NEXT` line.
 
 **NO agent may bypass gates.** If a subagent triggers a gate condition — it must escalate, not proceed.

@@ -18,7 +18,7 @@ services:
       - BM25_INDEX_PATH=/app/index
       - VAULT_PATH=/vault
     volumes:
-      - ./vault:/vault
+      - ./.vault:/vault
       - bm25-index:/app/index
     depends_on:
       chromadb:

@@ -7,6 +7,23 @@ description: Systematic corner case discovery during business requirements phase
 
 Business-level corner case analysis. Runs during the requirements phase — after clarifying questions with PO, before spec, design, or implementation plan. The goal is to surface every meaningful "what if" at the business domain level so the spec can address them proactively.
 
+## Invocation Interface
+
+Called by `@Main` via the `requirements-pipeline` skill (Step 2.5) or directly with:
+
+```
+Feature: [feature-name, snake_case]
+Module: [module name from manifest]
+Requirements file: [path to .vault/concepts/[module]/requirements/[feature].md]
+```
+
+The skill reads the requirements file, runs the 6-category analysis, and writes the corner case register to:
+`.vault/concepts/[module]/plans/[feature]-corner-cases.md`
+
+where `[module]` and `[feature]` are substituted from the input fields above.
+
+**Important:** The `Requirements file` input must point to the **final version** of the requirements — after all BA update iterations are complete. The skill reads whatever is currently in that file; it does not track history.
+
 ## When to Use
 
 **Primary trigger — REQUIRED before every FEATURE spec:**
@@ -188,6 +205,16 @@ This is the only integration point. Writing-plans reads the register as input. I
 - **Severity = stakeholder impact.** Not technical difficulty. Not implementation complexity.
 - **No spec without corners.** A spec written without a corner case register is speculation written without due diligence.
 - **YAGNI for corners.** Don't plan for scale-5 problems on a scale-1 system. But DO document the assumed scale.
+
+## Error Handling
+
+| Situation | Action |
+|-----------|--------|
+| Requirements file does not exist or is empty | STOP. Report: `Requirements file not found at [path] — BA must produce it first.` |
+| 6-category scan produces zero corner cases | WARNING. Write register with 0 rows + a note explaining why: `No corner cases identified because [reason]. PO review recommended — every feature accepting input has at least input boundary corner cases.` |
+| Cannot answer a category question | Flag it in the register row as `NEEDS_PO_DECISION`. Do not silently skip — PO must confirm or provide the answer. |
+| Register file cannot be written (path invalid) | Fallback to `.vault/concepts/[module]/plans/[feature]-corner-cases.md`. If that also fails, STOP and report the path error. |
+| Previous corner case register exists for same feature | Overwrite only if PO confirmed rejection of previous version. Otherwise, append new findings with a `## Supplement — [date]` section. |
 
 ## Red Flags
 

@@ -78,7 +78,7 @@ class PartyMenu(
                         OrderMenu(orderService, workdaysService, config, workFrontService).open(player, order)
                     } else {
                         if (FlagItemProtectionListener.hasOrderFlagInInventory(player)) {
-                            player.sendMessage(Component.text("§cУ вас уже есть флаг Ордера, товарищ! Установите его в мире или удалите из инвентаря."))
+                            player.sendMessage(Component.text("§cУ вас уже есть флаг Ордера, товарищ! Установите его в мире."))
                             return
                         }
                         val newOrder = orderService.create(player.uniqueId)
@@ -112,7 +112,7 @@ class PartyMenu(
                         FrontMenu(workFrontService).open(player, front)
                     } else {
                         if (FlagItemProtectionListener.hasFrontFlagInInventory(player)) {
-                            player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его или удалите из инвентаря."))
+                            player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."))
                             return
                         }
                         val flag = ItemStack(Material.RED_BANNER)

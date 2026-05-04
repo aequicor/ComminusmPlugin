@@ -60,7 +60,7 @@ class FrontMenu(
         when (event.slot) {
             moveSlot -> {
                 if (FlagItemProtectionListener.hasFrontFlagInInventory(player)) {
-                    player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире или удалите из инвентаря."))
+                    player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."))
                     return
                 }
                 val frontRadius = workFrontService.getByOwner(player.uniqueId)?.radius ?: 25

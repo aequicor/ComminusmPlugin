@@ -1,6 +1,6 @@
 # opencode-kit manifest for ComminusmPlugin
 
-kit_version: "1.4.0"
+kit_version: "1.5.0"
 
 project:
   name: "ComminusmPlugin"
@@ -11,7 +11,7 @@ editors:
 
 stack:
   language: kotlin
-  profile: minecraft-paper-plugin
+  profiles: [minecraft-paper-plugin, ollama-cloud]
   build_command: "./gradlew"
   compile_command: "./gradlew compileKotlin"
   lint_command: "./gradlew detekt ktlintCheck"
@@ -31,11 +31,11 @@ provider:
   api_key_env: OLLAMA_CLOUD_API_KEY
 
 models:
-  default: deepseek/deepseek-v4-pro
-  coder: deepseek/deepseek-v4-pro
-  reviewer: deepseek/deepseek-v4-pro
-  designer: glm-5.1
-  small: qwen/qwen3-coder-next
+  default: deepseek-v4-pro:cloud
+  coder: glm-5.1:cloud
+  reviewer: deepseek-v4-pro:cloud
+  designer: glm-5.1:cloud
+  small: deepseek-v4-flash:cloud
 
 mcp:
   context7:

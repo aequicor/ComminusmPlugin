@@ -11,9 +11,9 @@
 
 | Command | Purpose | Discovered |
 |---------|---------|------------|
-| `./gradlew compileKotlin` | Quick compile | 2026-04-30 |
-| `./gradlew :plugin:test` | Run tests | 2026-04-30 |
-| `./gradlew detekt` | Lint check | 2026-04-30 |
+| `./gradlew compileKotlin` | Quick compile | 2026-05-04T03:09:02Z |
+| `./gradlew :[module]:test` | Run tests | 2026-05-04T03:09:02Z |
+| `./gradlew detekt ktlintCheck` | Lint check | 2026-05-04T03:09:02Z |
 
 ---
 
@@ -40,6 +40,6 @@
 
 <!-- Agents: write the last active task here before completing a session. -->
 
-- Last task: opencode-kit upgrade 1.0.0 → 1.3.0
-- Last checkpoint: 2026-04-30T12:47:01Z
+- Last task: (none yet)
+- Last checkpoint: 2026-05-04T03:09:02Z
 - Active plan: (none yet)

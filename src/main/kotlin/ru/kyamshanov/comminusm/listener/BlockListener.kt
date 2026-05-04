@@ -1,5 +1,7 @@
 package ru.kyamshanov.comminusm.listener
 
+import java.util.UUID
+import kotlin.math.abs
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.event.EventHandler
@@ -10,12 +12,13 @@ import org.bukkit.event.player.PlayerInteractEvent
 import ru.kyamshanov.comminusm.gui.GuiUtils
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
-import kotlin.math.abs
 
 class BlockListener(
     private val orderService: OrderService,
     private val workFrontService: WorkFrontService?
 ) : Listener {
+
+    private fun hasOrder(uuid: UUID): Boolean = orderService.findByOwner(uuid) != null
 
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
@@ -63,7 +66,7 @@ class BlockListener(
                 ))
                 flag.itemMeta = meta
                 world.dropItemNaturally(loc, flag)
-                player.sendMessage(Component.text("§6☭ Трудовой Фронт закрыт. Флаг подобран."))
+                player.sendMessage(Component.text("§6☭ Трудовой Фронт удалён. Флаг подобран."))
                 return
             }
             val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
@@ -100,17 +103,13 @@ class BlockListener(
             return // allowed
         }
 
-        // 4. Check: inside ANY front (cooperative)? → ALLOW
-        if (workFrontService != null) {
-            val allFronts = workFrontService.getAllInWorld(world.name)
-            if (allFronts.any { isInsideFront(it, loc) }) {
-                return // cooperative mining allowed
-            }
-        }
-
-        // 5. No order, no front → DENY
+        // 4. No order, no front → DENY
         event.isCancelled = true
-        player.sendMessage(Component.text("§cНесанкционированная добыча ресурсов, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия"))
+        if (hasOrder(uuid)) {
+            player.sendMessage(Component.text("§cВы находитесь вне вашей жилплощади, товарищ! Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"))
+        } else {
+            player.sendMessage(Component.text("§cНесанкционированная добыча ресурсов, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия"))
+        }
     }
 
     @EventHandler
@@ -148,17 +147,13 @@ class BlockListener(
             }
         }
 
-        // 3. Check: inside ANY front (own or cooperative)? → ALLOW
-        if (workFrontService != null) {
-            val allFronts = workFrontService.getAllInWorld(world.name)
-            if (allFronts.any { isInsideFront(it, loc) }) {
-                return // allowed (building inside front zones is OK)
-            }
-        }
-
-        // 4. Outside all zones → DENY
+        // 3. Outside all zones → DENY
         event.isCancelled = true
-        player.sendMessage(Component.text("§cНесанкционированное строительство, товарищ! Стройте только на своей жилплощади или в зоне Трудового Фронта через §e/партия"))
+        if (hasOrder(uuid)) {
+            player.sendMessage(Component.text("§cВы находитесь вне вашей жилплощади, товарищ! Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"))
+        } else {
+            player.sendMessage(Component.text("§cНесанкционированное строительство, товарищ! Стройте только на своей жилплощади или в зоне Трудового Фронта через §e/партия"))
+        }
     }
 
     @EventHandler
@@ -188,17 +183,13 @@ class BlockListener(
             }
         }
 
-        // 3. Check: inside ANY front (cooperative)? → ALLOW
-        if (workFrontService != null) {
-            val allFronts = workFrontService.getAllInWorld(world.name)
-            if (allFronts.any { isInsideFront(it, loc) }) {
-                return // allowed
-            }
-        }
-
-        // 4. Outside all zones → DENY
+        // 3. Outside all zones → DENY
         event.isCancelled = true
-        player.sendMessage(Component.text("§cНесанкционированное взаимодействие, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия"))
+        if (hasOrder(uuid)) {
+            player.sendMessage(Component.text("§cВы находитесь вне вашей жилплощади, товарищ! Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"))
+        } else {
+            player.sendMessage(Component.text("§cНесанкционированное взаимодействие, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия"))
+        }
     }
 
     private fun isInsideOrder(order: ru.kyamshanov.comminusm.model.Order, loc: org.bukkit.Location): Boolean {

@@ -8,9 +8,9 @@
 
 ## Project Overview
 
-ComminusmPlugin — Minecraft Paper server plugin with communism satire mechanics.
+Minecraft Paper server plugin — communism satire mechanics
 
-**Stack:** kotlin
+**Stack:** ComminusmPlugin — kotlin stack
 
 ---
 
@@ -18,7 +18,7 @@ ComminusmPlugin — Minecraft Paper server plugin with communism satire mechanic
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `plugin` | `:` | `vault/` | Minecraft Paper server plugin — communism satire mechanics |
+| `plugin` | `:` | `.vault/plugin/` | Minecraft Paper server plugin — communism satire mechanics |
 
 ---
 
@@ -29,7 +29,7 @@ ComminusmPlugin — Minecraft Paper server plugin with communism satire mechanic
 | `./gradlew` | Full project build |
 | `./gradlew compileKotlin` | Quick compile check |
 | `./gradlew :[module]:test` | Run tests (replace `[module]` with module name) |
-| `./gradlew detekt` | Lint + code-style check |
+| `./gradlew detekt ktlintCheck` | Lint + code-style check |
 
 **Always compile and run tests before marking a task complete.**
 
@@ -49,10 +49,14 @@ ComminusmPlugin — Minecraft Paper server plugin with communism satire mechanic
 - TODO() in production code without DECISIONS.md entry
 - Raw SQL string concatenation (use parameterized queries)
 - Logging tokens, passwords, PII data
+- Hardcoded Bukkit ChatColor strings — use MiniMessage or component API
+- Using deprecated Bukkit API (use Paper-adventure components, not legacy ChatColors)
+- Blocking main thread — schedule async with Bukkit schedulers or coroutines
+- Storing Player references past event scope (causes memory leaks)
 
 ### Style
 
-- Run `./gradlew detekt` after every implementation block.
+- Run `./gradlew detekt ktlintCheck` after every implementation block.
 - Match the style of surrounding code, not personal preference.
 - All public API must be documented.
 
@@ -65,19 +69,30 @@ ComminusmPlugin — Minecraft Paper server plugin with communism satire mechanic
 - `.planning/CURRENT.md` — active task and last checkpoint. **Read before starting work.**
 - `.planning/DECISIONS.md` — architectural decision log (ADR). Check before proposing structural changes. **Append-only — never delete entries.**
 
-### Module Docs Structure
+### Knowledge Vault (.vault/)
 
-- `plugin` — docs at `vault/`
+Documentation lives in `.vault/` indexed by [KnowledgeOS](https://github.com/aequicor/KnowledgeOS).
+Structure follows [Diátaxis](https://diataxis.fr/) genre layout:
 
-Each module's docs follow: `docs/<module>/{requirements,spec,guidelines,plans,reports}/`
+| Genre | Question | Module Content |
+|-------|----------|---------------|
+| `concepts/<module>/` | **Why?** How is it structured? | requirements/, plans/ |
+| `reference/<module>/` | **What exists?** | spec/ (incl. test plans) |
+| `how-to/<module>/` | **How to do X?** | Implementation stage files |
+| `tutorials/<module>/` | **How to learn?** | Getting started, module docs |
+| `guidelines/<module>/` | **What rules to follow?** | Conventions, patterns, reports/ |
+| `guidelines/libs/` | **How to use library?** | External API cache per library+version |
+
+Each module's docs follow: `.vault/<genre>/<module>/{subdir}/`
 
 ### External Libraries
 
 Before using any external library API:
-1. Check `docs/external-apis/` for cached documentation.
-2. Look up the library from its canonical, authoritative source.
-3. **Never invent** method names, builder DSL methods, or annotation parameters.
-4. If no documentation is available, state that clearly — do not guess.
+1. Search `.vault/guidelines/libs/` for cached documentation via KnowledgeOS `search_docs`.
+2. If not found — look up the library from its canonical, authoritative source via `context7` or `webfetch`.
+3. After resolving — write guideline to `.vault/guidelines/libs/<lib>-<version>.md` via `write_guideline`.
+4. **Never invent** method names, builder DSL methods, or annotation parameters.
+5. If no documentation is available, state that clearly — do not guess.
 
 ---
 
@@ -91,9 +106,17 @@ Do NOT modify without explicit instruction:
 
 ---
 
+## Corner Cases
+
+- Corner cases MUST be identified during planning, not discovered during implementation.
+- Every feature has a corner case register at `.vault/concepts/<module>/plans/<feature>-corner-cases.md`. Read it before implementing.
+- Critical corner cases (data loss, security, system crash) require a test task in the implementation plan.
+- Use the `corner-case-refinement` skill to systematically scan: input boundaries, state lifecycles, concurrency, error paths, scale limits, domain invariants.
+
 ## Testing
 
 - Write a failing test before implementing when feasible (TDD preferred).
+- Every Critical corner case from the corner case register MUST have a test.
 - All existing tests must continue to pass after your change.
 - Network calls in tests → use mocks or test doubles, **never real endpoints**.
 - SQL only via parameterized queries — never concatenate user input into queries.
@@ -131,6 +154,6 @@ A task is **complete** only when ALL of the following are true:
 
 - [ ] Code compiles: `./gradlew compileKotlin`
 - [ ] All tests pass (including new tests for any changed behaviour)
-- [ ] Lint passes: `./gradlew detekt`
+- [ ] Lint passes: `./gradlew detekt ktlintCheck`
 - [ ] No unexplained `TODO` or `FIXME` remains
 - [ ] Changes committed to git with a descriptive message
