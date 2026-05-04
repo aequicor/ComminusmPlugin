@@ -56,6 +56,16 @@ class FrontFlagListener(
         }
 
         val oldFront = workFrontService.getByOwner(player.uniqueId)
+        // Remove old banner block from the world to prevent orphaned banners
+        if (oldFront != null) {
+            val oldWorld = org.bukkit.Bukkit.getWorld(oldFront.centerWorld)
+            if (oldWorld != null) {
+                val oldBlock = oldWorld.getBlockAt(oldFront.centerX, oldFront.centerY, oldFront.centerZ)
+                if (oldBlock.type == Material.RED_BANNER) {
+                    oldBlock.type = Material.AIR
+                }
+            }
+        }
         workFrontService.activate(player.uniqueId, world, location.blockX, location.blockY, location.blockZ)
 
         val msg = if (oldFront != null) {

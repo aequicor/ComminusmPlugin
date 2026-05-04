@@ -57,6 +57,8 @@ class BlockListener(
                 event.isCancelled = true
                 val frontRadius = front.radius
                 workFrontService?.deactivate(uuid)
+                // Remove orphaned banner block from the world
+                event.block.type = Material.AIR
                 val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
                 val meta = flag.itemMeta
                 meta.displayName(Component.text("§6Флаг Трудового Фронта"))
@@ -84,6 +86,12 @@ class BlockListener(
         // 1. Check: inside player's OWN order? → ALLOW
         val myOrder = orderService.findByOwner(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
+            // Prevent breaking support block of someone else's front flag
+            if (isForeignFrontSupportBlock(world, loc, uuid)) {
+                event.isCancelled = true
+                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
+                return
+            }
             return // allowed
         }
 
@@ -100,6 +108,12 @@ class BlockListener(
         // 3. Check: inside player's OWN front? → ALLOW
         val myFront = workFrontService?.getByOwner(uuid)
         if (myFront != null && myFront.centerWorld == world.name && isInsideFront(myFront, loc)) {
+            // Prevent breaking support block of someone else's front flag
+            if (isForeignFrontSupportBlock(world, loc, uuid)) {
+                event.isCancelled = true
+                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
+                return
+            }
             return // allowed
         }
 
@@ -120,15 +134,10 @@ class BlockListener(
         val loc = block.location
         val world = loc.world ?: return
 
-        // BUG-004 FIX: Allow flag placement outside zones - OrderFlagListener/FrontFlagListener will handle activation
+        // Allow flag placement — OrderFlagListener/FrontFlagListener will handle activation
         val item = event.itemInHand
-        val meta = item.itemMeta
-        val displayName = meta?.displayName()?.toString() ?: ""
-        if (item.type == Material.WHITE_BANNER && displayName.contains("Флаг Ордера")) {
-            return // OrderFlagListener will handle activation
-        }
-        if (item.type == Material.RED_BANNER && displayName.contains("Флаг Трудового Фронта")) {
-            return // FrontFlagListener will handle activation
+        if (item.type == Material.WHITE_BANNER || item.type == Material.RED_BANNER) {
+            return
         }
 
         // 1. Check: inside player's OWN order? → ALLOW
@@ -147,7 +156,13 @@ class BlockListener(
             }
         }
 
-        // 3. Outside all zones → DENY
+        // 3. Check: inside player's OWN front? → ALLOW
+        val myFront = workFrontService?.getByOwner(uuid)
+        if (myFront != null && myFront.centerWorld == world.name && isInsideFront(myFront, loc)) {
+            return // allowed
+        }
+
+        // 4. Outside all zones → DENY
         event.isCancelled = true
         if (hasOrder(uuid)) {
             player.sendMessage(Component.text("§cВы находитесь вне вашей жилплощади, товарищ! Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"))
@@ -164,6 +179,13 @@ class BlockListener(
 
         val player = event.player
         val uuid = player.uniqueId
+
+        // Allow flag placement — OrderFlagListener/FrontFlagListener will handle interactions with their own flags
+        val heldItem = player.inventory.itemInMainHand
+        if (heldItem.type == Material.WHITE_BANNER || heldItem.type == Material.RED_BANNER) {
+            return
+        }
+
         val loc = block.location
         val world = loc.world ?: return
 
@@ -183,7 +205,13 @@ class BlockListener(
             }
         }
 
-        // 3. Outside all zones → DENY
+        // 3. Check: inside player's OWN front? → ALLOW
+        val myFront = workFrontService?.getByOwner(uuid)
+        if (myFront != null && myFront.centerWorld == world.name && isInsideFront(myFront, loc)) {
+            return // allowed
+        }
+
+        // 4. Outside all zones → DENY
         event.isCancelled = true
         if (hasOrder(uuid)) {
             player.sendMessage(Component.text("§cВы находитесь вне вашей жилплощади, товарищ! Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"))
@@ -206,6 +234,44 @@ class BlockListener(
         val dy = abs(front.centerY - loc.blockY)
         val dz = abs(front.centerZ - loc.blockZ)
         return dx <= front.radius && dy <= front.radius && dz <= front.radius
+    }
+
+    /**
+     * Check if the broken block is a support block of a foreign front flag.
+     * Red banners (wall-mounted) are attached to a face of the target block.
+     * If the support block is destroyed, the banner drops silently without a BlockBreakEvent
+     * for the banner itself — so we must intercept at the support block level.
+     */
+    private fun isForeignFrontSupportBlock(
+        world: org.bukkit.World,
+        loc: org.bukkit.Location,
+        breakerUuid: UUID
+    ): Boolean {
+        // Check all 4 horizontal directions + top/bottom for an attached RED_BANNER
+        val directions = listOf(
+            loc.clone().add(1.0, 0.0, 0.0),
+            loc.clone().add(-1.0, 0.0, 0.0),
+            loc.clone().add(0.0, 0.0, 1.0),
+            loc.clone().add(0.0, 0.0, -1.0),
+            loc.clone().add(0.0, 1.0, 0.0),
+            loc.clone().add(0.0, -1.0, 0.0)
+        )
+        val allFronts = workFrontService?.getAllInWorld(world.name) ?: return false
+        for (neighbor in directions) {
+            val neighborBlock = world.getBlockAt(neighbor)
+            if (neighborBlock.type == Material.RED_BANNER) {
+                for (f in allFronts) {
+                    if (f.centerWorld == world.name
+                        && f.centerX == neighbor.blockX
+                        && f.centerY == neighbor.blockY
+                        && f.centerZ == neighbor.blockZ
+                        && f.ownerUuid != breakerUuid) {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
     }
 
     private fun showDeleteOrderConfirmation(player: org.bukkit.entity.Player, orderId: Long? = null) {
