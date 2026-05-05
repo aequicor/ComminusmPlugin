@@ -156,6 +156,8 @@ AI agents do NOT touch the Notes column. AI agents do NOT generate per-TC detail
 | TC-103 | PEND   | —     | unit-edge   | [spec] Front-move lock acquisition with lexicographic ordering: old="world:5:3", new="world:3:5" — new key acquired first              | Lock for "world:3:5" acquired before "world:5:3"; no deadlock; operation completes or rolls back cleanly |
 | TC-104 | PEND   | —     | integration | [spec] /party with PDC chunk marker present but marker value missing/reset (marker gone) — /party falls through to normal flag issuance (A-06) | New flag issued normally; no error thrown; player receives new flag item                           |
 | TC-105 | PEND   | —     | error       | [spec] /party with PDC marker value starting with "ITEM:" but containing corrupted Base64 — marker deleted, ERROR logged, /party falls through to normal issuance | Corrupted marker removed from PDC; ERROR entry in server log; player receives new flag via normal flow |
+| TC-106 | PASS   | —     | error       | [bug-fix] Player moves front flag (places RED_BANNER in new location) while owning an existing active front — old BEDROCK support block and old ArmorStand must be fully removed | Old BEDROCK support block is removed (restored to original material), old ArmorStand is despawned; no orphaned entities or indestructible blocks remain at the old position |
+| TC-107 | PASS   | —     | error       | [bug-fix] Player breaks the BEDROCK support block of their front flag (e.g. in creative mode) — block must be restored to original material instead of leaving a void | Support block position is restored to the original material (STONE, DIRT, GRAVEL, etc.) that was saved at activation time; no void/AIR hole remains |
 
 > The TC-00 block is a single static template. Manual tester copies it on demand
 > when they want to elaborate on one specific TC (typically a failing one).
@@ -179,4 +181,7 @@ AI agents do NOT touch the Notes column. AI agents do NOT generate per-TC detail
 
 > Append-only. Each entry references a TC by id. AI agents (@TestRunner / @BugFixer) maintain this section.
 
-*(empty)*
+| DEF-id | TC-id  | Status | Description                                                                                          |
+|--------|--------|--------|------------------------------------------------------------------------------------------------------|
+| DEF-05 | TC-106 | FIXED  | Old BEDROCK support block and ArmorStand orphaned on front flag relocation — FrontFlagListener used manual banner-only removal instead of FlagCleanupHelper.cleanupFlag() (fix: vault/guidelines/comminusm/reports/fix-front-flag-relocation-cleanup.md) |
+| DEF-06 | TC-107 | FIXED  | Breaking support block leaves void instead of restoring original material — FlagCleanupHelper always set AIR; BlockListener overwrote restoration with explicit AIR set (fix: vault/guidelines/comminusm/reports/fix-front-flag-relocation-cleanup.md) |

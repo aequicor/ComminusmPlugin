@@ -118,10 +118,11 @@ class BlockListener(
                     if (front != null) {
                         if (front.ownerUuid == uuid) {
                             // Owner breaking their own front flag support → deactivate front, give flag to inventory
+                            // Note: deactivate() calls FlagCleanupHelper which restores the original support material.
+                            // Do NOT set event.block.type = Material.AIR here — that would overwrite the restoration.
                             event.isCancelled = true
                             val frontRadius = front.radius
                             checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
-                            event.block.type = Material.AIR
                             val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
                             val meta = flag.itemMeta
                             meta.displayName(Component.text("§6Флаг Трудового Фронта"))

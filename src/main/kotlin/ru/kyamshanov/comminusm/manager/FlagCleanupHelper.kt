@@ -12,8 +12,8 @@ import java.util.concurrent.locks.ReentrantLock
 
 /**
  * Stateless helper that encapsulates the full flag cleanup flow:
- * ArmorStand removal, block replacement with AIR, PDC key cleanup,
- * cache eviction, and async DB deletion.
+ * ArmorStand removal, support block restoration to original material (or AIR if unknown),
+ * banner block removal, PDC key cleanup, cache eviction, and async DB deletion.
  */
 class FlagCleanupHelper(private val plugin: Plugin) {
 
@@ -137,8 +137,13 @@ class FlagCleanupHelper(private val plugin: Plugin) {
                 }
             }
 
-            // Set support block to AIR
-            world.getBlockAt(supportX, supportY, supportZ).type = Material.AIR
+            // Restore support block to its original material (saved at activation time), or AIR if unknown
+            val supportMaterialKey = NamespacedKey(plugin, "support_material/$flagId")
+            val originalMaterialName = pdc.get(supportMaterialKey, PersistentDataType.STRING)
+            val originalMaterial = originalMaterialName
+                ?.let { runCatching { Material.valueOf(it) }.getOrNull() }
+                ?: Material.AIR
+            world.getBlockAt(supportX, supportY, supportZ).type = originalMaterial
 
             // Set banner block to AIR if it is still a banner
             val bannerBlock = world.getBlockAt(bannerX, bannerY, bannerZ)

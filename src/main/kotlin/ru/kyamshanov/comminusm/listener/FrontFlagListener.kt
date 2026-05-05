@@ -14,17 +14,20 @@ import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.gui.FrontMenu
 import ru.kyamshanov.comminusm.manager.ActivationCheckResult
 import ru.kyamshanov.comminusm.manager.FlagActivationHelper
+import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import java.util.concurrent.locks.ReentrantLock
 
+@Suppress("LongParameterList")
 class FrontFlagListener(
     private val workFrontService: WorkFrontService,
     private val orderService: OrderService,
     private val plugin: Plugin,
     private val flagActivationHelper: FlagActivationHelper,
+    private val flagCleanupHelper: FlagCleanupHelper,
     private val manager: FlagStabilityManager,
     private val config: PluginConfig
 ) : Listener {
@@ -69,15 +72,22 @@ class FrontFlagListener(
         val bannerBlock = event.block
         val ownerUuid = player.uniqueId
 
-        // Remove old banner block from the world to prevent orphaned banners
         val oldFront = workFrontService.getByOwner(ownerUuid)
         if (oldFront != null) {
             val oldWorld = Bukkit.getWorld(oldFront.centerWorld)
             if (oldWorld != null) {
-                val oldBlock = oldWorld.getBlockAt(oldFront.centerX, oldFront.centerY, oldFront.centerZ)
-                if (oldBlock.type == Material.RED_BANNER) {
-                    oldBlock.type = Material.AIR
-                }
+                flagCleanupHelper.cleanupFlag(
+                    world = oldWorld,
+                    supportX = oldFront.centerX,
+                    supportY = oldFront.centerY - 1,
+                    supportZ = oldFront.centerZ,
+                    bannerX = oldFront.centerX,
+                    bannerY = oldFront.centerY,
+                    bannerZ = oldFront.centerZ,
+                    flagId = "front/$ownerUuid",
+                    manager = manager,
+                    dbDeleteFn = {}
+                )
             }
         }
 

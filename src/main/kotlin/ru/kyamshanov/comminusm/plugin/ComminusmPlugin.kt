@@ -105,7 +105,7 @@ class ComminusmPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(ExplosionListener(orderService, workFrontService, flagStabilityManager), this)
 
         // Register front flag listener
-        server.pluginManager.registerEvents(FrontFlagListener(workFrontService, orderService, this, flagActivationHelper, flagStabilityManager, pluginConfig), this)
+        server.pluginManager.registerEvents(FrontFlagListener(workFrontService, orderService, this, flagActivationHelper, flagCleanupHelper, flagStabilityManager, pluginConfig), this)
 
         // Register flag deletion confirmation listener
         server.pluginManager.registerEvents(FlagDeletionConfirmListener(orderService, workFrontService), this)
