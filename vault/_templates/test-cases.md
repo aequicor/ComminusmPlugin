@@ -9,19 +9,16 @@ triggers:
   - "test run"
 confidence: high
 source: human
-updated: 2026-05-05T07:41:32Z
+updated: 2026-05-05
 ---
 
 # Test Cases: [Feature Name]
 
-**Module:** [module-name]
-**Feature:** [feature-slug]
-**Generated:** YYYY-MM-DD by @QA (Phase=REQUIREMENTS)
-**Last updated:** YYYY-MM-DD
-**Source:** requirements + corner-case register + spec
-**Spec:** `[[reference/<module>/spec/<feature>]]`
-**Requirements:** `[[concepts/<module>/requirements/<feature>]]`
-**Corner cases register:** `[[concepts/<module>/plans/<feature>-corner-cases]]`
+**Module:** [module-name]  
+**Feature:** [feature-slug]  
+**Generated:** YYYY-MM-DD by @QA  
+**Spec:** `[[reference/<module>/spec/<feature>]]`  
+**Requirements:** `[[concepts/<module>/requirements/<feature>]]`  
 
 ---
 
@@ -31,9 +28,9 @@ This is a **living document**. Multiple parties update it over time:
 
 - **@QA** (REQUIREMENTS phase) — creates this file from requirements + corner cases. All Status default to `PEND`.
 - **@QA** (IMPLEMENTATION phase, DRAFT/FINAL) — appends impl-level TCs (unit-edge, integration, error). Append-only.
-- **@TestRunner** — runs interactive walkthrough (mode `EXECUTE`), updates Status, allocates DEF-ids in Defects log.
+- **@TestRunner** — runs interactive walkthrough (mode `EXECUTE`), updates the table (Status, Notes), allocates DEF-ids in Defects log.
 - **@BugFixer** — after a fix, updates Status `FAIL → PASS` and Defects log `OPEN → FIXED` for the row it fixed.
-- **PO (you)** — can edit any cell directly. Mark Status, add Notes, append a new TC row when a new bug or scenario is discovered. `/fix` will pick up your edits automatically.
+- **Manual tester** — writes the TC sections below the table (Pre-requirements, Steps, As is, To be). Can also edit Notes in the table to record bug root cause or remarks.
 
 `/fix` reads this file, scans for `FAIL` and `PEND` rows, asks PO which to fix, dispatches @BugFixer per chosen TC, then dispatches @TestRunner (RERUN) to verify.
 
@@ -49,49 +46,41 @@ This is a **living document**. Multiple parties update it over time:
 
 ---
 
-## Environment
+> Filled by @TestRunner (AI agent). Do not edit manually — except the **Notes** column, where the manual tester records bug root cause or remarks.
 
-| Parameter | Value |
-|-----------|-------|
-| Environment | [dev / staging / prod] |
-| Version / Build | [commit hash or version] |
-| Tester | [PO name or "automated"] |
+| ID    | Status | Notes | Type | Pre-requirements | To be |
+|-------|--------|-------|------|------------------|-------|
+| TC-01 | PEND   | —     |      |                  |       |
 
 ---
 
-## Test cases
+> Everything below is written by the manual tester. The `TC-00: Template`
+> block stays as-is — copy and fill it in for individual TCs only when you
+> want to elaborate (typically a failing case). AI agents must NOT duplicate
+> the table by generating `TC-NN` sections automatically.
 
-| ID    | Pri  | Type        | Source     | Preconditions | Steps                          | Expected            | Status | Notes | Bug Ref |
-|-------|------|-------------|------------|---------------|--------------------------------|---------------------|--------|-------|---------|
-| TC-01 | HIGH | happy path  | US-1       | logged in     | 1. open /home  2. click Sign-in | dashboard renders  | PEND  |       |         |
-| TC-02 | HIGH | corner case | CC-3 Crit  | n/a           | 1. POST /login {email:"a+b@x"}  | 200, valid session  | PEND  |       |         |
-| TC-03 | MED  | acceptance  | AC-2       | seeded DB     | 1. ...                         | ...                 | PEND  |       |         |
+---
 
-> **Type values:** `happy path | acceptance | corner case | error | security | performance | unit-edge | integration | manual`
->
-> **Source values (REQUIREMENTS phase):** `US-N` (user story), `AC-N` (acceptance criterion), `CC-N <Severity>` (corner case row).
-> **Source values (IMPLEMENTATION phase):** `spec`. **Source values (PO-added):** `PO-added`. **Source values (bug-fix added):** `bug-fix`.
+## TC-00: Template
+
+**Pre-requirements:**
+
+* pre-requirement number 1
+
+**Steps:**
+
+1. step number 1
+
+**As is:**
+as is
+
+**To be:**
+what to be
 
 ---
 
 ## Defects log
 
-> Append-only. Each row links back to a TC via the `Bug Ref` column above. `/fix` and @BugFixer maintain this section automatically.
+> Append-only. Each row links back to a TC via the Notes column above. `/fix` and @BugFixer maintain this section automatically.
 
-- **DEF-001** — [HIGH] *<one-line summary>*. TC-02. Status: OPEN. Reported: YYYY-MM-DD by @TestRunner.
-- **DEF-002** — [MED] *<summary>*. TC-05. Status: FIXED. Fixed by @BugFixer in commit `abc1234`. Verification pending.
-
----
-
-## Coverage summary (optional, auto-computed by @TestRunner SCAN)
-
-| Metric | Value |
-|--------|-------|
-| Total TCs | 0 |
-| PEND | 0 |
-| PASS | 0 |
-| FAIL | 0 |
-| SKIP | 0 |
-| Pass rate | 0% |
-| Defects OPEN | 0 |
-| Defects VERF | 0 |
+- **DEF-001** — [HIGH] *<one-line summary>*. TC-NN. Status: OPEN. Reported: YYYY-MM-DD by @TestRunner.
