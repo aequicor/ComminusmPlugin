@@ -59,6 +59,30 @@ class WorkFrontRepository(private val conn: Connection) {
         stmt.close()
     }
 
+    fun findAllActivated(): List<WorkFront> {
+        val stmt = conn.prepareStatement(
+            "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts"
+        )
+        val rs = stmt.executeQuery()
+        val result = mutableListOf<WorkFront>()
+        while (rs.next()) {
+            result.add(
+                WorkFront(
+                    ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                    centerWorld = rs.getString("center_world"),
+                    centerX = rs.getInt("center_x"),
+                    centerY = rs.getInt("center_y"),
+                    centerZ = rs.getInt("center_z"),
+                    radius = rs.getInt("radius"),
+                    createdAt = rs.getString("created_at")
+                )
+            )
+        }
+        rs.close()
+        stmt.close()
+        return result
+    }
+
     fun findAllInWorld(world: String): List<WorkFront> {
         val stmt = conn.prepareStatement(
             "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE center_world = ?"

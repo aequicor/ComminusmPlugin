@@ -11,12 +11,14 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import ru.kyamshanov.comminusm.gui.GuiUtils
+import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 
 class BlockListener(
     private val orderService: OrderService,
-    private val workFrontService: WorkFrontService?
+    private val workFrontService: WorkFrontService?,
+    private val manager: FlagStabilityManager? = null
 ) : Listener {
 
     private fun hasOrder(uuid: UUID): Boolean = orderService.findByOwner(uuid) != null

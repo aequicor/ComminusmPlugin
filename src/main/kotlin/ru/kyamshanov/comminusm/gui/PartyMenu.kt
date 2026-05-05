@@ -3,22 +3,27 @@ package ru.kyamshanov.comminusm.gui
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataType
+import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.listener.FlagItemProtectionListener
 import ru.kyamshanov.comminusm.service.WorkdaysService
+import java.util.Base64
 
 class PartyMenu(
     private val config: PluginConfig,
     private val workdaysService: WorkdaysService?,
     private val orderService: OrderService?,
-    private val workFrontService: WorkFrontService?
+    private val workFrontService: WorkFrontService?,
+    private val plugin: Plugin? = null,
 ) : Listener {
     private val orderSlot = 20
     private val frontSlot = 24
@@ -26,7 +31,7 @@ class PartyMenu(
     private val balanceSlot = 40
 
     fun open(player: Player) {
-        val inv = Bukkit.createInventory(null, 45, Component.text("\u00a78\u041f\u0430\u0440\u0442\u0438\u0439\u043d\u044b\u0435 \u0443\u0441\u043b\u0443\u0433\u0438"))
+        val inv = Bukkit.createInventory(null, 45, Component.text("§8Партийные услуги"))
         GuiUtils.fillBorder(inv)
 
         val uuid = player.uniqueId
@@ -34,37 +39,38 @@ class PartyMenu(
         val hasFront = workFrontService?.getByOwner(uuid) != null
 
         inv.setItem(orderSlot, GuiUtils.namedItem(
-            if (hasOrder) "\u00a7e\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u041e\u0440\u0434\u0435\u0440\u043e\u043c" else "\u00a7a\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u041e\u0440\u0434\u0435\u0440",
+            if (hasOrder) "§eУправление Ордером" else "§aПолучить Ордер",
             Material.WHITE_BANNER,
-            if (hasOrder) "\u00a77\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0432\u0430\u0448\u0435\u0439 \u0436\u0438\u043b\u043f\u043b\u043e\u0449\u0430\u0434\u044c\u044e" else "\u00a77\u041f\u0430\u0440\u0442\u0438\u044f \u0432\u044b\u0434\u0435\u043b\u0438\u0442 \u0432\u0430\u043c \u0436\u0438\u043b\u043f\u043b\u043e\u0449\u0430\u0434\u044c"
+            if (hasOrder) "§7Управление вашей жилплощадью" else "§7Партия выделит вам жилплощадь"
         ))
 
         inv.setItem(frontSlot, GuiUtils.namedItem(
-            "\u00a76\u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0439 \u0444\u0440\u043e\u043d\u0442",
+            "§6Трудовой фронт",
             Material.NETHERITE_PICKAXE,
-            if (hasFront) "\u00a77\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0442\u0440\u0443\u0434\u043e\u0432\u044b\u043c \u0444\u0440\u043e\u043d\u0442\u043e\u043c" else "\u00a77\u0410\u043a\u0442\u0438\u0432\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0442\u0440\u0443\u0434\u043e\u0432\u043e\u0439 \u0444\u0440\u043e\u043d\u0442"
+            if (hasFront) "§7Управление трудовым фронтом" else "§7Активировать трудовой фронт"
         ))
 
         inv.setItem(treasurySlot, GuiUtils.namedItem(
-            "\u00a7e\u041a\u0430\u0437\u043d\u0430",
+            "§eКазна",
             Material.CHEST,
-            "\u00a77\u0421\u0434\u0430\u0442\u044c \u0440\u0435\u0441\u0443\u0440\u0441\u044b \u0432 \u043e\u0431\u0449\u0443\u044e \u043a\u0430\u0437\u043d\u0443"
+            "§7Сдать ресурсы в общую казну"
         ))
 
         val balance = workdaysService?.getBalance(uuid) ?: 0
         inv.setItem(balanceSlot, GuiUtils.namedItem(
-            "\u00a7f\u0422\u0440\u0443\u0434\u043e\u0434\u043d\u0438: \u00a7e$balance",
+            "§fТрудодни: §e$balance",
             Material.EXPERIENCE_BOTTLE,
-            "\u00a77\u0412\u0430\u0448 \u0442\u0440\u0443\u0434\u043e\u0432\u043e\u0439 \u0431\u0430\u043b\u0430\u043d\u0441"
+            "§7Ваш трудовой баланс"
         ))
 
         player.openInventory(inv)
     }
 
     @EventHandler
+    @Suppress("ReturnCount", "LongMethod", "CyclomaticComplexMethod", "NestedBlockDepth")
     fun onClick(event: InventoryClickEvent) {
         val title = event.view.title().toString()
-        if (!title.contains("\u041f\u0430\u0440\u0442\u0438\u0439\u043d\u044b\u0435 \u0443\u0441\u043b\u0443\u0433\u0438")) return
+        if (!title.contains("Партийные услуги")) return
         event.isCancelled = true
 
         val player = event.whoClicked as Player
@@ -85,21 +91,21 @@ class PartyMenu(
                         if (newOrder != null) {
                             val flag = ItemStack(Material.WHITE_BANNER)
                             val meta = flag.itemMeta
-                            meta.displayName(Component.text("\u00a7a\u0424\u043b\u0430\u0433 \u041e\u0440\u0434\u0435\u0440\u0430 \u2116${newOrder.id}"))
+                            meta.displayName(Component.text("§aФлаг Ордера №${newOrder.id}"))
                             meta.lore(listOf(
-                                Component.text("\u00a77\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u0434\u043b\u044f \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438 \u041e\u0440\u0434\u0435\u0440\u0430"),
-                                Component.text("\u00a77\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446: \u00a7e${player.name}")
+                                Component.text("§7Установите флаг для активации Ордера"),
+                                Component.text("§7Владелец: §e${player.name}")
                             ))
                             flag.itemMeta = meta
                             if (player.inventory.firstEmpty() == -1) {
-                                player.sendMessage(Component.text("\u00a7c\u0422\u043e\u0432\u0430\u0440\u0438\u0449, \u043e\u0441\u0432\u043e\u0431\u043e\u0434\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b 1 \u0441\u043b\u043e\u0442 \u0432 \u0438\u043d\u0432\u0435\u043d\u0442\u0430\u0440\u0435 \u0434\u043b\u044f \u0444\u043b\u0430\u0433\u0430 \u041e\u0440\u0434\u0435\u0440\u0430!"))
+                                player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Ордера!"))
                             } else {
                                 player.inventory.addItem(flag)
-                                player.sendMessage(Component.text("\u00a7a\u262d \u041f\u0430\u0440\u0442\u0438\u044f \u0432\u044b\u0434\u0435\u043b\u0438\u043b\u0430 \u0432\u0430\u043c \u0436\u0438\u043b\u043f\u043b\u043e\u0449\u0430\u0434\u044c! \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u043d\u0430 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0439 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0438."))
+                                player.sendMessage(Component.text("§a☭ Партия выделила вам жилплощадь! Установите флаг на выбранной территории."))
                             }
                             player.closeInventory()
                         } else {
-                            player.sendMessage(Component.text("\u00a7c\u0423 \u0432\u0430\u0441 \u0443\u0436\u0435 \u0435\u0441\u0442\u044c \u041e\u0440\u0434\u0435\u0440, \u0442\u043e\u0432\u0430\u0440\u0438\u0449."))
+                            player.sendMessage(Component.text("§cУ вас уже есть Ордер, товарищ."))
                         }
                     }
                 }
@@ -111,28 +117,33 @@ class PartyMenu(
                     if (front != null) {
                         FrontMenu(workFrontService).open(player, front)
                     } else {
+                        // Check for pending_flag PDC marker before issuing a new flag
+                        if (tryDeliverPendingFrontFlag(player)) {
+                            player.closeInventory()
+                            return
+                        }
                         if (FlagItemProtectionListener.hasFrontFlagInInventory(player)) {
                             player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."))
                             return
                         }
                         val flag = ItemStack(Material.RED_BANNER)
                         val meta = flag.itemMeta
-                        meta.displayName(Component.text("\u00a76\u0424\u043b\u0430\u0433 \u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0433\u043e \u0424\u0440\u043e\u043d\u0442\u0430"))
+                        meta.displayName(Component.text("§6Флаг Трудового Фронта"))
                         meta.lore(listOf(
-                            Component.text("\u00a77\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u0434\u043b\u044f \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438"),
-                            Component.text("\u00a77\u0420\u0430\u0434\u0438\u0443\u0441 \u0434\u043e\u0431\u044b\u0447\u0438: \u00a7e${config.frontRadius} \u00a77\u0431\u043b\u043e\u043a\u043e\u0432")
+                            Component.text("§7Установите флаг для активации"),
+                            Component.text("§7Радиус добычи: §e${config.frontRadius} §7блоков")
                         ))
                         flag.itemMeta = meta
                         if (player.inventory.firstEmpty() == -1) {
-                            player.sendMessage(Component.text("\u00a7c\u0422\u043e\u0432\u0430\u0440\u0438\u0449, \u043e\u0441\u0432\u043e\u0431\u043e\u0434\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b 1 \u0441\u043b\u043e\u0442 \u0432 \u0438\u043d\u0432\u0435\u043d\u0442\u0430\u0440\u0435 \u0434\u043b\u044f \u0444\u043b\u0430\u0433\u0430 \u0424\u0440\u043e\u043d\u0442\u0430!"))
+                            player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Фронта!"))
                         } else {
                             player.inventory.addItem(flag)
-                            player.sendMessage(Component.text("\u00a76\u262d \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0444\u043b\u0430\u0433 \u0434\u043b\u044f \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438 \u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0433\u043e \u0424\u0440\u043e\u043d\u0442\u0430, \u0442\u043e\u0432\u0430\u0440\u0438\u0449!"))
+                            player.sendMessage(Component.text("§6☭ Установите флаг для активации Трудового Фронта, товарищ!"))
                         }
                         player.closeInventory()
                     }
                 } else {
-                    player.sendMessage(Component.text("\u00a7c\u0422\u0440\u0443\u0434\u043e\u0432\u043e\u0439 \u0444\u0440\u043e\u043d\u0442 \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d, \u0442\u043e\u0432\u0430\u0440\u0438\u0449."))
+                    player.sendMessage(Component.text("§cТрудовой фронт временно недоступен, товарищ."))
                 }
             }
             treasurySlot -> {
@@ -140,6 +151,127 @@ class PartyMenu(
                 if (wds != null) {
                     TreasuryMenu(config, wds).open(player)
                 }
+            }
+        }
+    }
+
+    /**
+     * Scans all loaded chunks for a pending_flag PDC marker belonging to [player].
+     * If found and the payload is valid, delivers the flag item to the player's inventory.
+     *
+     * @return `true` if a pending marker was found (delivery succeeded or inventory full);
+     *         `false` if no pending marker exists for this player.
+     */
+    @Suppress("ReturnCount")
+    private fun tryDeliverPendingFrontFlag(player: Player): Boolean {
+        val pluginInstance = plugin ?: return false
+        val ownerUuid = player.uniqueId
+        val pendingKeyStr = "pending_flag/front/$ownerUuid"
+
+        for (world in Bukkit.getWorlds()) {
+            for (chunk in world.loadedChunks) {
+                val pdc = chunk.persistentDataContainer
+                val pendingKey = NamespacedKey(pluginInstance, pendingKeyStr)
+                val payload = pdc.get(pendingKey, PersistentDataType.STRING) ?: continue
+
+                // Found a pending marker — attempt delivery
+                val flagItem = parsePendingFlagPayload(payload, player, pluginInstance) ?: run {
+                    // Malformed payload — delete it and fall through to new flag issuance
+                    pdc.remove(pendingKey)
+                    pluginInstance.logger.severe(
+                        "Deleted malformed pending_flag payload for ${player.name} in chunk ${chunk.x},${chunk.z}"
+                    )
+                    return false
+                }
+
+                if (player.inventory.firstEmpty() < 0) {
+                    player.sendMessage(
+                        Component.text(
+                            "§eОсвободите место в инвентаре, чтобы получить ваш флаг."
+                        )
+                    )
+                    // Marker still exists but cannot deliver — block new flag issuance
+                    return true
+                }
+
+                player.inventory.addItem(flagItem)
+                pdc.remove(pendingKey)
+                player.sendMessage(
+                    Component.text(
+                        "§6☭ Ваш флаг Трудового Фронта возвращён!"
+                    )
+                )
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Parses the [payload] string stored in a pending_flag PDC entry.
+     *
+     * Supported formats:
+     * - `SENTINEL:FRONT:` — re-creates a standard front flag item from config.
+     * - `ITEM:<base64>` — deserializes a previously serialized ItemStack.
+     *
+     * @return the reconstructed [ItemStack], or `null` if the payload is malformed.
+     */
+    @Suppress("TooGenericExceptionCaught", "ReturnCount")
+    private fun parsePendingFlagPayload(
+        payload: String,
+        player: Player,
+        pluginInstance: Plugin,
+    ): ItemStack? {
+        val colonIdx = payload.indexOf(':')
+        if (colonIdx < 0) {
+            pluginInstance.logger.severe("Malformed pending_flag payload for ${player.name}: no colon separator")
+            return null
+        }
+        return when (val type = payload.substring(0, colonIdx)) {
+            "SENTINEL" -> {
+                val rest = payload.substring(colonIdx + 1)
+                when {
+                    rest.startsWith("FRONT:") -> {
+                        val flag = ItemStack(Material.RED_BANNER)
+                        val meta = flag.itemMeta
+                        meta.displayName(
+                            Component.text("§6Флаг Трудового Фронта")
+                        )
+                        meta.lore(listOf(
+                            Component.text("§7Установите в новом месте"),
+                            Component.text(
+                                "§7Радиус добычи: §e${config.frontRadius} §7блоков"
+                            ),
+                        ))
+                        flag.itemMeta = meta
+                        flag
+                    }
+                    else -> {
+                        pluginInstance.logger.severe(
+                            "Unknown SENTINEL type in pending_flag for ${player.name}: $rest"
+                        )
+                        null
+                    }
+                }
+            }
+            "ITEM" -> {
+                val b64 = payload.substring(colonIdx + 1)
+                if (b64.isEmpty()) {
+                    pluginInstance.logger.severe("Empty ITEM payload for ${player.name}")
+                    return null
+                }
+                try {
+                    ItemStack.deserializeBytes(Base64.getDecoder().decode(b64))
+                } catch (e: Exception) {
+                    pluginInstance.logger.severe(
+                        "Failed to deserialize pending flag for ${player.name}: ${e.message}"
+                    )
+                    null
+                }
+            }
+            else -> {
+                pluginInstance.logger.severe("Unknown pending_flag type for ${player.name}: $type")
+                null
             }
         }
     }

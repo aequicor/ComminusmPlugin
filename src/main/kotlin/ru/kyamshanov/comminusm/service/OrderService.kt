@@ -2,18 +2,23 @@ package ru.kyamshanov.comminusm.service
 
 import org.bukkit.Location
 import ru.kyamshanov.comminusm.config.OrderLevelConfig
+import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
+import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
 import ru.kyamshanov.comminusm.storage.OrderRepository
 import java.util.UUID
 import kotlin.math.abs
 
+@Suppress("LongParameterList")
 class OrderService(
     private val orderRepository: OrderRepository,
     private val levels: List<OrderLevelConfig>,
     private val workdaysService: WorkdaysService?,
     private val minDistanceBetweenCenters: Int,
-    private val chunkCacheManager: ChunkCacheManager? = null
+    private val chunkCacheManager: ChunkCacheManager? = null,
+    private val flagCleanupHelper: FlagCleanupHelper? = null,
+    private val flagStabilityManager: FlagStabilityManager? = null,
 ) {
 
     fun create(uuid: UUID): Order? {
@@ -88,11 +93,37 @@ class OrderService(
         val order = orderRepository.findByOwner(uuid)
         if (order != null && order.centerWorld != null) {
             val world = org.bukkit.Bukkit.getWorld(order.centerWorld)
+            val helper = flagCleanupHelper
+            val manager = flagStabilityManager
+            if (world != null && helper != null && manager != null) {
+                val supportY = order.centerY - 1
+                val chunk = world.getChunkAt(order.centerX shr CHUNK_SHIFT, order.centerZ shr CHUNK_SHIFT)
+                chunkCacheManager?.removeOrderChunk(chunk)
+                helper.cleanupFlag(
+                    world = world,
+                    supportX = order.centerX,
+                    supportY = supportY,
+                    supportZ = order.centerZ,
+                    bannerX = order.centerX,
+                    bannerY = order.centerY,
+                    bannerZ = order.centerZ,
+                    flagId = "order/$uuid",
+                    manager = manager,
+                    dbDeleteFn = { orderRepository.deleteByOwner(uuid) },
+                )
+                return
+            }
+            // Fallback: no cleanup helper — clean old chunk cache, delete DB only
             if (world != null) {
-                val chunk = world.getChunkAt(order.centerX shr 4, order.centerZ shr 4)
+                val chunk = world.getChunkAt(order.centerX shr CHUNK_SHIFT, order.centerZ shr CHUNK_SHIFT)
                 chunkCacheManager?.removeOrderChunk(chunk)
             }
         }
+        // Not activated or no world — DB-only delete
         orderRepository.deleteByOwner(uuid)
+    }
+
+    private companion object {
+        const val CHUNK_SHIFT = 4
     }
 }

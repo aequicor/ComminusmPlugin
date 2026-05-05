@@ -30,3 +30,11 @@ private-system:
       DIAMOND: 40
       OAK_LOG: 4
       DIRT: 1
+flag:
+  supportBlockMaterial: BEDROCK
+  minAirAbove: 2
+  titleFormat: "§6{type} — §f{player}"
+  maxPerChunk: 50
+  allowedWorlds:
+    - world
+  startupScanBatchSize: 10

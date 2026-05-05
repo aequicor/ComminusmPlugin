@@ -96,6 +96,32 @@ class OrderRepository(private val conn: Connection) {
         return result
     }
 
+    fun findAllActivated(): List<Order> {
+        val stmt = conn.prepareStatement(
+            "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE center_world IS NOT NULL"
+        )
+        val rs = stmt.executeQuery()
+        val result = mutableListOf<Order>()
+        while (rs.next()) {
+            result.add(
+                Order(
+                    id = rs.getLong("id"),
+                    ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                    level = rs.getInt("level"),
+                    centerWorld = rs.getString("center_world"),
+                    centerX = rs.getInt("center_x"),
+                    centerY = rs.getInt("center_y"),
+                    centerZ = rs.getInt("center_z"),
+                    radius = rs.getInt("radius"),
+                    createdAt = rs.getString("created_at")
+                )
+            )
+        }
+        rs.close()
+        stmt.close()
+        return result
+    }
+
     fun deleteByOwner(uuid: UUID) {
         val stmt = conn.prepareStatement("DELETE FROM orders WHERE owner_uuid = ?")
         stmt.setString(1, uuid.toString())

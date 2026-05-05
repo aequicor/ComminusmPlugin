@@ -1,6 +1,8 @@
 package ru.kyamshanov.comminusm.config
 
+import org.bukkit.Material
 import org.bukkit.configuration.file.FileConfiguration
+import ru.kyamshanov.comminusm.plugin.ComminusmPlugin
 
 data class OrderLevelConfig(val level: Int, val radius: Int, val cost: Int)
 
@@ -39,7 +41,58 @@ class PluginConfig(private val config: FileConfiguration) {
         }
     }
 
+    val flagSupportBlockMaterial: Material
+        get() {
+            val name = config.getString("flag.supportBlockMaterial", "BEDROCK") ?: "BEDROCK"
+            return runCatching { Material.valueOf(name) }
+                .getOrElse {
+                    ComminusmPlugin.getInstance().logger.severe(
+                        "flag.supportBlockMaterial '$name' is invalid — falling back to BEDROCK"
+                    )
+                    Material.BEDROCK
+                }
+        }
+
+    val flagMinAirAbove: Int
+        get() = config.getInt("flag.minAirAbove", DEFAULT_FLAG_MIN_AIR_ABOVE).coerceAtLeast(MIN_FLAG_AIR_ABOVE)
+
+    val flagTitleFormat: String
+        get() = config.getString("flag.titleFormat", "§6{type} — §f{player}") ?: "§6{type} — §f{player}"
+
+    val flagMaxPerChunk: Int
+        get() {
+            val v = config.getInt("flag.maxPerChunk", DEFAULT_FLAG_MAX_PER_CHUNK)
+            if (v <= 0) {
+                ComminusmPlugin.getInstance().logger.warning(
+                    "flag.maxPerChunk must be ≥ 1, got $v — using default $DEFAULT_FLAG_MAX_PER_CHUNK"
+                )
+                return DEFAULT_FLAG_MAX_PER_CHUNK
+            }
+            return v
+        }
+
+    val flagAllowedWorlds: Set<String>
+        get() {
+            val list = config.getStringList("flag.allowedWorlds")
+            if (list.isEmpty()) {
+                ComminusmPlugin.getInstance().logger.warning(
+                    "flag.allowedWorlds is empty — flag placement is disabled in all worlds"
+                )
+            }
+            return list.toSet()
+        }
+
+    val flagStartupScanBatchSize: Int
+        get() = config.getInt("flag.startupScanBatchSize", DEFAULT_FLAG_STARTUP_SCAN_BATCH_SIZE)
+            .coerceAtLeast(MIN_FLAG_STARTUP_SCAN_BATCH_SIZE)
+
     companion object {
+        const val DEFAULT_FLAG_MIN_AIR_ABOVE = 2
+        const val MIN_FLAG_AIR_ABOVE = 1
+        const val DEFAULT_FLAG_MAX_PER_CHUNK = 50
+        const val DEFAULT_FLAG_STARTUP_SCAN_BATCH_SIZE = 10
+        const val MIN_FLAG_STARTUP_SCAN_BATCH_SIZE = 1
+
         fun defaultOrderLevels(): List<OrderLevelConfig> = listOf(
             OrderLevelConfig(1, 2, 0),
             OrderLevelConfig(2, 3, 30),
