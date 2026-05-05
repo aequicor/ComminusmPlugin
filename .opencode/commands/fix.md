@@ -1,4 +1,4 @@
----
+﻿---
 description: Fix failing/pending test cases in the current feature's test-cases.md. Argument is optional — without it, scans and asks PO. With a TC-id, fixes that one. With free-form text, creates a new TC and fixes it.
 ---
 
@@ -42,7 +42,7 @@ DEBUG    — task @debugger with TC Steps + Notes + environment. Output: BUG-NNN
 DISPATCH — task @BugFixer:
              TC: <TC-id>
              Test-cases file: <path>
-             Bug Ref: <DEF-id or empty>
+             DEF-id: <DEF-id from Notes column, or empty>
            @BugFixer: ANALYZE → REPRODUCE (failing test) → FIX → REGRESSION TEST →
              @CodeReviewer → BUILD → update test-cases.md (Status FAIL→PASS, Defects log OPEN→FIXED)
              → commit → write report to vault/guidelines/<module>/reports/<bug-name>.md.

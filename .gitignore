@@ -52,3 +52,6 @@ bin/
 /app/byCompose/desktop/app/database/mission_chat.db-wal
 /run/
 /.env
+
+# ai-agent-kit: local session pointer — not shared, each developer has their own
+.planning/CURRENT.md

@@ -7,8 +7,6 @@
 
 ## Learned Build Commands
 
-<!-- Agents: append build commands you discover here. Format: "command — what it does — date" -->
-
 | Command | Purpose | Discovered |
 |---------|---------|------------|
 | `./gradlew compileKotlin` | Quick compile | 2026-05-05T07:41:32Z |
@@ -19,27 +17,21 @@
 
 ## Debugging Insights
 
-<!-- Agents: append debugging learnings here. Format: "## problem — root_cause: file:line — fix: summary — date" -->
-
 ---
 
 ## API Pitfalls
-
-<!-- Agents: append library API surprises here. -->
-<!-- Format: "library version: api_that_did_not_work → correct_api — date" -->
 
 ---
 
 ## Useful Patterns
 
-<!-- Agents: append reusable code patterns discovered during work. -->
-
 ---
 
 ## Session Continuity
 
-<!-- Agents: write the last active task here before completing a session. -->
+- Last task: feat-privates-orders-fronts (CLOSED)
+- Last checkpoint: 2026-05-05T13:00:00Z
+- Active plan: none
 
-- Last task: (none yet)
-- Last checkpoint: 2026-05-05T07:41:32Z
-- Active plan: (none yet)
+### Test Coverage Notes (2026-05-05)
+Feature "Privates — Orders and Fronts" has 70 manual test cases but only ~12 are covered by existing unit tests (OrderServiceTest, OrderRepositoryTest, WorkFrontServiceTest, WorkFrontRepositoryTest). The remaining 58 test cases require a running Paper server, GUI interaction, chunk PDC state, or explosions — no automated tests exist for these. When adding coverage, target: listeners (BlockListener, OrderFlagListener, FrontFlagListener, ExplosionListener), GUI menus (PartyMenu, OrderMenu, FrontMenu, TreasuryMenu, AdminMenu), and chunk cache manager.

@@ -1,7 +1,7 @@
----
+﻿---
 description: Orchestrator. Single entry point for PO. Plans, dispatches, writes checkpoint. Does not write code.
 mode: primary
-model: ollama-cloud/kimi-k2.6:cloud
+model: ollama_cloud/deepseek-v4-pro:cloud
 temperature: 0.2
 steps: 100
 permission:
@@ -259,7 +259,7 @@ PO can edit it directly — flip a Status to FAIL, add a new TC row, edit Notes 
              CHECKPOINT: .planning/tasks/<active_task>.md.
 
 3. DISPATCH BugFixer — task @BugFixer. Pass:
-             - Mode A input: TC-id + test-cases file path + Bug Ref (DEF-id, may be empty).
+             - Mode A input: TC-id + test-cases file path + DEF-id (extracted from Notes column, may be empty).
              @BugFixer fixes, runs CodeReviewer, builds, updates test-cases.md
              (Status FAIL→PASS, Defects log OPEN→FIXED), commits, writes report.
              Wait for HAND OFF result with TC-id, DEF-id, report path.

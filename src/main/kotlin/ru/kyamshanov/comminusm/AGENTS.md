@@ -1,16 +1,16 @@
-# AGENTS.md — plugin / ComminusmPlugin
+# AGENTS.md — comminusm / ComminusmPlugin
 
-> Nested module-level agent instructions for `plugin`.
+> Nested module-level agent instructions for `comminusm`.
 > This file is closest to `src/main/kotlin/ru/kyamshanov/comminusm/` — it takes precedence over the root `AGENTS.md`.
 
 ---
 
-## Module: plugin
+## Module: comminusm
 
-**Responsibility:** Minecraft Paper server plugin — communism satire mechanics
+**Responsibility:** Minecraft Paper plugin — communism-themed gameplay mechanics
 **Source root:** `src/main/kotlin/ru/kyamshanov/comminusm/`
 **Test root:** `src/test/kotlin/ru/kyamshanov/comminusm/`
-**Gradle module:** `:`
+**Gradle:** (not a Gradle project)
 
 ---
 
@@ -18,32 +18,27 @@
 
 | Command | Purpose |
 |---------|---------|
-| `./gradlew compileKotlin` | Quick compile check |
-| `./gradlew test` | Run all tests |
-| `./gradlew detekt ktlintCheck` | Lint check |
+| `./gradlew` | Build project |
+| `./gradlew :[module]:test` | Run tests |
+| `./gradlew compileKotlin` | Quick compile |
 
 ---
 
 ## Module-Specific Conventions
 
-- Follow AGENTS.md conventions at project root.
-- Paper API: use Adventure components, not legacy ChatColor.
-- All database access via SQLite (parameterized queries only).
-- Use Bukkit schedulers or coroutines for async work — never block main thread.
+(use project-default conventions from root AGENTS.md)
 
 ---
 
 ## Module Dependencies
 
-- `io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT` — compileOnly
-- `org.jetbrains.kotlin:kotlin-stdlib-jdk8`
-- `org.xerial:sqlite-jdbc:3.46.0.0`
+- `comminusm`: (none specified)
 
 ---
 
 ## Module Docs
 
-Docs path: `vault/`
+Docs path: `vault/comminusm/`
 - `requirements/` — business requirements
 - `spec/` — technical specifications
 - `guidelines/` — patterns and rules
