@@ -1,0 +1,69 @@
+kit_version: "2.1.3"
+language_code: ru
+editors: [opencode]
+project:
+  name: "ComminusmPlugin"
+  description: "First communism plugin"
+vault_path: vault
+stack:
+  language: kotlin
+  profiles: [kotlin-gradle, ollama-cloud, paper-plugin, security-baseline]
+  build_command: "./gradlew"
+  compile_command: "./gradlew compileKotlin"
+  lint_command: "./gradlew detekt ktlintCheck"
+  test_command: "./gradlew :[module]:test"
+modules:
+  - name: comminusm
+    gradle_module: null
+    source_root: src/main/kotlin/ru/kyamshanov/comminusm/
+    test_root: src/test/kotlin/ru/kyamshanov/comminusm/
+    docs_path: vault/comminusm/
+    responsibility: "Minecraft Paper plugin — communism-themed gameplay mechanics"
+provider:
+  name: ollama-cloud
+  base_url: https://ollama.com
+  api_key_env: OLLAMA_API_KEY
+models:
+  default: kimi-k2.6:cloud
+  coder: deepseek-v4-flash:cloud
+  reviewer: deepseek-v4-pro:cloud
+  designer: glm-5.1:cloud
+  small: deepseek-v4-flash:cloud
+mcp:
+  context7: { enabled: false }
+  knowledge: { enabled: true, url: "http://localhost:8010/mcp" }
+  serena: { enabled: true }
+lsp:
+  enabled: true
+  command: kotlin-lsp
+  extensions: [".kt", ".kts"]
+ui:
+  framework: null
+  platforms: []
+  colors: []
+code_quality:
+  forbidden_patterns:
+    - "!! operator (use requireNotNull/checkNotNull with message)"
+    - "GlobalScope.launch (always use a scoped coroutine)"
+    - "Thread.sleep in suspend code (use delay())"
+    - "Empty catch blocks"
+    - "Bare Exception/Throwable catch (catch specific types)"
+    - "lateinit outside DI containers, fragments, and tests"
+    - "runBlocking outside main and tests"
+    - "Hardcoded secrets or API keys in code (use environment variables)"
+    - "SQL string concatenation with user input (use parameterized queries)"
+    - "Logging sensitive data (passwords, tokens, PII)"
+    - "TODO/FIXME in production code without a tracking entry (issue or DECISIONS.md)"
+    - "Disabled/commented-out tests without an explanation"
+    - "Catching Throwable/Exception generically and swallowing it"
+    - "Hardcoded Bukkit ChatColor strings — use MiniMessage or component API"
+    - "Using deprecated Bukkit API (use Paper-adventure components, not legacy ChatColors)"
+    - "Blocking the main server thread — schedule async with Bukkit schedulers or coroutines"
+    - "Storing Player references past event scope (causes memory leaks)"
+    - "Calling Bukkit API from non-main thread without scheduler bouncing back to main"
+    - "Long-running task in event handler (offload to BukkitScheduler.runTaskAsynchronously)"
+formatter:
+  enabled: true
+  name: "gradle-detekt-format"
+  command: ["./gradlew", "detekt", "--auto-correct"]
+  extensions: [".kt", ".kts"]
