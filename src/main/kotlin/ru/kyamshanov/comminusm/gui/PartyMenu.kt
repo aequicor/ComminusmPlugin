@@ -78,8 +78,8 @@ class PartyMenu(
                         OrderMenu(orderService, workdaysService, config, workFrontService).open(player, order)
                     } else {
                         if (FlagItemProtectionListener.hasOrderFlagInInventory(player)) {
-                            player.sendMessage(Component.text("§cУ вас уже есть флаг Ордера, товарищ! Установите его в мире."))
-                            return
+                            // Stale flag from a deleted order — remove it and create a new one
+                            FlagItemProtectionListener.removeAllOrderFlags(player)
                         }
                         val newOrder = orderService.create(player.uniqueId)
                         if (newOrder != null) {

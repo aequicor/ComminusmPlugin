@@ -107,6 +107,7 @@
 | TC-70 | PEND   | Обработка исключений `DatabaseManager.kt`                             | corner case | Файл SQLite становится недоступен (симулировать сбой)                                             | Корректная обработка: операция прервана, игрок уведомлён, данные не повреждены                        |
 | TC-User-01 | PASS | DEF-User-01: `WorkFrontService.deactivate()` не ломал блок баннера | bug | У игрока есть активированный Фронт | Старый баннер удалён из мира при деактивации Фронта |
 | TC-User-02 | PASS | DEF-User-02, DEF-User-03: `Component.contains()` style-sensitive — цветное имя не распознавалось | bug | У игрока есть активированный Ордер или Фронт | Флаг не выпадает при разрушении опорного блока посторонним игроком |
+| TC-User-03 | PASS | DEF-User-04: устаревший флаг с ID удалённого Ордера блокировал создание нового | bug | У игрока есть Ордер и он установлен; флаг удалён через GUI подтверждения | После удаления можно сразу создать новый Ордер (старый флаг не падает на землю, а если устаревший флаг уже в инвентаре — он автоматически удаляется) |
 
 ---
 
@@ -117,6 +118,7 @@
 | DEF-User-01 | FIXED | Old front flag not removed on Move (orphaned banner) | 2026-05-05 | 2026-05-05 |
 | DEF-User-02 | FIXED | Order/Front flag drops when support block broken (missing WHITE_BANNER check) | 2026-05-05 | 2026-05-05 |
 | DEF-User-03 | FIXED | Component.contains() style-sensitive — gold-colored flag name not recognized by plain-text comparison, causing getFlagSupportInfo() to miss the banner | 2026-05-05 | 2026-05-05 |
+| DEF-User-04 | FIXED | Obsolete WHITE_BANNER flag with deleted Order ID dropped on deletion; player auto-picks it up, hasOrderFlagInInventory() returns true, blocking new Order creation | 2026-05-05 | 2026-05-05 |
 
 ---
 

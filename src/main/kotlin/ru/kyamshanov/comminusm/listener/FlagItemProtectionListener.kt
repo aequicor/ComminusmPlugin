@@ -61,5 +61,16 @@ class FlagItemProtectionListener : Listener {
         fun hasFrontFlagInInventory(player: org.bukkit.entity.Player): Boolean {
             return player.inventory.contents.any { isFrontFlag(it) }
         }
+
+        @JvmStatic
+        fun removeAllOrderFlags(player: org.bukkit.entity.Player) {
+            val inv = player.inventory
+            for (i in 0 until inv.size) {
+                val item = inv.getItem(i)
+                if (isOrderFlag(item)) {
+                    inv.clear(i)
+                }
+            }
+        }
     }
 }
