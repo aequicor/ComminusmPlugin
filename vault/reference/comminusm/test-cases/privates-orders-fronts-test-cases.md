@@ -106,7 +106,7 @@
 | TC-69 | PEND   | `OrderService.kt:create` (разные владельцы)                           | corner case | Два игрока без Ордеров одновременно нажимают слот Ордера                                          | Каждый получает свой Ордер; конфликта нет, так как разные `owner_uuid`                                |
 | TC-70 | PEND   | Обработка исключений `DatabaseManager.kt`                             | corner case | Файл SQLite становится недоступен (симулировать сбой)                                             | Корректная обработка: операция прервана, игрок уведомлён, данные не повреждены                        |
 | TC-User-01 | PASS | DEF-User-01: `WorkFrontService.deactivate()` не ломал блок баннера | bug | У игрока есть активированный Фронт | Старый баннер удалён из мира при деактивации Фронта |
-| TC-User-02 | PASS | DEF-User-02: `isForeignFrontSupportBlock()` проверял только RED_BANNER | bug | У игрока есть активированный Ордер или Фронт | Флаг не выпадает при разрушении опорного блока посторонним игроком |
+| TC-User-02 | PASS | DEF-User-02, DEF-User-03: `Component.contains()` style-sensitive — цветное имя не распознавалось | bug | У игрока есть активированный Ордер или Фронт | Флаг не выпадает при разрушении опорного блока посторонним игроком |
 
 ---
 
@@ -116,6 +116,7 @@
 |----|--------|-------------|---------|-------|
 | DEF-User-01 | FIXED | Old front flag not removed on Move (orphaned banner) | 2026-05-05 | 2026-05-05 |
 | DEF-User-02 | FIXED | Order/Front flag drops when support block broken (missing WHITE_BANNER check) | 2026-05-05 | 2026-05-05 |
+| DEF-User-03 | FIXED | Component.contains() style-sensitive — gold-colored flag name not recognized by plain-text comparison, causing getFlagSupportInfo() to miss the banner | 2026-05-05 | 2026-05-05 |
 
 ---
 

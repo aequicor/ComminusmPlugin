@@ -3,6 +3,7 @@ package ru.kyamshanov.comminusm.listener
 import java.util.UUID
 import kotlin.math.abs
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -56,7 +57,7 @@ class BlockListener(
                 && front.centerX == loc.blockX && front.centerY == loc.blockY && front.centerZ == loc.blockZ) {
                 event.isCancelled = true
                 val frontRadius = front.radius
-                workFrontService?.deactivate(uuid)
+                checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
                 // Remove orphaned banner block from the world
                 event.block.type = Material.AIR
                 val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
@@ -83,15 +84,67 @@ class BlockListener(
             }
         }
 
+        // Check: is this block a support block for any order or front flag?
+        val supportInfo = getFlagSupportInfo(world, loc)
+        if (supportInfo != null) {
+            when (supportInfo.type) {
+                FlagSupportType.ORDER -> {
+                    val order = orderService.findAllInWorld(world.name).firstOrNull { o ->
+                        o.centerX == supportInfo.flagX &&
+                            o.centerY == supportInfo.flagY &&
+                            o.centerZ == supportInfo.flagZ
+                    }
+                    if (order != null) {
+                        if (order.ownerUuid == uuid) {
+                            // Owner breaking their own order flag support → show deletion confirmation
+                            event.isCancelled = true
+                            showDeleteOrderConfirmation(player, order.id)
+                        } else {
+                            // Foreign player breaking someone's order flag support → deny
+                            event.isCancelled = true
+                            player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Ордера, товарищ!"))
+                        }
+                        return
+                    }
+                }
+                FlagSupportType.FRONT -> {
+                    val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
+                    val front = allFronts.firstOrNull { f ->
+                        f.centerX == supportInfo.flagX &&
+                            f.centerY == supportInfo.flagY &&
+                            f.centerZ == supportInfo.flagZ
+                    }
+                    if (front != null) {
+                        if (front.ownerUuid == uuid) {
+                            // Owner breaking their own front flag support → deactivate front, drop flag
+                            event.isCancelled = true
+                            val frontRadius = front.radius
+                            checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
+                            event.block.type = Material.AIR
+                            val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
+                            val meta = flag.itemMeta
+                            meta.displayName(Component.text("§6Флаг Трудового Фронта"))
+                            meta.lore(listOf(
+                                Component.text("§7Установите в новом месте"),
+                                Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
+                            ))
+                            flag.itemMeta = meta
+                            world.dropItemNaturally(loc, flag)
+                            player.sendMessage(Component.text("§6☭ Трудовой Фронт удалён. Флаг подобран."))
+                        } else {
+                            // Foreign player breaking someone's front flag support → deny
+                            event.isCancelled = true
+                            player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
+                        }
+                        return
+                    }
+                }
+            }
+        }
+
         // 1. Check: inside player's OWN order? → ALLOW
         val myOrder = orderService.findByOwner(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
-            // Prevent breaking support block of someone else's front flag
-            if (isForeignFrontSupportBlock(world, loc, uuid)) {
-                event.isCancelled = true
-                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага, товарищ!"))
-                return
-            }
             return // allowed
         }
 
@@ -108,12 +161,6 @@ class BlockListener(
         // 3. Check: inside player's OWN front? → ALLOW
         val myFront = workFrontService?.getByOwner(uuid)
         if (myFront != null && myFront.centerWorld == world.name && isInsideFront(myFront, loc)) {
-            // Prevent breaking support block of someone else's front flag
-            if (isForeignFrontSupportBlock(world, loc, uuid)) {
-                event.isCancelled = true
-                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага, товарищ!"))
-                return
-            }
             return // allowed
         }
 
@@ -237,58 +284,87 @@ class BlockListener(
     }
 
     /**
-     * Check if the broken block is a support block of a foreign front flag or order flag.
-     * Both red banners (work fronts) and white banners (orders) are attached to a face
-     * of the target block. If the support block is destroyed, the banner drops silently
-     * without a BlockBreakEvent for the banner itself — so we must intercept at the support
-     * block level.
+     * Scan the 6 neighboring blocks for an attached banner that belongs to
+     * an order or work front. Uses DB lookup AND fallback display-name check
+     * for defense in depth.
      */
-    private fun isForeignFrontSupportBlock(
-        world: org.bukkit.World,
-        loc: org.bukkit.Location,
-        breakerUuid: UUID
-    ): Boolean {
-        // Check all 4 horizontal directions + top/bottom for an attached banner
+    private fun getFlagSupportInfo(world: org.bukkit.World, loc: org.bukkit.Location): FlagSupportInfo? {
         val directions = listOf(
-            loc.clone().add(1.0, 0.0, 0.0),
-            loc.clone().add(-1.0, 0.0, 0.0),
-            loc.clone().add(0.0, 0.0, 1.0),
-            loc.clone().add(0.0, 0.0, -1.0),
-            loc.clone().add(0.0, 1.0, 0.0),
-            loc.clone().add(0.0, -1.0, 0.0)
+            loc.clone().add(1.0, 0.0, 0.0), loc.clone().add(-1.0, 0.0, 0.0),
+            loc.clone().add(0.0, 0.0, 1.0), loc.clone().add(0.0, 0.0, -1.0),
+            loc.clone().add(0.0, 1.0, 0.0), loc.clone().add(0.0, -1.0, 0.0)
         )
         for (neighbor in directions) {
             val neighborBlock = world.getBlockAt(neighbor)
-            when (neighborBlock.type) {
-                Material.RED_BANNER -> {
-                    val allFronts = workFrontService?.getAllInWorld(world.name) ?: continue
-                    for (f in allFronts) {
-                        if (f.centerWorld == world.name
-                            && f.centerX == neighbor.blockX
-                            && f.centerY == neighbor.blockY
-                            && f.centerZ == neighbor.blockZ
-                            && f.ownerUuid != breakerUuid) {
-                            return true
-                        }
-                    }
-                }
-                Material.WHITE_BANNER -> {
-                    val allOrders = orderService.findAllInWorld(world.name)
-                    for (o in allOrders) {
-                        if (o.centerWorld == world.name
-                            && o.centerX == neighbor.blockX
-                            && o.centerY == neighbor.blockY
-                            && o.centerZ == neighbor.blockZ
-                            && o.ownerUuid != breakerUuid) {
-                            return true
-                        }
-                    }
-                }
-                else -> { /* not our concern */ }
+            val result = checkBannerNeighbor(world, neighborBlock)
+            if (result != null) return result
+        }
+        return null
+    }
+
+    /**
+     * If neighborBlock is a RED_BANNER or WHITE_BANNER attached to this support block,
+     * returns the flag's type and coordinates; otherwise returns null.
+     */
+    private fun checkBannerNeighbor(world: org.bukkit.World, neighborBlock: org.bukkit.block.Block): FlagSupportInfo? {
+        val bannerState = neighborBlock.state as? org.bukkit.block.Banner ?: return null
+        return when (neighborBlock.type) {
+            Material.RED_BANNER -> resolveFrontFlag(world, neighborBlock, bannerState)
+            Material.WHITE_BANNER -> resolveOrderFlag(world, neighborBlock, bannerState)
+            else -> null
+        }
+    }
+
+    private fun resolveFrontFlag(
+        world: org.bukkit.World, block: org.bukkit.block.Block, bannerState: org.bukkit.block.Banner
+    ): FlagSupportInfo? {
+        val customName = bannerState.customName()
+        if (customName != null) {
+            val plainText = PlainTextComponentSerializer.plainText().serialize(customName)
+            if (plainText.contains("Флаг Трудового Фронта") ||
+                plainText.contains("Трудового Фронта")) {
+                return FlagSupportInfo(FlagSupportType.FRONT, block.x, block.y, block.z)
             }
         }
-        return false
+        val allFronts = workFrontService?.getAllInWorld(world.name) ?: return null
+        for (f in allFronts) {
+            if (f.centerWorld == world.name && f.centerX == block.x && f.centerY == block.y && f.centerZ == block.z) {
+                return FlagSupportInfo(FlagSupportType.FRONT, f.centerX, f.centerY, f.centerZ)
+            }
+        }
+        return null
     }
+
+    private fun resolveOrderFlag(
+        world: org.bukkit.World, block: org.bukkit.block.Block, bannerState: org.bukkit.block.Banner
+    ): FlagSupportInfo? {
+        val customName = bannerState.customName()
+        if (customName != null) {
+            val plainText = PlainTextComponentSerializer.plainText().serialize(customName)
+            if (plainText.contains("Флаг Ордера") ||
+                plainText.contains("Ордера")) {
+                return FlagSupportInfo(FlagSupportType.ORDER, block.x, block.y, block.z)
+            }
+        }
+        val allOrders = orderService.findAllInWorld(world.name)
+        for (o in allOrders) {
+            if (o.centerWorld == world.name && o.centerX == block.x && o.centerY == block.y && o.centerZ == block.z) {
+                return FlagSupportInfo(FlagSupportType.ORDER, o.centerX, o.centerY, o.centerZ)
+            }
+        }
+        return null
+    }
+
+    /** Whether the support block belongs to an order front or a work front. */
+    private enum class FlagSupportType { ORDER, FRONT }
+
+    /** Coordinates of the flag this block supports and its type. */
+    private data class FlagSupportInfo(
+        val type: FlagSupportType,
+        val flagX: Int,
+        val flagY: Int,
+        val flagZ: Int
+    )
 
     private fun showDeleteOrderConfirmation(player: org.bukkit.entity.Player, orderId: Long? = null) {
         val inv = org.bukkit.Bukkit.createInventory(null, 9, Component.text("§cПодтверждение удаления"))
