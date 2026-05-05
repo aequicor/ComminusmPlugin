@@ -31,10 +31,15 @@ class WorkFrontService(
     fun deactivate(uuid: UUID) {
         val front = repository.findByOwner(uuid)
         repository.deleteByOwner(uuid)
-        // Clean up PDC marker if cached
         if (front != null && chunkCacheManager != null) {
             val bukkitWorld = org.bukkit.Bukkit.getWorld(front.centerWorld)
             if (bukkitWorld != null) {
+                // Break the banner block to prevent orphaned flags
+                val bannerBlock = bukkitWorld.getBlockAt(front.centerX, front.centerY, front.centerZ)
+                if (bannerBlock.type == org.bukkit.Material.RED_BANNER) {
+                    bannerBlock.type = org.bukkit.Material.AIR
+                }
+                // Clean up PDC marker
                 val chunk = bukkitWorld.getChunkAt(front.centerX shr 4, front.centerZ shr 4)
                 chunkCacheManager.removeFrontChunk(chunk)
             }

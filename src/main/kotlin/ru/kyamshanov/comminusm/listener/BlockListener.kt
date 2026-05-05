@@ -89,7 +89,7 @@ class BlockListener(
             // Prevent breaking support block of someone else's front flag
             if (isForeignFrontSupportBlock(world, loc, uuid)) {
                 event.isCancelled = true
-                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
+                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага, товарищ!"))
                 return
             }
             return // allowed
@@ -111,7 +111,7 @@ class BlockListener(
             // Prevent breaking support block of someone else's front flag
             if (isForeignFrontSupportBlock(world, loc, uuid)) {
                 event.isCancelled = true
-                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
+                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага, товарищ!"))
                 return
             }
             return // allowed
@@ -237,17 +237,18 @@ class BlockListener(
     }
 
     /**
-     * Check if the broken block is a support block of a foreign front flag.
-     * Red banners (wall-mounted) are attached to a face of the target block.
-     * If the support block is destroyed, the banner drops silently without a BlockBreakEvent
-     * for the banner itself — so we must intercept at the support block level.
+     * Check if the broken block is a support block of a foreign front flag or order flag.
+     * Both red banners (work fronts) and white banners (orders) are attached to a face
+     * of the target block. If the support block is destroyed, the banner drops silently
+     * without a BlockBreakEvent for the banner itself — so we must intercept at the support
+     * block level.
      */
     private fun isForeignFrontSupportBlock(
         world: org.bukkit.World,
         loc: org.bukkit.Location,
         breakerUuid: UUID
     ): Boolean {
-        // Check all 4 horizontal directions + top/bottom for an attached RED_BANNER
+        // Check all 4 horizontal directions + top/bottom for an attached banner
         val directions = listOf(
             loc.clone().add(1.0, 0.0, 0.0),
             loc.clone().add(-1.0, 0.0, 0.0),
@@ -256,19 +257,34 @@ class BlockListener(
             loc.clone().add(0.0, 1.0, 0.0),
             loc.clone().add(0.0, -1.0, 0.0)
         )
-        val allFronts = workFrontService?.getAllInWorld(world.name) ?: return false
         for (neighbor in directions) {
             val neighborBlock = world.getBlockAt(neighbor)
-            if (neighborBlock.type == Material.RED_BANNER) {
-                for (f in allFronts) {
-                    if (f.centerWorld == world.name
-                        && f.centerX == neighbor.blockX
-                        && f.centerY == neighbor.blockY
-                        && f.centerZ == neighbor.blockZ
-                        && f.ownerUuid != breakerUuid) {
-                        return true
+            when (neighborBlock.type) {
+                Material.RED_BANNER -> {
+                    val allFronts = workFrontService?.getAllInWorld(world.name) ?: continue
+                    for (f in allFronts) {
+                        if (f.centerWorld == world.name
+                            && f.centerX == neighbor.blockX
+                            && f.centerY == neighbor.blockY
+                            && f.centerZ == neighbor.blockZ
+                            && f.ownerUuid != breakerUuid) {
+                            return true
+                        }
                     }
                 }
+                Material.WHITE_BANNER -> {
+                    val allOrders = orderService.findAllInWorld(world.name)
+                    for (o in allOrders) {
+                        if (o.centerWorld == world.name
+                            && o.centerX == neighbor.blockX
+                            && o.centerY == neighbor.blockY
+                            && o.centerZ == neighbor.blockZ
+                            && o.ownerUuid != breakerUuid) {
+                            return true
+                        }
+                    }
+                }
+                else -> { /* not our concern */ }
             }
         }
         return false
