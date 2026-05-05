@@ -145,7 +145,7 @@ class FlagActivationHelper(private val plugin: Plugin) {
             PersistentDataType.LONG_ARRAY,
             longArrayOf(bannerBlock.x.toLong(), bannerBlock.y.toLong(), bannerBlock.z.toLong())
         )
-        pdc.set(supportMatKey, PersistentDataType.STRING, config.flagSupportBlockMaterial.name)
+        pdc.set(supportMatKey, PersistentDataType.STRING, originalMaterial.name)
 
         // Phase 1c: Add both positions to cache
         manager.addToCache(
