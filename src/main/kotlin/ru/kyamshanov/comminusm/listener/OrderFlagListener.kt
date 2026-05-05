@@ -38,6 +38,12 @@ class OrderFlagListener(
         val meta = item.itemMeta ?: return
         if (!meta.displayName().toString().contains("Флаг Ордера")) return
 
+        if (event.block.type == Material.WHITE_WALL_BANNER) {
+            event.isCancelled = true
+            event.player.sendMessage(Component.text("§cФлаг нужно устанавливать на горизонтальную поверхность, товарищ!"))
+            return
+        }
+
         val player = event.player
         val ownerUuid = player.uniqueId
         val order = orderService.findByOwner(ownerUuid)
