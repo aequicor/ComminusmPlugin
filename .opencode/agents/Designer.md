@@ -1,7 +1,7 @@
 ---
 description: Designer — UI/UX design for null (). Clarifies context, thinks step by step, produces screen/component/flow descriptions. Read-only, outputs design docs via task response.
 mode: subagent
-model: ollama-cloud/glm-5.1:cloud
+model: ollama_cloud/glm-5.1:cloud
 temperature: 0.5
 steps: 10
 permission:

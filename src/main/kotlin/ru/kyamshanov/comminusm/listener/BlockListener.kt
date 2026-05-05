@@ -68,8 +68,7 @@ class BlockListener(
                     Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
                 ))
                 flag.itemMeta = meta
-                world.dropItemNaturally(loc, flag)
-                player.sendMessage(Component.text("§6☭ Трудовой Фронт удалён. Флаг подобран."))
+                giveOrNotify(player, flag, "§6☭ Трудовой Фронт удалён. Флаг добавлен в инвентарь.")
                 return
             }
             val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
@@ -116,7 +115,7 @@ class BlockListener(
                     }
                     if (front != null) {
                         if (front.ownerUuid == uuid) {
-                            // Owner breaking their own front flag support → deactivate front, drop flag
+                            // Owner breaking their own front flag support → deactivate front, give flag to inventory
                             event.isCancelled = true
                             val frontRadius = front.radius
                             checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
@@ -129,8 +128,7 @@ class BlockListener(
                                 Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
                             ))
                             flag.itemMeta = meta
-                            world.dropItemNaturally(loc, flag)
-                            player.sendMessage(Component.text("§6☭ Трудовой Фронт удалён. Флаг подобран."))
+                            giveOrNotify(player, flag, "§6☭ Трудовой Фронт удалён. Флаг добавлен в инвентарь.")
                         } else {
                             // Foreign player breaking someone's front flag support → deny
                             event.isCancelled = true
@@ -365,6 +363,29 @@ class BlockListener(
         val flagY: Int,
         val flagZ: Int
     )
+
+    /**
+     * Try to add [item] to player's inventory. Falls back to dropping on ground
+     * only when inventory is full, with an overflow warning.
+     */
+    private fun giveOrNotify(
+        player: org.bukkit.entity.Player,
+        item: org.bukkit.inventory.ItemStack,
+        successMsg: String
+    ) {
+        if (player.inventory.firstEmpty() == -1) {
+            // Inventory full — fallback to ground with warning, but flag still NOT lost:
+            // player can retrieve it anytime via /партия
+            player.world.dropItemNaturally(player.location, item)
+            player.sendMessage(Component.text(
+                "§e⚠ Ваш инвентарь переполнен, товарищ! Флаг выброшен на землю.\n" +
+                    "§7Вы всегда можете получить новый флаг через меню §e/партия"
+            ))
+        } else {
+            player.inventory.addItem(item)
+            player.sendMessage(Component.text(successMsg))
+        }
+    }
 
     private fun showDeleteOrderConfirmation(player: org.bukkit.entity.Player, orderId: Long? = null) {
         val inv = org.bukkit.Bukkit.createInventory(null, 9, Component.text("§cПодтверждение удаления"))

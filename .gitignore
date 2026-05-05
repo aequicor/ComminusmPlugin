@@ -55,3 +55,8 @@ bin/
 
 # ai-agent-kit: local session pointer — not shared, each developer has their own
 .planning/CURRENT.md
+/vault/.obsidian/app.json
+/vault/.obsidian/appearance.json
+/vault/.obsidian/core-plugins.json
+/vault/.obsidian/workspace.json
+/.planning/tasks/*

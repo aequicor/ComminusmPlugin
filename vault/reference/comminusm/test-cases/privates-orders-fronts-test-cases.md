@@ -3,6 +3,7 @@
 **Module:** comminusm
 **Feature:** privates-orders-fronts
 **Generated:** 2026-05-05 by @QA
+**Last updated:** 2026-05-05 by @TestRunner
 **Spec:** `[[reference/comminusm/spec/privates-orders-fronts]]`
 **Requirements:** `[[concepts/comminusm/requirements/privates-orders-fronts]]`
 
@@ -115,10 +116,10 @@
 
 | ID | Status | Description | Created | Fixed |
 |----|--------|-------------|---------|-------|
-| DEF-User-01 | FIXED | Old front flag not removed on Move (orphaned banner) | 2026-05-05 | 2026-05-05 |
-| DEF-User-02 | FIXED | Order/Front flag drops when support block broken (missing WHITE_BANNER check) | 2026-05-05 | 2026-05-05 |
-| DEF-User-03 | FIXED | Component.contains() style-sensitive — gold-colored flag name not recognized by plain-text comparison, causing getFlagSupportInfo() to miss the banner | 2026-05-05 | 2026-05-05 |
-| DEF-User-04 | FIXED | Obsolete WHITE_BANNER flag with deleted Order ID dropped on deletion; player auto-picks it up, hasOrderFlagInInventory() returns true, blocking new Order creation | 2026-05-05 | 2026-05-05 |
+| DEF-User-01 | VERF | Old front flag not removed on Move (orphaned banner) | 2026-05-05 | 2026-05-05 |
+| DEF-User-02 | VERF | Order/Front flag drops when support block broken (missing WHITE_BANNER check) | 2026-05-05 | 2026-05-05 |
+| DEF-User-03 | VERF | Component.contains() style-sensitive — gold-colored flag name not recognized by plain-text comparison, causing getFlagSupportInfo() to miss the banner | 2026-05-05 | 2026-05-05 |
+| DEF-User-04 | VERF | Obsolete WHITE_BANNER flag with deleted Order ID dropped on deletion; player auto-picks it up, hasOrderFlagInInventory() returns true, blocking new Order creation | 2026-05-05 | 2026-05-05 |
 
 ---
 

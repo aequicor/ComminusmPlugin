@@ -48,7 +48,20 @@ Extended `isForeignFrontSupportBlock()` with a `when` branch for `Material.WHITE
 - [x] Lint: `./gradlew detekt` — 0 new issues (216 pre-existing)
 - [x] Test-cases.md updated: TC-User-01 → PASS, TC-User-02 → PASS, Defects log added
 
-## Lessons Learned
-- Banner block lifecycle (break/create) belongs in the service, not scattered across listeners and menus.
-- `isForeignFrontSupportBlock` should be renamed to something generic like `isForeignFlagSupportBlock` — both order and front flags need protection.
-- The `chunkCacheManager != null` guard is an existing pattern that separates production (Bukkit available) from tests (no Bukkit). Must be preserved.
+## Retrospective
+
+**Root cause:** Service methods do not own the full entity lifecycle. `WorkFrontService.deactivate()` only handled DB and cache — block removal was left to callers.
+**Category:** Guideline gap
+
+### Actions
+
+| # | Action | Status | File |
+|---|--------|--------|------|
+| 1 | Write regression tests for flag block lifecycle | ✅ Done | BlockListenerTest.kt (3 tests, DEF-User-03) |
+| 2 | Create flag-lifecycle guideline | ✅ Done | `vault/guidelines/comminusm/flag-lifecycle.md` |
+
+### Lessons
+
+- Services must handle the full lifecycle: DB + chunk cache + world block. Never split these across listeners/menus.
+- Support-block protection must be centralized before zone checks — not scattered in per-zone branches.
+- Both WHITE_BANNER and RED_BANNER need the same protection — never assume only one type matters.

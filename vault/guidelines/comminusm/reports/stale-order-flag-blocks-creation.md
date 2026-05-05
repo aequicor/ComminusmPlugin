@@ -55,3 +55,20 @@ FlagDeletionConfirmListener.onClick(slot=2)
 - When a deletion drops items as a "courtesy," consider whether those items still have meaning. A flag for a deleted Order is meaningless.
 - Defense in depth: even after fixing the root cause, the PartyMenu fallback handles the edge case where a stale flag already exists in inventory from a prior session.
 - Same pattern should be checked for Front flags (TC-User-01 already fixed; Front deletion may have the same issue — though it doesn't block creation the same way).
+
+## Retrospective
+
+**Root cause:** Listener creates and drops an item referencing a deleted DB record — stale item gets auto-picked up, inventory check blocks future operations.
+**Category:** Guideline gap
+
+### Actions
+
+| # | Action | Status | File |
+|---|--------|--------|------|
+| 1 | Add Rule 4 to flag-lifecycle guideline | ✅ Done | `vault/guidelines/comminusm/flag-lifecycle.md` |
+| 2 | Add safety net: `removeAllOrderFlags()` | ✅ Done | FlagItemProtectionListener.kt |
+
+### Lessons
+
+- "Drop item on delete" patterns are anti-patterns when the item references the now-deleted record.
+- Always add a cleanup fallback for stale items — inventory-based presence checks are fragile without it.

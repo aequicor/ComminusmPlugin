@@ -1,7 +1,7 @@
 ---
 description: Developer — implements one stage of the plan, writes tests, validates via LSP, builds the module, returns list of changed files
 mode: all
-model: ollama-cloud/deepseek-v4-flash:cloud
+model: ollama_cloud/deepseek-v4-flash:cloud
 temperature: 0.1
 steps: 20
 permission:

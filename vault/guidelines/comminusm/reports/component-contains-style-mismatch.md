@@ -77,6 +77,24 @@ This strips color/formatting before comparison, working with any color code.
 - Always strip formatting with `PlainTextComponentSerializer` before plain-text matching.
 - Defense-in-depth: keep the DB fallback as a second layer, but the custom-name fast path must work reliably.
 
+## Retrospective
+
+**Root cause:** `Component.contains(Component)` is style-sensitive — an undocumented pitfall in the Kyori Adventure API when used for semantic name matching.
+**Category:** Guideline gap
+
+### Actions
+
+| # | Action | Status | File |
+|---|--------|--------|------|
+| 1 | Write regression test proving style sensitivity | ✅ Done | BlockListenerTest.kt (3 tests) |
+| 2 | Add Rule 2 to flag-lifecycle guideline | ✅ Done | `vault/guidelines/comminusm/flag-lifecycle.md` |
+
+### Lessons
+
+- Kyori `Component.contains()` compares style trees, not text content. Use `PlainTextComponentSerializer` for any display-name-based logic.
+- Test your name-matching code with BOTH styled and plain variants — one will silently fail.
+- This applies to ALL Component-based checks, not just flags — any ItemMeta custom name comparison in the plugin should be audited.
+
 ---
 
 ## Related

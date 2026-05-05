@@ -1,7 +1,7 @@
 ---
 description: Code Reviewer — read-only review of changesets (compilation readiness, code style, technical compliance, security)
 mode: subagent
-model: ollama-cloud/deepseek-v4-pro:cloud
+model: ollama_cloud/deepseek-v4-pro:cloud
 temperature: 0.1
 steps: 10
 permission:

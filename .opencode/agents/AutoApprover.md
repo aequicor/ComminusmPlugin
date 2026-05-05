@@ -1,7 +1,7 @@
 ---
 description: Automated plan approver — verifies plan completeness, spec alignment and risks. Called by @Main in AUTO_APPROVE mode instead of waiting for PO. Returns APPROVED or NEEDS_CHANGES.
 mode: subagent
-model: ollama-cloud/deepseek-v4-pro:cloud
+model: ollama_cloud/deepseek-v4-pro:cloud
 temperature: 0.1
 steps: 8
 permission:

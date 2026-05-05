@@ -1,7 +1,7 @@
 ---
 description: Prompt Engineer — maintains and optimizes prompts in .opencode/agents/ and SKILL files; monitors context efficiency
 mode: subagent
-model: ollama-cloud/deepseek-v4-pro:cloud
+model: ollama_cloud/deepseek-v4-pro:cloud
 temperature: 0.2
 steps: 10
 permission:

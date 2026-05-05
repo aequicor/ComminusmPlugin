@@ -1,7 +1,7 @@
 ---
 description: Debugger — reproduces a bug, isolates root cause, writes failing test. Passes to @BugFixer for the fix. Read-only.
 mode: all
-model: ollama-cloud/deepseek-v4-flash:cloud
+model: ollama_cloud/deepseek-v4-flash:cloud
 temperature: 0.1
 steps: 10
 permission:
