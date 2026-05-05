@@ -1,13 +1,21 @@
-kit_version: "2.2.1"
+kit_version: "4.0.1"
 language_code: ru
-editors: [opencode]
+hosts: [opencode, claude-code]  # NEW in v4.0.0: replaces pre-v4 `editors:` field. Allowed values: opencode, claude-code.
+claude_code:
+  models:
+    default: sonnet
+    coder: sonnet
+    reviewer: sonnet
+    designer: sonnet
+    small: haiku
 project:
   name: "ComminusmPlugin"
   description: "First communism plugin"
 vault_path: vault
 stack:
   language: kotlin
-  profiles: [kotlin-gradle, ollama-cloud, paper-plugin, security-baseline]
+  profiles: [kotlin-gradle, ollama-cloud, paper-plugin, security-baseline, opencode, claude-code]
+  external_profiles: {}  # NEW in v3.1.0: map of <profile-name> -> <source URL> for /kit-extend external profiles.
   build_command: "./gradlew"
   compile_command: "./gradlew compileKotlin"
   lint_command: "./gradlew detekt ktlintCheck"

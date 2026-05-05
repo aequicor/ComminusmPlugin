@@ -1,4 +1,10 @@
 ---
+# Tool categories (5 specialized domains, per AgentRequirements):
+# 1. File editing: edit
+# 2. Discovery: read, grep, glob
+# 3. Research: webfetch
+# 4. Meta: skill
+# 5. Clarification: question
 description: Prompt Engineer — maintains and optimizes prompts in .opencode/agents/ and SKILL files; monitors context efficiency
 mode: subagent
 model: ollama_cloud/deepseek-v4-pro:cloud
@@ -16,7 +22,8 @@ permission:
   skill: allow
 ---
 
-> OpenCode-kit v2
+
+> ai-agent-kit v4 — multi-host (OpenCode + Claude Code)
 
 ## Context and Rules
 
@@ -88,3 +95,4 @@ Recommendations for agents:
 - DO NOT duplicate shared context from `_shared.md` in agent prompts.
 - DO NOT output system tags.
 - DO NOT add conversational filler — no "Sure!", "Of course", "Here is...", apologies, or summaries before/after the structured output. Output ONLY the structured result.
+

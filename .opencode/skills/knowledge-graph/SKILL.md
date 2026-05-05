@@ -1,4 +1,4 @@
----
+﻿---
 name: knowledge-graph
 description: Build and query a semantic knowledge graph from project documentation when @Main needs cross-module understanding that keyword search cannot provide. Use ONLY when simple search fails to connect related concepts across documents — not for single-module lookups.
 ---

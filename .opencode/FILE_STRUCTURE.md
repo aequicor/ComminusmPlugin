@@ -1,4 +1,4 @@
-# File Structure — ComminusmPlugin Agent Reference
+﻿# File Structure — ComminusmPlugin Agent Reference
 
 > Central path reference. Before creating any new file — check this table.
 > All agents read this file instead of guessing paths.
@@ -57,7 +57,7 @@ vault/
 
 | Module | Gradle task | Source root |
 |--------|-------------|-------------|
-| comminusm | — | src/main/kotlin/ru/kyamshanov/comminusm/ |
+| comminusm | `—` | `src/main/kotlin/ru/kyamshanov/comminusm/` |
 
 ### System paths
 
@@ -80,6 +80,7 @@ vault/
 | `.opencode/FILE_STRUCTURE.md` | @PromptEngineer | This file — path reference |
 | `.opencode/agents/[Name].md` | @PromptEngineer | Individual agent prompt |
 | `.opencode/skills/[name]/SKILL.md` | @PromptEngineer | Skill definition |
+| `opencode.json` | human (PO) | Runtime config for this host (OpenCode) |
 
 ---
 
@@ -89,13 +90,13 @@ vault/
 
 | Module | Gradle task | Source root |
 |--------|-------------|-------------|
-| comminusm | — | src/main/kotlin/ru/kyamshanov/comminusm/ |
+| comminusm | `—` | `src/main/kotlin/ru/kyamshanov/comminusm/` |
 
 ### Test roots
 
 | Module | Test root |
 |--------|----------|
-| comminusm | src/test/kotlin/ru/kyamshanov/comminusm/ |
+| `comminusm` | `src/test/kotlin/ru/kyamshanov/comminusm/` |
 
 ---
 

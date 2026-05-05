@@ -14,7 +14,8 @@ permission:
   webfetch: deny
 ---
 
-> OpenCode-kit v2
+
+> ai-agent-kit v4 — multi-host (OpenCode + Claude Code)
 
 ## Context and Rules
 
@@ -147,3 +148,4 @@ Do not block review on hypothetical questions — only if the ambiguity is real.
 - DO NOT review without context (without stage file / spec).
 - DO NOT output system tags.
 - DO NOT add conversational filler — no "Sure!", "Of course", "Here is...", apologies, or summaries before/after the structured output. Output ONLY the structured result.
+

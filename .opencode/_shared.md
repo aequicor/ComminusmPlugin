@@ -1,7 +1,7 @@
-# Shared Agent Context — ComminusmPlugin
+﻿# Shared Agent Context — ComminusmPlugin
 
-> This file is loaded by all agents via `opencode.json` `instructions`. Agent-specific files contain only role-specific details — shared context lives here.
-> OpenCode-kit v2 — migrated to `permission` syntax (OpenCode v1.1.1+), `external_directory`, `doom_loop`, `small_model`, `compaction`, `formatter`.
+> This file is loaded by all agents in this host's runtime (OpenCode). Agent-specific files contain only role-specific details — shared context lives here.
+> ai-agent-kit v4 — multi-host (OpenCode + Claude Code).
 
 ## Instruction Hierarchy
 
@@ -9,20 +9,21 @@ When instructions conflict, the most specific source wins:
 
 ```
 1. Agent-specific file (.opencode/agents/Name.md)   — highest priority
-2. AGENTS.md                                         — project rules
-3. _shared.md (this file)                            — shared context, lowest priority
+2. AGENTS.md                              — project rules
+3. _shared.md (this file)                                  — shared context, lowest priority
 ```
 
 If an agent file instruction contradicts `_shared.md` — follow the agent file.
 
 ## Language / i18n
 
-Active locale: check the `OPENCODE_LANG` environment variable first; if unset, fall back to the install-time default **ru**. All status messages and user-facing output must use `.opencode/i18n/<resolved-locale>.yaml`.
+Active locale: check the `OPENCODE_LANG` environment variable first; if unset, fall back to the install-time default **ru**. The locale file `.opencode/i18n/<resolved-locale>.md` is loaded by this host's runtime — follow its labels for all status messages and user-facing output.
 
 Supported locales: `en` (English), `ru` (Russian). To add a new language:
-1. Copy `.opencode/i18n/en.yaml` to `.opencode/i18n/<code>.yaml`
+1. Copy `.opencode/i18n/en.md` to `.opencode/i18n/<code>.md`
 2. Translate all values
-3. Re-run `/update` and set `language_code: <code>` in the manifest
+3. Wire it up: for OpenCode add the path to `instructions` in `opencode.json`; for Claude Code reference it from `CLAUDE.md` via `@.opencode/i18n/<code>.md`
+4. Re-run `/kit-update` and set `language_code: <code>` in the manifest
 
 ## Project Context
 
@@ -32,7 +33,7 @@ Supported locales: `en` (English), `ru` (Russian). To add a new language:
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| comminusm | — | vault/comminusm/ | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
 
 ## File Structure
 
@@ -57,6 +58,7 @@ Structure follows [Diátaxis](https://diataxis.fr/) genre layout.
 Per-module path examples:
 - Requirements: `vault/concepts/<module>/requirements/<feature>.md`
 - Spec: `vault/reference/<module>/spec/<feature>.md`
+- Diagrams (optional, Mermaid UML): `vault/reference/<module>/spec/<feature>-diagrams.md`
 - Test plan: `vault/reference/<module>/spec/<feature>-test-plan.md`
 - Implementation plan: `vault/concepts/<module>/plans/<feature>-plan.md`
 - Stage files: `vault/how-to/<module>/plans/<feature>-stage-NN.md`
@@ -138,7 +140,7 @@ This reduces errors in multi-step tasks. For trivial actions (read known file, g
 
 ## Workflow
 
-### Standard development pipeline (`/new-feature`)
+### Standard development pipeline (`/kit-new-feature`)
 
 ```
 PO ─► @Main (single entry point)
@@ -155,7 +157,7 @@ PO ─► @Main (single entry point)
         │       ├─► @CornerCaseReviewer   — attack spec (TECHNICAL mode)
         │       ├─► @ConsistencyChecker   — final gate
         │       │       ↕ (loop, max 2)
-        │       └─► PO sign-off (/approve → artifacts → /resume @Main)
+        │       └─► PO sign-off (/kit-approve → artifacts → /kit-resume @Main)
         │
         │   superpowers:writing-plans   → plan + stage files
         │                                 (requirements/spec come from @RequirementsPipeline)
@@ -176,19 +178,19 @@ PO ─► @Main (single entry point)
 
 **Pipeline order:**
 1. `clarifying questions` (Step 0) — minimal: module, description, UI?, constraints
-2. `@RequirementsPipeline` — full BA/CCR/QA/SA pipeline; PO signs off → `/resume @Main`
+2. `@RequirementsPipeline` — full BA/CCR/QA/SA pipeline; PO signs off → `/kit-resume @Main`
    (skipped if pre-made requirements package found in the active task file)
 3. `writing-plans` — implementation plan + stage files using requirements/corner cases/spec as inputs
 4. `executing-plans` or `subagent-driven-development` — implements plan; no requirements discovery here
 
 **Single entry point — `@Main`.** Do not invoke other agents directly without @Main orchestration.
 
-### AI-driven requirements pipeline (`/requirements-pipeline`)
+### AI-driven requirements pipeline (`/kit-requirements-pipeline`)
 
 Fully automated requirements phase. PO only needed at input and final sign-off.
 
 ```
-PO ─► @RequirementsPipeline (entry point via /requirements-pipeline)
+PO ─► @RequirementsPipeline (entry point via /kit-requirements-pipeline)
         │
         ├─► @BusinessAnalyst       — drafts business requirements from PO description
         │       ↕ (loop, max 3)
@@ -205,7 +207,7 @@ PO ─► @RequirementsPipeline (entry point via /requirements-pipeline)
         ├─► @ConsistencyChecker    — verifies spec does not contradict requirements
         │       ↕ (loop, max 2 — @SystemAnalyst resolves conflicts)
         │
-        └─► PO sign-off (/approve) → artifacts ready for @Main /new-feature
+        └─► PO sign-off (/kit-approve) → artifacts ready for @Main /kit-new-feature
 ```
 
 **Artifacts produced:**
@@ -225,9 +227,9 @@ PO ─► @RequirementsPipeline (entry point via /requirements-pipeline)
 - spec: vault/reference/[module]/spec/[feature].md
 ```
 
-**Flow A — integrated (default):** `@RequirementsPipeline` is dispatched by `@Main` as step 1 of the FEATURE pipeline. After PO types `/approve` to `@RequirementsPipeline` and then `/resume`, `@Main` continues from step 2 (SEARCH).
+**Flow A — integrated (default):** `@RequirementsPipeline` is dispatched by `@Main` as step 1 of the FEATURE pipeline. After PO types `/kit-approve` to `@RequirementsPipeline` and then `/kit-resume`, `@Main` continues from step 2 (SEARCH).
 
-**Flow B — standalone:** PO first runs `/requirements-pipeline` separately, then `/new-feature`. `@Main` detects the pre-made package in the active task file at step 0.5 and skips directly to step 3 (DESIGN).
+**Flow B — standalone:** PO first runs `/kit-requirements-pipeline` separately, then `/kit-new-feature`. `@Main` detects the pre-made package in the active task file at step 0.5 and skips directly to step 3 (DESIGN).
 
 In both flows, `@Main` does **not** modify requirements, corner cases, or spec files — they are approved artifacts. If `@Main` finds a contradiction at planning time, it surfaces it to PO before starting implementation.
 
@@ -330,14 +332,14 @@ Critical operations require explicit PO approval before execution. @Main enforce
 | COST_BREACH | Single operation > $5 estimated cost | PO must approve | Expensive model calls |
 
 **Approval flow — PLAN_CONFIRM gate:**
-- **Manual mode (default):** @Main pauses and presents summary to PO. PO types `/approve` to continue or `denied` to abort.
+- **Manual mode (default):** @Main pauses and presents summary to PO. PO types `/kit-approve` to continue or `denied` to abort.
 - **AUTO_APPROVE=true mode:** @Main dispatches `@AutoApprover` which reviews plan/spec alignment and returns `APPROVED` or `NEEDS_CHANGES`. If approved — proceed. If not — @Main resolves BLOCKERs directly (plan files are @Main's domain) and retries, max 2 cycles, then escalates to PO.
 
 **Approval flow — all other gates (DEPLOY, DESTROY, SECRET_ROTATE, MIGRATION, EXTERNAL_API, COST_BREACH):**
 1. @Main detects gate condition.
 2. @Main writes `BLOCKED: <gate> — awaiting PO approval` to the active task file.
 3. @Main presents the operation description, risk assessment, and impact scope to PO.
-4. PO types `/approve` to proceed or `denied` to abort. AUTO_APPROVE mode does **not** bypass these gates — only PLAN_CONFIRM is automated.
+4. PO types `/kit-approve` to proceed or `denied` to abort. AUTO_APPROVE mode does **not** bypass these gates — only PLAN_CONFIRM is automated.
 5. @Main resumes from the task file's `NEXT` line.
 
 **NO agent may bypass gates.** If a subagent triggers a gate condition — it must escalate, not proceed.

@@ -1,4 +1,7 @@
 ---
+# Tool categories (2 specialized domains, per AgentRequirements):
+# 1. Code ops: bash, lsp, serena_*
+# 2. Discovery: read, grep, glob
 description: Debugger — reproduces a bug, isolates root cause, writes failing test. Passes to @BugFixer for the fix. Read-only.
 mode: all
 model: ollama_cloud/deepseek-v4-flash:cloud
@@ -16,7 +19,8 @@ permission:
   "serena_*": allow
 ---
 
-> OpenCode-kit v2
+
+> ai-agent-kit v4 — multi-host (OpenCode + Claude Code)
 
 ## Context
 
@@ -91,3 +95,4 @@ Create `.planning/bugs/BUG-NNN.md`:
 - "Try clearing the cache" → that's not debugging, that's hope.
 - Theorizing without code/log support — don't do it.
 - Adding conversational filler — no "Sure!", "Of course", "Here is...", apologies. Output ONLY the structured result.
+

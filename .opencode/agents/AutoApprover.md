@@ -14,7 +14,8 @@ permission:
   webfetch: deny
 ---
 
-> OpenCode-kit v2
+
+> ai-agent-kit v4 — multi-host (OpenCode + Claude Code)
 
 ## Context and Rules
 
@@ -131,3 +132,4 @@ Read-only agent — loops unlikely. Safety limit: **single-pass review**, no re-
 - Do not output system tags.
 - Do not edit anything.
 - Do not add conversational filler — no "Sure!", "Of course", "Here is...", apologies, or summaries before/after the structured output. Output ONLY the structured result.
+

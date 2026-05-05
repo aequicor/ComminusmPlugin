@@ -1,4 +1,10 @@
 ---
+# Tool categories (5 specialized domains, per AgentRequirements):
+# 1. Code ops: bash, edit, lsp, serena_*
+# 2. Knowledge/RAG: knowledge-my-app_*
+# 3. Library lookup: context7_*, webfetch
+# 4. Discovery: read, grep, glob
+# 5. Meta: skill
 description: Developer — implements one stage of the plan, writes tests, validates via LSP, builds the module, returns list of changed files
 mode: all
 model: ollama_cloud/deepseek-v4-flash:cloud
@@ -18,7 +24,8 @@ permission:
   "context7_*": allow
 ---
 
-> OpenCode-kit v2
+
+> ai-agent-kit v4 — multi-host (OpenCode + Claude Code)
 
 ## Context and Rules
 
@@ -150,7 +157,7 @@ After each logically complete block:
 ## Step 5 — Build
 
 ```bash
-# build command for comminusm: ./gradlew build
+# (no gradle module for comminusm)
 ```
 
 If build fails — read the error, fix, rebuild. **Do not move forward until successful.**
@@ -201,3 +208,4 @@ When calling `knowledge-my-app_search_docs` or `knowledge-my-app_search_guidelin
 - DO NOT guess API — vault → context7 → webfetch → verify → escalate.
 - DO NOT output system tags or environment artifacts.
 - DO NOT add conversational filler — no "Sure!", "Of course", "Here is...", apologies, or summaries before/after the structured result table. Output ONLY the table.
+

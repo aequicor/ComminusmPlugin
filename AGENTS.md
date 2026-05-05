@@ -1,8 +1,9 @@
 # AGENTS.md — ComminusmPlugin
 
-> Universal coding-agent rules for this project.
-> Supported by: Claude Code, OpenCode, Cursor, GitHub Copilot, Windsurf, Devin, Google Jules,
+> Universal coding-agent rules for this project (OpenCode host).
+> Supported by: OpenCode, Cursor, GitHub Copilot, Windsurf, Devin, Google Jules,
 > and all tools following the [AAIF AGENTS.md standard](https://agents.md).
+> For Claude Code, the equivalent file is `CLAUDE.md` at this same root.
 
 ---
 
@@ -18,7 +19,7 @@ First communism plugin
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| comminusm | — | vault/comminusm/ | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
 
 ---
 
@@ -164,3 +165,4 @@ A task is **complete** only when ALL of the following are true:
 - [ ] Lint passes: `./gradlew detekt ktlintCheck`
 - [ ] No unexplained `TODO` or `FIXME` remains
 - [ ] Changes committed to git with a descriptive message
+

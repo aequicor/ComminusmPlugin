@@ -5,6 +5,7 @@
   "instructions": [
     "AGENTS.md",
     ".opencode/_shared.md",
+    ".opencode/i18n/ru.md",
     ".planning/CURRENT.md",
     ".planning/DECISIONS.md",
     "AUTO_MEMORY.md"
@@ -30,7 +31,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "ollama-cloud",
       "options": {
-        "baseURL": "https://ollama.com/v1",
+        "baseURL": "https://ollama.com",
         "apiKey": "{env:OLLAMA_API_KEY}"
       },
       "models": {
@@ -74,12 +75,8 @@
   },
   "lsp": {
     "kotlin": {
-      "command": [
-        "kotlin-lsp"
-      ],
-      "extensions": [
-        ".kt", ".kts"
-      ]
+      "command": ["kotlin-lsp"],
+      "extensions": [".kt", ".kts"]
     }
   },
   "permission": {

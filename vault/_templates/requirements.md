@@ -7,7 +7,7 @@ triggers:
   - "feature scope"
 confidence: high
 source: human
-updated: 2026-05-05T07:41:32Z
+updated: 2026-05-05T16:20:56Z
 ---
 
 # Requirements: [Feature Name]
