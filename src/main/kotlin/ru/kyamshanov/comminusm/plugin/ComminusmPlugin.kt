@@ -140,11 +140,9 @@ class ComminusmPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(FlagEventListener(htManager), this)
 
         // Register GUI listeners
-        server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService, this), this)
-        server.pluginManager.registerEvents(
-            OrderMenu(orderService, workdaysService, pluginConfig, workFrontService, htManager, orderFlagStabilityManager, this),
-            this,
-        )
+        val orderMenu = OrderMenu(orderService, workdaysService, pluginConfig, workFrontService, htManager, orderFlagStabilityManager, this)
+        server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService, this, orderMenu), this)
+        server.pluginManager.registerEvents(orderMenu, this)
         server.pluginManager.registerEvents(FrontMenu(workFrontService), this)
         server.pluginManager.registerEvents(TreasuryMenu(pluginConfig, workdaysService), this)
         server.pluginManager.registerEvents(AdminMenu(pluginConfig, orderService, workFrontService, workdaysService), this)

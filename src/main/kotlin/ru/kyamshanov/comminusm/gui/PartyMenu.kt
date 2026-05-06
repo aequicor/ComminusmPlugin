@@ -24,6 +24,7 @@ class PartyMenu(
     private val orderService: OrderService?,
     private val workFrontService: WorkFrontService?,
     private val plugin: Plugin? = null,
+    private val orderMenu: OrderMenu? = null,
 ) : Listener {
     private val orderSlot = 20
     private val frontSlot = 24
@@ -81,7 +82,7 @@ class PartyMenu(
                 if (orderService != null) {
                     val order = orderService.findByOwner(player.uniqueId)
                     if (order != null) {
-                        OrderMenu(orderService, workdaysService, config, workFrontService).open(player, order)
+                        (orderMenu ?: OrderMenu(orderService, workdaysService, config, workFrontService)).open(player, order)
                     } else {
                         if (FlagItemProtectionListener.hasOrderFlagInInventory(player)) {
                             // Stale flag from a deleted order — remove it and create a new one
