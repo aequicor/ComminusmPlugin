@@ -285,33 +285,31 @@ class BlockListener(
     }
 
     /**
-     * Scan the 6 neighboring blocks for an attached banner that belongs to
-     * an order or work front. Uses DB lookup AND fallback display-name check
-     * for defense in depth.
+     * Check if the broken block is the structural support of any order or front flag.
+     *
+     * A support block is ALWAYS exactly one Y-level below the banner
+     * (confirmed by FlagActivationHelper.activate: bannerBlock.y - 1).
+     * Therefore, the only candidate above the broken block to inspect is
+     * the single block at (loc.x, loc.y + 1, loc.z).
+     *
+     * The previous 6-direction scan was too broad: any block adjacent to a banner
+     * (including flowers, torches, etc.) falsely triggered flag cleanup.
      */
     private fun getFlagSupportInfo(world: org.bukkit.World, loc: org.bukkit.Location): FlagSupportInfo? {
-        val directions = listOf(
-            loc.clone().add(1.0, 0.0, 0.0), loc.clone().add(-1.0, 0.0, 0.0),
-            loc.clone().add(0.0, 0.0, 1.0), loc.clone().add(0.0, 0.0, -1.0),
-            loc.clone().add(0.0, 1.0, 0.0), loc.clone().add(0.0, -1.0, 0.0)
-        )
-        for (neighbor in directions) {
-            val neighborBlock = world.getBlockAt(neighbor)
-            val result = checkBannerNeighbor(world, neighborBlock)
-            if (result != null) return result
-        }
-        return null
+        // Only the block directly above can be the banner whose support this block is.
+        val blockAbove = world.getBlockAt(loc.clone().add(0.0, 1.0, 0.0))
+        return checkBannerDirectlyAbove(world, blockAbove)
     }
 
     /**
-     * If neighborBlock is a RED_BANNER or WHITE_BANNER attached to this support block,
-     * returns the flag's type and coordinates; otherwise returns null.
+     * If blockAbove is a RED_BANNER or WHITE_BANNER, and this block (one Y-level below)
+     * is registered as its support block, returns FlagSupportInfo; otherwise null.
      */
-    private fun checkBannerNeighbor(world: org.bukkit.World, neighborBlock: org.bukkit.block.Block): FlagSupportInfo? {
-        val bannerState = neighborBlock.state as? org.bukkit.block.Banner ?: return null
-        return when (neighborBlock.type) {
-            Material.RED_BANNER -> resolveFrontFlag(world, neighborBlock, bannerState)
-            Material.WHITE_BANNER -> resolveOrderFlag(world, neighborBlock, bannerState)
+    private fun checkBannerDirectlyAbove(world: org.bukkit.World, blockAbove: org.bukkit.block.Block): FlagSupportInfo? {
+        val bannerState = blockAbove.state as? org.bukkit.block.Banner ?: return null
+        return when (blockAbove.type) {
+            Material.RED_BANNER -> resolveFrontFlag(world, blockAbove, bannerState)
+            Material.WHITE_BANNER -> resolveOrderFlag(world, blockAbove, bannerState)
             else -> null
         }
     }

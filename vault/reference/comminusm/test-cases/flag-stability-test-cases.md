@@ -5,7 +5,7 @@ title: Test Cases — Flag Stability
 topic: flag-stability
 status: Living
 generated: 2026-05-05
-last_updated: 2026-05-05
+last_updated: 2026-05-06
 author: "@QA"
 related:
   - vault/concepts/comminusm/requirements/flag-stability.md
@@ -158,6 +158,7 @@ AI agents do NOT touch the Notes column. AI agents do NOT generate per-TC detail
 | TC-105 | PEND   | —     | error       | [spec] /party with PDC marker value starting with "ITEM:" but containing corrupted Base64 — marker deleted, ERROR logged, /party falls through to normal issuance | Corrupted marker removed from PDC; ERROR entry in server log; player receives new flag via normal flow |
 | TC-106 | PASS   | —     | error       | [bug-fix] Player moves front flag (places RED_BANNER in new location) while owning an existing active front — old BEDROCK support block and old ArmorStand must be fully removed | Old BEDROCK support block is removed (restored to original material), old ArmorStand is despawned; no orphaned entities or indestructible blocks remain at the old position |
 | TC-107 | PASS   | —     | error       | [bug-fix] Player breaks the BEDROCK support block of their front flag (e.g. in creative mode) — block must be restored to original material instead of leaving a void | Support block position is restored to the original material (STONE, DIRT, GRAVEL, etc.) that was saved at activation time; no void/AIR hole remains |
+| TC-108 | PASS   | —     | error       | [bug-fix] Игрок ломает цветок (POPPY/DANDELION/любой short flower), стоящий рядом с активным флагом фронта (RED_BANNER) — баг: флаг фронта удаляется как побочный эффект разрушения соседнего цветка. Source: bug-fix. | При разрушении цветка-соседа активный флаг фронта остаётся целым (BEDROCK опорный блок, ArmorStand с именем владельца, запись в БД, PDC чанка) — никаких изменений в состоянии флага не происходит. |
 
 > The TC-00 block is a single static template. Manual tester copies it on demand
 > when they want to elaborate on one specific TC (typically a failing one).
@@ -185,3 +186,4 @@ AI agents do NOT touch the Notes column. AI agents do NOT generate per-TC detail
 |--------|--------|--------|------------------------------------------------------------------------------------------------------|
 | DEF-05 | TC-106 | FIXED  | Old BEDROCK support block and ArmorStand orphaned on front flag relocation — FrontFlagListener used manual banner-only removal instead of FlagCleanupHelper.cleanupFlag() (fix: vault/guidelines/comminusm/reports/fix-front-flag-relocation-cleanup.md) |
 | DEF-06 | TC-107 | FIXED  | Breaking support block leaves void instead of restoring original material — FlagCleanupHelper always set AIR; BlockListener overwrote restoration with explicit AIR set (fix: vault/guidelines/comminusm/reports/fix-front-flag-relocation-cleanup.md) |
+| DEF-07 | TC-108 | FIXED  | Front flag removed as side-effect when neighbor flower (POPPY/DANDELION) is broken — likely incorrect block-break event handler match for support block neighbors (fix: vault/guidelines/comminusm/reports/fix-flower-break-deletes-front.md) |
