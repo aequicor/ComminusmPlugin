@@ -37,6 +37,8 @@ vault/
    reference/<module>/                ← WHAT EXISTS — specs, schemas, test plans, test cases
      spec/<feature>.md
      spec/<feature>-test-plan.md      ← Draft/Final (@QA)
+     spec/<feature>-trace.md          ← traceability matrix AC/CC/endpoint → TC → test → source (@TraceabilityChecker)
+     spec/<feature>-dod.md            ← Definition-of-Done verdict report (@DoDGate)
      test-cases/<feature>-test-cases.md ← Test cases with defect tracking (@TestRunner)
 
   how-to/<module>/                   ← HOW TO implement
@@ -48,16 +50,22 @@ vault/
   guidelines/<module>/               ← RULES — accumulated by agents
     <topic>.md
     reports/<bug-name>.md            ← bug fix reports (@BugFixer)
+    reports/test-runs/<ISO>-stage-NN.md ← independent test-run reports (@TestExecutor)
 
   guidelines/libs/                   ← external library API documentation cache
     <lib>-<version>.md               ← (@CodeWriter, @BugFixer)
+
+  tech-debt/<module>/                ← deferred non-critical findings (@CodeWriter, @BugFixer, @CodeReviewer, @SecurityReviewer, @TestExecutor)
+    <slug>.md                        ← open / in-progress entries
+    done/<slug>.md                   ← archived after `/kit-techdebt` closes them
 ```
 
 ### Modules
 
 | Module | Gradle task | Source root |
 |--------|-------------|-------------|
-| comminusm | — | `src/main/kotlin/ru/kyamshanov/comminusm/` |
+| comminusm | `—` | `src/main/kotlin/ru/kyamshanov/comminusm/` |
+
 
 ### System paths
 
@@ -69,6 +77,12 @@ vault/
 | `vault/_templates/bug-report.md` | (template) | Template for @BugFixer |
 | `vault/_templates/spec.md` | (template) | Template for @Main |
 | `vault/_templates/requirements.md` | (template) | Template for @Main |
+| `vault/_templates/tech-debt.md` | (template) | Template for `tech-debt-record` skill |
+| `vault/tech-debt/<module>/<slug>.md` | @CodeWriter, @BugFixer, @CodeReviewer, @SecurityReviewer, @TestExecutor | Open tech-debt entries (status: open\|in-progress) |
+| `vault/tech-debt/<module>/done/<slug>.md` | @Main (via `/kit-techdebt`) | Closed entries (status: fixed\|wont-fix) |
+| `vault/reference/<module>/spec/<feature>-trace.md` | @TraceabilityChecker | Traceability matrix per feature (AC/CC/endpoint → TC → test file → source) |
+| `vault/reference/<module>/spec/<feature>-dod.md` | @DoDGate | Definition-of-Done verdict report — last gate before CLOSE |
+| `vault/guidelines/<module>/reports/test-runs/<ISO>-stage-NN.md` | @TestExecutor | Independent run report per stage (build + unit + integration + TC mapping) |
 
 ---
 
@@ -90,13 +104,15 @@ vault/
 
 | Module | Gradle task | Source root |
 |--------|-------------|-------------|
-| comminusm | — | `src/main/kotlin/ru/kyamshanov/comminusm/` |
+| comminusm | `—` | `src/main/kotlin/ru/kyamshanov/comminusm/` |
+
 
 ### Test roots
 
 | Module | Test root |
 |--------|----------|
 | `comminusm` | `src/test/kotlin/ru/kyamshanov/comminusm/` |
+
 
 ---
 

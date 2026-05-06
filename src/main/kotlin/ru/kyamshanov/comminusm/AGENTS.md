@@ -19,8 +19,9 @@
 | Command | Purpose |
 |---------|---------|
 | `./gradlew` | Build project |
-| `./gradlew :comminusm:test` | Run tests |
+| `./gradlew :[module]:test` | Run tests |
 | `./gradlew compileKotlin` | Quick compile |
+
 
 ---
 

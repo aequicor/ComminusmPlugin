@@ -16,7 +16,8 @@ Run the project lint command and report results:
       "command": ["./gradlew", "detekt", "--auto-correct"],
       "extensions": [".kt", ".kts"]
     }
-  },` as auto-fix if formatter is configured.
+  },
+` as auto-fix if formatter is configured.
    d. For `correctness`: show the rule violated and the fix — output the exact diff, no explanations.
    e. Output the structured report below.
 

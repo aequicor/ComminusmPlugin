@@ -266,6 +266,7 @@ Test files mirror `src/main/`:
 |--------|----------|
 | `comminusm` | `src/test/kotlin/ru/kyamshanov/comminusm/` |
 
+
 ## Quality Rules
 
 - **Every Acceptance Criterion MUST have ≥1 TC** (REQUIREMENTS phase).

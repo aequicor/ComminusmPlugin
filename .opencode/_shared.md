@@ -33,7 +33,8 @@ Supported locales: `en` (English), `ru` (Russian). To add a new language:
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `comminusm` | — | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+
 
 ## File Structure
 
@@ -54,6 +55,7 @@ Structure follows [Diátaxis](https://diataxis.fr/) genre layout.
 | `tutorials/<module>/` | **How to learn?** | Getting started, module docs | As needed |
 | `guidelines/<module>/` | **What rules to follow?** | Conventions, patterns, reports/ | @Main, @Designer, @CodeWriter, @BugFixer |
 | `guidelines/libs/` | **How to use library?** | External API cache | @CodeWriter, @BugFixer |
+| `tech-debt/<module>/` | **What is deferred?** | Non-critical smells/duplication/warnings recorded for `/kit-techdebt` | @CodeWriter, @BugFixer, @CodeReviewer (via `tech-debt-record` skill) |
 
 Per-module path examples:
 - Requirements: `vault/concepts/<module>/requirements/<feature>.md`
@@ -65,6 +67,7 @@ Per-module path examples:
 - Guidelines: `vault/guidelines/<module>/<topic>.md`
 - Bug reports: `vault/guidelines/<module>/reports/<bug-name>.md`
 - External API cache: `vault/guidelines/libs/<lib>-<version>.md`
+- Tech debt entries: `vault/tech-debt/<module>/<slug>.md` (archived: `<module>/done/<slug>.md`)
 
 **Indexing rule:** when creating or updating any document, immediately call `knowledge-my-app_write_guideline` (new) or `knowledge-my-app_update_doc` (update).
 
@@ -165,9 +168,14 @@ PO ─► @Main (single entry point)
         │   superpowers:subagent-driven-development → dispatch executors
         │   checkpoint → .planning/tasks/<active_task>.md after each step
         │
-        ├─► @CodeWriter    (code + tests + build)
-        ├─► @CodeReviewer  (pull-request style review)
-        ├─► @BugFixer      (defect analysis + fix + report)
+        ├─► @CodeWriter    (TDD: failing tests → code → build)
+        ├─► @TestExecutor  (independent run of full module test suite — gate after CodeWriter)
+        ├─► @CodeReviewer  (style + spec + structure + surface-level security smell)
+        ├─► @SecurityReviewer (adversarial OWASP-aligned pass on security-relevant stages)
+        ├─► @CornerCaseReviewer IMPLEMENTATION (verify each Critical/High CC has a real branch in code)
+        ├─► @TraceabilityChecker (AC/CC/spec endpoint → TC → test file → source symbol matrix)
+        ├─► @DoDGate       (Definition-of-Done — last gate before CLOSE; binary PASS/BLOCK)
+        ├─► @BugFixer      (defect analysis + fix + report; auto-triggers bug-retro for CRIT/HIGH)
         ├─► @Debugger      (reproduction + root cause, read-only)
         ├─► @Designer      (UI/UX design)
         ├─► @QA            (REQUIREMENTS phase: creates test-cases.md; IMPLEMENTATION phase: appends impl TCs)
@@ -239,13 +247,17 @@ In both flows, `@Main` does **not** modify requirements, corner cases, or spec f
 |------|-----------|-----------|
 | `src/`, `*/src/test/` | @CodeWriter, @BugFixer | all |
 | `vault/concepts/<module>/requirements/` | @Main, @BusinessAnalyst | all |
-| `vault/concepts/<module>/plans/` | @Main, @BusinessAnalyst, corner-case-refinement skill | all |
+| `vault/concepts/<module>/plans/` | @Main, @BusinessAnalyst, corner-case-refinement skill, pre-mortem skill (Risks table appended to plan file) | all |
 | `vault/reference/<module>/spec/` | @Main, @CodeWriter, @SystemAnalyst | all |
+| `vault/reference/<module>/spec/<feature>-trace.md` | @TraceabilityChecker | all |
+| `vault/reference/<module>/spec/<feature>-dod.md` | @DoDGate | all |
 | `vault/reference/<module>/test-cases/` | @Main, @QA, @TestRunner, @BugFixer | all |
 | `vault/how-to/<module>/plans/` | @Main | all |
 | `vault/guidelines/<module>/` | @Main, @Designer, @CodeWriter | all |
 | `vault/guidelines/<module>/reports/` | @BugFixer | all |
+| `vault/guidelines/<module>/reports/test-runs/` | @TestExecutor | all |
 | `vault/guidelines/libs/` | @CodeWriter, @BugFixer | all |
+| `vault/tech-debt/<module>/` | @CodeWriter, @BugFixer, @CodeReviewer, @SecurityReviewer, @TestExecutor (via `tech-debt-record`); @Main (status updates via `/kit-techdebt`) | all |
 | `.opencode/agents/`, `.opencode/skills/` | @PromptEngineer | all |
 | `.planning/CURRENT.md` (local pointer, gitignored) | @Main | all |
 | `.planning/tasks/<slug>.md` | @Main, @RequirementsPipeline (checkpoint after each step) | all |
@@ -271,7 +283,11 @@ KnowledgeOS tools use a **hyphen** in `my-app`, not underscore:
 - `corner-case-refinement` — business-level corner case analysis. Runs BEFORE spec is written, during business requirements phase. Scans 6 categories: input integrity, process integrity, domain invariants, external dependency failures, scale/capacity, temporal/concurrency. Produces corner case register at `vault/concepts/<module>/plans/<feature>-corner-cases.md`. Critical items become mandatory test tasks.
 - `code-review-checklist` — pre-commit systematic review checklist.
 - `test-execution` — AI-driven test execution and defect management. Generates test cases from spec/requirements, provides structured template for manual testing with defect logging, and supports transactional updates (re-run after fixes, add new test cases when defects reveal edge cases).
-- `bug-retro` — post-bug root cause analysis and prevention.
+- `bug-retro` — post-bug root cause analysis and prevention. **Mandatory** for CRITICAL/HIGH defects (auto-triggers; no PO request needed).
+- `tech-debt-record` — capture a non-critical code smell / duplication / warning as a tech-debt entry under `vault/tech-debt/<module>/`. Drained by `/kit-techdebt`.
+- `definition-of-done` — canonical 8-group, ~25-row Definition-of-Done checklist read by `@DoDGate` as the last gate before CLOSE. Binary verdict: any FAIL or unwaived UNVERIFIED → BLOCK.
+- `pre-mortem` — lightweight 8-lens risk pass run by `@Main` between PLAN and CONFIRM. Forces "imagine it failed in production — what was the cause?" before any code is written. Risks table appended to plan file.
+- `spec-to-code-trace` — heuristics + conventions for linking AC/CC/spec endpoint → TC → test file → source symbol. Read by `@TraceabilityChecker` (mandatory) and `@CodeReviewer` (spec-alignment check). Defines tag prefixes and `(impl: ...)` notation.
 - `knowledge-graph` — semantic document indexing and cross-reference.
 - `look-up` — proactive external API documentation lookup.
 - `session-replay` — past session analysis for patterns.

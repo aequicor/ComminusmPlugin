@@ -8,7 +8,7 @@ triggers:
   - "regression test"
 confidence: high
 source: human
-updated: 2026-05-06T05:00:54Z
+updated: 2026-05-06T00:00:00Z
 ---
 
 # Bug Fix Report: [Bug Name]

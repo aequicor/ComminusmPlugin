@@ -1,4 +1,4 @@
-kit_version: "4.3.1"
+kit_version: "4.5.0"
 language_code: ru
 hosts: [opencode, claude-code]  # NEW in v4.0.0: replaces pre-v4 `editors:` field. Allowed values: opencode, claude-code.
 claude_code:

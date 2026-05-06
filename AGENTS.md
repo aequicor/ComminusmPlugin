@@ -19,7 +19,8 @@ First communism plugin
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `comminusm` | — | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+
 
 ---
 
@@ -59,6 +60,7 @@ First communism plugin
 - Storing Player references past event scope (causes memory leaks)
 - Calling Bukkit API from non-main thread without scheduler bouncing back to main
 - Long-running task in event handler (offload to BukkitScheduler.runTaskAsynchronously)
+
 
 ### Style
 

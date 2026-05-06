@@ -53,7 +53,8 @@ Called by @CodeReviewer automatically after each @CodeWriter stage completion. N
 - Blocking the main server thread — schedule async with Bukkit schedulers or coroutines
 - Storing Player references past event scope (causes memory leaks)
 - Calling Bukkit API from non-main thread without scheduler bouncing back to main
-- Long-running task in event handler (offload to BukkitScheduler.runTaskAsynchronously)`
+- Long-running task in event handler (offload to BukkitScheduler.runTaskAsynchronously)
+`
 
 ## Architecture
 

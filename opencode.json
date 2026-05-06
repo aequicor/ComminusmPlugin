@@ -26,6 +26,7 @@
       "extensions": [".kt", ".kts"]
     }
   },
+
   "provider": {
     "ollama_cloud": {
       "npm": "@ai-sdk/openai-compatible",
@@ -79,6 +80,7 @@
       "extensions": [".kt", ".kts"]
     }
   },
+
   "permission": {
     "edit": "allow",
     "external_directory": "ask",

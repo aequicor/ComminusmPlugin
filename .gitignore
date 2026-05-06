@@ -60,3 +60,4 @@ bin/
 /vault/.obsidian/core-plugins.json
 /vault/.obsidian/workspace.json
 /.planning/tasks/*
+/.claude/worktrees
