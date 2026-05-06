@@ -7,10 +7,24 @@ commands:
     description: Открыть партийное меню
     usage: /<command>
     aliases: [партия, party, partiya]
+  cc:
+    description: Commune chat command
+    usage: /<command> [message]
+    permission: comminusm.commune.chat
+  order:
+    description: Order management command
+    usage: /<command> commune <orderName>
+    permission: comminusm.order.info
 permissions:
   comminusm.admin:
     description: Доступ к админ-панели
     default: op
   comminusm.party:
     description: Доступ к /партия
+    default: true
+  comminusm.commune.chat:
+    description: Доступ к команде /cc
+    default: true
+  comminusm.order.info:
+    description: Доступ к команде /order
     default: true
