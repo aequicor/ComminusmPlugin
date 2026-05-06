@@ -120,15 +120,15 @@ class OrderMenu(
         @Suppress("MaxLineLength")
         return when (buttonState) {
             HomeButtonState.ACTIVE -> GuiUtils.namedItem(
-                "<green>Вернуться домой</green>",
+                "§aВернуться домой",
                 Material.COMPASS,
-                "<gray>Нажмите, чтобы начать телепортацию</gray>",
-                "<gray>Стойте неподвижно 30 сек.</gray>",
+                "§7Нажмите, чтобы начать телепортацию",
+                "§7Стойте неподвижно 30 сек.",
             )
             HomeButtonState.DISABLED_DIFFERENT_WORLD -> GuiUtils.namedItem(
-                "<gray>Вернуться домой</gray>",
+                "§7Вернуться домой",
                 Material.COMPASS,
-                "<red>Флаг в другом мире — телепорт недоступен</red>",
+                "§cФлаг в другом мире — телепорт недоступен",
             )
             HomeButtonState.HIDDEN -> null
         }
