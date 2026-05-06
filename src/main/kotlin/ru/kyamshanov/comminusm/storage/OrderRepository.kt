@@ -122,6 +122,28 @@ class OrderRepository(private val conn: Connection) {
         return result
     }
 
+    fun findById(id: Long): Order? {
+        val sql = "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE id = ?"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setLong(1, id)
+            val rs = stmt.executeQuery()
+            if (rs.next()) {
+                return Order(
+                    id = rs.getLong("id"),
+                    ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                    level = rs.getInt("level"),
+                    centerWorld = rs.getString("center_world"),
+                    centerX = rs.getInt("center_x"),
+                    centerY = rs.getInt("center_y"),
+                    centerZ = rs.getInt("center_z"),
+                    radius = rs.getInt("radius"),
+                    createdAt = rs.getString("created_at"),
+                )
+            }
+        }
+        return null
+    }
+
     fun deleteByOwner(uuid: UUID) {
         val stmt = conn.prepareStatement("DELETE FROM orders WHERE owner_uuid = ?")
         stmt.setString(1, uuid.toString())

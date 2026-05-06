@@ -21,11 +21,16 @@ import ru.kyamshanov.comminusm.listener.BlockListener
 import ru.kyamshanov.comminusm.listener.ExplosionListener
 import ru.kyamshanov.comminusm.listener.FlagChunkListener
 import ru.kyamshanov.comminusm.listener.FlagDeletionConfirmListener
+import ru.kyamshanov.comminusm.listener.FlagEventListener
 import ru.kyamshanov.comminusm.listener.FlagItemProtectionListener
 import ru.kyamshanov.comminusm.listener.FlagProtectionListener
 import ru.kyamshanov.comminusm.listener.FrontFlagListener
+import ru.kyamshanov.comminusm.listener.HomeTimerCancelListener
 import ru.kyamshanov.comminusm.listener.OrderFlagListener
+import ru.kyamshanov.comminusm.listener.OrderRespawnListener
 import ru.kyamshanov.comminusm.listener.PlayerListener
+import ru.kyamshanov.comminusm.service.HomeTimerManager
+import ru.kyamshanov.comminusm.service.OrderFlagStabilityManager
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService
@@ -39,6 +44,7 @@ import java.util.UUID
 class ComminusmPlugin : JavaPlugin() {
 
     lateinit var flagStabilityManager: FlagStabilityManager
+    private var homeTimerManager: HomeTimerManager? = null
 
     companion object {
         private lateinit var INSTANCE: ComminusmPlugin
@@ -88,7 +94,7 @@ class ComminusmPlugin : JavaPlugin() {
         // Services
         val chunkCache = ChunkCacheManager()
         val workdaysService = WorkdaysService(workdaysRepo)
-        val orderService = OrderService(orderRepo, pluginConfig.orderLevels, workdaysService, pluginConfig.minDistanceBetweenCenters, chunkCache, flagCleanupHelper, flagStabilityManager)
+        val orderService = OrderService(orderRepo, pluginConfig.orderLevels, workdaysService, pluginConfig.minDistanceBetweenCenters, chunkCache, flagCleanupHelper, flagStabilityManager, this)
         val workFrontService = WorkFrontService(frontRepo, pluginConfig.frontRadius, chunkCache, this, flagCleanupHelper, flagStabilityManager)
 
         // Register listeners
@@ -122,9 +128,23 @@ class ComminusmPlugin : JavaPlugin() {
             this,
         )
 
+        // Home spawn feature
+        val orderFlagStabilityManager = OrderFlagStabilityManager(orderRepo, logger)
+        val htManager = HomeTimerManager(this, orderFlagStabilityManager)
+        homeTimerManager = htManager
+        server.pluginManager.registerEvents(HomeTimerCancelListener(htManager), this)
+        server.pluginManager.registerEvents(
+            OrderRespawnListener(orderService, orderFlagStabilityManager, logger),
+            this,
+        )
+        server.pluginManager.registerEvents(FlagEventListener(htManager), this)
+
         // Register GUI listeners
         server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService, this), this)
-        server.pluginManager.registerEvents(OrderMenu(orderService, workdaysService, pluginConfig, workFrontService), this)
+        server.pluginManager.registerEvents(
+            OrderMenu(orderService, workdaysService, pluginConfig, workFrontService, htManager, orderFlagStabilityManager, this),
+            this,
+        )
         server.pluginManager.registerEvents(FrontMenu(workFrontService), this)
         server.pluginManager.registerEvents(TreasuryMenu(pluginConfig, workdaysService), this)
         server.pluginManager.registerEvents(AdminMenu(pluginConfig, orderService, workFrontService, workdaysService), this)
@@ -248,6 +268,7 @@ class ComminusmPlugin : JavaPlugin() {
     }
 
     override fun onDisable() {
+        homeTimerManager?.onDisable()
         logger.info("☭ Плагин деактивирован. До встречи на собрании, товарищ!")
     }
 }

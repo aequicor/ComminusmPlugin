@@ -1,7 +1,9 @@
 package ru.kyamshanov.comminusm.service
 
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import ru.kyamshanov.comminusm.config.OrderLevelConfig
+import ru.kyamshanov.comminusm.event.FlagDeactivatedEvent
 import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.model.Order
@@ -19,6 +21,7 @@ class OrderService(
     private val chunkCacheManager: ChunkCacheManager? = null,
     private val flagCleanupHelper: FlagCleanupHelper? = null,
     private val flagStabilityManager: FlagStabilityManager? = null,
+    private val plugin: org.bukkit.plugin.Plugin? = null,
 ) {
 
     fun create(uuid: UUID): Order? {
@@ -91,8 +94,10 @@ class OrderService(
 
     fun deleteByOwner(uuid: UUID) {
         val order = orderRepository.findByOwner(uuid)
+        val wasActivated = order != null && order.centerWorld != null
+        val orderId = order?.id
         if (order != null && order.centerWorld != null) {
-            val world = org.bukkit.Bukkit.getWorld(order.centerWorld)
+            val world = Bukkit.getWorld(order.centerWorld)
             val helper = flagCleanupHelper
             val manager = flagStabilityManager
             if (world != null && helper != null && manager != null) {
@@ -109,7 +114,20 @@ class OrderService(
                     bannerZ = order.centerZ,
                     flagId = "order/$uuid",
                     manager = manager,
-                    dbDeleteFn = { orderRepository.deleteByOwner(uuid) },
+                    dbDeleteFn = {
+                        orderRepository.deleteByOwner(uuid)
+                        if (wasActivated && orderId != null) {
+                            val p = plugin
+                            if (p != null) {
+                                p.server.scheduler.runTask(
+                                    p,
+                                    Runnable {
+                                        Bukkit.getPluginManager().callEvent(FlagDeactivatedEvent(orderId))
+                                    },
+                                )
+                            }
+                        }
+                    },
                 )
                 return
             }
@@ -119,8 +137,11 @@ class OrderService(
                 chunkCacheManager?.removeOrderChunk(chunk)
             }
         }
-        // Not activated or no world — DB-only delete
+        // Not activated or no cleanup helper — DB-only delete
         orderRepository.deleteByOwner(uuid)
+        if (wasActivated && orderId != null) {
+            Bukkit.getPluginManager().callEvent(FlagDeactivatedEvent(orderId))
+        }
     }
 
     private companion object {
