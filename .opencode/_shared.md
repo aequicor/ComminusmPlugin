@@ -17,7 +17,7 @@ If an agent file instruction contradicts `_shared.md` — follow the agent file.
 
 ## Language / i18n
 
-Active locale: check the `OPENCODE_LANG` environment variable first; if unset, fall back to the install-time default **ru**. The locale file `.opencode/i18n/<resolved-locale>.md` is loaded by this host's runtime — follow its labels for all status messages and user-facing output.
+Active locale: **ru** (overridable via `OPENCODE_LANG` env var). **Read `.opencode/i18n/ru.md` at the start of every task** — follow its labels for all status messages and user-facing output. (For Claude Code main session the file is also `@`-imported in `CLAUDE.md`; subagents must read it explicitly.)
 
 Supported locales: `en` (English), `ru` (Russian). To add a new language:
 1. Copy `.opencode/i18n/en.md` to `.opencode/i18n/<code>.md`
@@ -33,7 +33,7 @@ Supported locales: `en` (English), `ru` (Russian). To add a new language:
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | — | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
 
 ## File Structure
 
@@ -168,7 +168,7 @@ PO ─► @Main (single entry point)
         ├─► @CodeWriter    (code + tests + build)
         ├─► @CodeReviewer  (pull-request style review)
         ├─► @BugFixer      (defect analysis + fix + report)
-        ├─► @debugger      (reproduction + root cause, read-only)
+        ├─► @Debugger      (reproduction + root cause, read-only)
         ├─► @Designer      (UI/UX design)
         ├─► @QA            (REQUIREMENTS phase: creates test-cases.md; IMPLEMENTATION phase: appends impl TCs)
         ├─► @TestRunner    (interactive walkthrough, Status updates, Defects log, SCAN/RERUN/APPEND)
@@ -229,7 +229,7 @@ PO ─► @RequirementsPipeline (entry point via /kit-requirements-pipeline)
 
 **Flow A — integrated (default):** `@RequirementsPipeline` is dispatched by `@Main` as step 1 of the FEATURE pipeline. After PO types `/kit-approve` to `@RequirementsPipeline` and then `/kit-resume`, `@Main` continues from step 2 (SEARCH).
 
-**Flow B — standalone:** PO first runs `/kit-requirements-pipeline` separately, then `/kit-new-feature`. `@Main` detects the pre-made package in the active task file at step 0.5 and skips directly to step 3 (DESIGN).
+**Flow B — standalone:** PO first runs `/kit-requirements-pipeline` separately, then `/kit-new-feature`. `@Main` detects the pre-made package in the active task file at step 0.5 and skips REQUIREMENTS PHASE (step 1), proceeding to step 2 (SEARCH).
 
 In both flows, `@Main` does **not** modify requirements, corner cases, or spec files — they are approved artifacts. If `@Main` finds a contradiction at planning time, it surfaces it to PO before starting implementation.
 

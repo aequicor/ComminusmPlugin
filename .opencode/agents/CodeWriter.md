@@ -157,7 +157,7 @@ After each logically complete block:
 ## Step 5 — Build
 
 ```bash
-# (no gradle module for comminusm)
+# build command for comminusm: ./gradlew build
 ```
 
 If build fails — read the error, fix, rebuild. **Do not move forward until successful.**

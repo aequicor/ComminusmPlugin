@@ -20,7 +20,7 @@
     "prune": true,
     "reserved": 10000
   },
-  "formatter": {
+    "formatter": {
     "gradle-detekt-format": {
       "command": ["./gradlew", "detekt", "--auto-correct"],
       "extensions": [".kt", ".kts"]
@@ -73,7 +73,7 @@
       "enabled": true
     }
   },
-  "lsp": {
+    "lsp": {
     "kotlin": {
       "command": ["kotlin-lsp"],
       "extensions": [".kt", ".kts"]

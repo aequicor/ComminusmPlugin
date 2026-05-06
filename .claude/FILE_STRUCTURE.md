@@ -13,7 +13,7 @@
 | `.planning/tasks/<slug>.md` | @Main | **Per-task state (committed).** Type, Module, Description, Timeline (DONE/NEXT/BLOCKED). One file per active task — no merge conflicts between team members. |
 | `.planning/tasks/done/<slug>.md` | @Main | Archived task files after CLOSE. |
 | `.planning/DECISIONS.md` | @Main, humans | ADR — architectural decisions |
-| `.planning/bugs/BUG-NNN.md` | @debugger | Bug investigation report (root cause + failing test) |
+| `.planning/bugs/BUG-NNN.md` | @Debugger | Bug investigation report (root cause + failing test) |
 
 ---
 
@@ -57,7 +57,7 @@ vault/
 
 | Module | Gradle task | Source root |
 |--------|-------------|-------------|
-| comminusm | `—` | `src/main/kotlin/ru/kyamshanov/comminusm/` |
+| comminusm | — | `src/main/kotlin/ru/kyamshanov/comminusm/` |
 
 ### System paths
 
@@ -90,7 +90,7 @@ vault/
 
 | Module | Gradle task | Source root |
 |--------|-------------|-------------|
-| comminusm | `—` | `src/main/kotlin/ru/kyamshanov/comminusm/` |
+| comminusm | — | `src/main/kotlin/ru/kyamshanov/comminusm/` |
 
 ### Test roots
 

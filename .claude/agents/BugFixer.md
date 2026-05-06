@@ -205,7 +205,7 @@ Focus: security implications + unhandled edge cases."
 ## Step 7 — Build
 
 ```bash
-# (no gradle module for comminusm)
+# build command for comminusm: ./gradlew build
 ```
 
 If build fails after **2** attempts — **STOP**, escalate to main agent.

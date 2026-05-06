@@ -11,7 +11,7 @@ Run the project lint command and report results:
 3. If lint fails:
    a. List ONLY files with actual errors (skip clean files).
    b. Categorize each issue: `style` | `correctness` | `warning`.
-   c. For `style` issues: propose `"formatter": {
+   c. For `style` issues: propose `  "formatter": {
     "gradle-detekt-format": {
       "command": ["./gradlew", "detekt", "--auto-correct"],
       "extensions": [".kt", ".kts"]

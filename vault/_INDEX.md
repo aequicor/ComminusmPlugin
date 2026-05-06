@@ -8,7 +8,7 @@ triggers:
   - "orientation"
 confidence: high
 source: human
-updated: 2026-05-05T16:20:56Z
+updated: 2026-05-06T05:00:54Z
 ---
 
 # ComminusmPlugin — Knowledge Vault
@@ -34,7 +34,7 @@ updated: 2026-05-05T16:20:56Z
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | — | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
 
 ### Per-module layout
 

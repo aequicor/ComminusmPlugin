@@ -43,7 +43,7 @@ SPEC_FILE: <path or N/A>
 ```
 Then:
 - If verdict = `✅ APPROVED` → write checkpoint "Auto-approved by @AutoApprover" and proceed immediately.
-- If verdict = `❌ NEEDS_CHANGES` → resolve BLOCKERs by updating the plan/spec files directly (same write process as step 4 — plan files are @Main's domain), then call `@AutoApprover` again. Maximum **2 retry cycles**, then STOP and escalate to PO.
+- If verdict = `❌ NEEDS_CHANGES` → resolve BLOCKERs by updating the plan/spec files directly (same write process as step 5 — plan files are @Main's domain), then call `@AutoApprover` again. Maximum **2 retry cycles**, then STOP and escalate to PO.
 
 **Human `/kit-approve` always overrides** — if PO types `/kit-approve` at any point, treat it as immediate approval regardless of mode.
 
@@ -55,6 +55,7 @@ Then:
 | Subagent returned empty result 2 times in a row | STOP. Report to PO which agent and what was expected. |
 | Reasoning spinning without progress > 3 steps | STOP immediately. Output: "REASONING LOOP: <what I tried>. Waiting for instructions." |
 | Stage cycle on **same issue** (review → fix → review) ran 3 times | STOP. Escalate to PO with full review history. |
+| `@CodeWriter` returned success but no `@CodeReviewer` dispatched yet for this stage | STOP. Dispatch `@CodeReviewer` now, before any checkpoint or stage advance. Self-verification by `Read` is NOT a substitute. |
 
 **Rule:** better to stop and ask than burn context in a loop.
 
@@ -194,20 +195,48 @@ After receiving answers from PO:
               vault/reference/[module]/test-cases/[feature]-test-cases.md.
               No new file is created — the requirements pipeline already produced it.
 
+5b. SESSION HANDOFF — read `.opencode/skills/session-handoff/SKILL.md` and follow
+              its instructions exactly. This prints a copy-pasteable artifact block
+              so the PO can resume in a new session without context loss.
+              Then proceed immediately to step 6.
+
 6. CONFIRM — show PO summary: goal, modules, stages, risks, link to test-cases.md (highlight new PEND TCs).
              AUTO_APPROVE=false → wait for PO /kit-approve.
              AUTO_APPROVE=true  → dispatch @AutoApprover (see AUTO_APPROVE mode section).
              CHECKPOINT: write to .planning/tasks/<active_task>.md (DONE: plan created, NEXT: await approve).
 
-7. EXECUTE — call superpowers:executing-plans. For each incomplete stage:
-               a. Read stage file and referenced guidelines.
-               b. Dispatch @CodeWriter via task with stage file and context.
-               c. If build fails → analyze, update guideline, retry.
-               d. Dispatch @CodeReviewer.
-               e. CRITICAL/HIGH issues → fix via @CodeWriter (max 3 cycles, then STOP + escalate PO).
-               f. Update stage status in plan file.
-               g. CHECKPOINT after each stage: .planning/tasks/<active_task>.md.
-               h. compress.
+7. EXECUTE — for each incomplete stage in the plan, run this MANDATORY loop.
+             Every sub-step is required; do NOT skip any. Do NOT self-verify by
+             reading the changed files yourself — `@CodeReviewer` dispatch is
+             non-negotiable (see step 7.3).
+
+             `superpowers:executing-plans` MAY be used as a helper for stage
+             iteration / progress tracking, but it does NOT replace this loop
+             and it does NOT include the `@CodeReviewer` step. Ownership of
+             7.1–7.6 stays here in `@Main`.
+
+   7.1  READ — stage file + every guideline it references.
+   7.2  WRITE — dispatch `@CodeWriter` with stage file and context.
+                `@CodeWriter` writes code, tests, and runs the build.
+                If build fails → return to `@CodeWriter` with the error.
+                Max 3 build-retry cycles, then STOP and escalate to PO.
+   7.3  REVIEW — dispatch `@CodeReviewer`. **MANDATORY.**
+                Run this even if `@CodeWriter` reported success and the
+                changed files look fine on a quick read. Reading files
+                yourself is NOT a substitute — `@CodeReviewer` is an
+                independent pass with security/style/compliance checks
+                that the writer cannot self-grade.
+                `@CodeReviewer` returns issues classified
+                CRITICAL / HIGH / MEDIUM / LOW.
+   7.4  FIX — if review returned CRITICAL or HIGH:
+                dispatch `@CodeWriter` again with the review findings, then
+                loop 7.2 → 7.3. Max 3 review-fix cycles per stage; then STOP
+                and escalate to PO with the full review history.
+                MEDIUM/LOW issues → log them in the checkpoint (DONE line)
+                but do not block stage completion.
+   7.5  UPDATE — mark the stage status in the plan file.
+   7.6  CHECKPOINT — append to `.planning/tasks/<active_task>.md` (DONE/NEXT)
+                and compress before moving to the next stage.
 
 7a. QA IMPL FINAL — after last stage: dispatch @QA (Phase=IMPLEMENTATION, Mode=FINAL).
                Reconciles test-cases.md with the test files @CodeWriter actually wrote.
@@ -255,9 +284,9 @@ PO can edit it directly — flip a Status to FAIL, add a new TC row, edit Notes 
              clear stacktrace or self-evident steps → step 3 (DISPATCH BugFixer).
              complex, needs reproduction → step 2 (DEBUG).
 
-2. DEBUG  — task @debugger. Pass: TC-id + Description + (Notes if tester wrote one) from test-cases.md, environment.
+2. DEBUG  — task @Debugger. Pass: TC-id + Description + (Notes if tester wrote one) from test-cases.md, environment.
              Output: BUG-NNN.md with root cause hypothesis + failing test reference.
-             If @debugger discovers an additional scenario → dispatch @TestRunner APPEND
+             If @Debugger discovers an additional scenario → dispatch @TestRunner APPEND
              so it's tracked.
              CHECKPOINT: .planning/tasks/<active_task>.md.
 
@@ -283,11 +312,14 @@ PO can edit it directly — flip a Status to FAIL, add a new TC row, edit Notes 
 1. SEARCH  — knowledge-my-app_search_docs on the topic.
 2. PLAN    — superpowers:writing-plans (no business requirements sections).
              Create plan + stage files in vault/concepts/[module]/plans/ and vault/how-to/[module]/plans/.
+2a. SESSION HANDOFF — read `.opencode/skills/session-handoff/SKILL.md` and follow
+             its instructions exactly. Prints copy-pasteable artifact block for new-session resume.
+             Then proceed immediately to step 3.
 3. CONFIRM — show PO summary: goal, modules, stages, risks.
              AUTO_APPROVE=false → wait for PO /kit-approve.
              AUTO_APPROVE=true  → dispatch @AutoApprover (see AUTO_APPROVE mode section).
              CHECKPOINT: .planning/tasks/<active_task>.md.
-4. EXECUTE — same cycle as FEATURE step 6.
+4. EXECUTE — same cycle as FEATURE step 7.
 5. CLOSE   — update affected documentation.
              CHECKPOINT: .planning/tasks/<active_task>.md.
 ```
@@ -329,6 +361,8 @@ When calling `knowledge-my-app_search_docs`:
 - **DO NOT skip Step 0 (THINK)** — every action starts with reasoning.
 - **DO NOT skip Step 0a.** Every task starts with questions.
 - **DO NOT start EXECUTE without explicit PO approve** on the plan.
+- **DO NOT skip `@CodeReviewer` (step 7.3)** — even if `@CodeWriter` reported success and the changed files look fine on your own read. Reading the diff yourself is **not** a code review. `@CodeReviewer` is an independent dispatch and is mandatory before every checkpoint.
+- **DO NOT delegate the EXECUTE loop to `superpowers:executing-plans`** — it's a helper, not a replacement. Ownership of steps 7.1–7.6 stays in `@Main`; the helper does not dispatch `@CodeReviewer`.
 - **DO NOT write code or tests** — that's @CodeWriter.
 - **DO NOT fix bugs** — that's @BugFixer.
 - **DO NOT dispatch @CodeWriter without a stage file** — stage file is mandatory.

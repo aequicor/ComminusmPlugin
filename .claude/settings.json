@@ -81,16 +81,16 @@
     "KIT_LANG": "ru"
   },
   "mcpServers": {
-      "knowledge-my-app": {
-          "type": "http",
-          "url": "http://localhost:8010/mcp"
-      },
-      "serena": {
-          "type": "stdio",
-          "command": "serena",
-          "args": [
-              "start-mcp-server"
-          ]
-      }
+  "knowledge-my-app": {
+    "type": "http",
+    "url": "http://localhost:8010/mcp"
+  },
+  "serena": {
+    "type": "stdio",
+    "command": "serena",
+    "args": [
+      "start-mcp-server"
+    ]
   }
+}
 }

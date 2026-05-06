@@ -1,5 +1,5 @@
 ---
-name: debugger
+name: Debugger
 description: Debugger — reproduces a bug, isolates root cause, writes failing test. Passes to @BugFixer for the fix. Read-only.
 tools: Read,Bash,Grep,Glob
 model: sonnet
@@ -73,7 +73,7 @@ Create `.planning/bugs/BUG-NNN.md`:
 
 - Output: "BUG-NNN root cause: `<file:line>`. Failing test: `.planning/bugs/BUG-NNN.md`. Passing to @BugFixer."
 - **@Main** reads the output, updates the active task file, and dispatches @BugFixer with BUG-NNN.md.
-- (debugger has no write access to .planning/ files — that's @Main's job.)
+- (Debugger has no write access to .planning/ files — that's @Main's job.)
 
 ## Anti-patterns
 

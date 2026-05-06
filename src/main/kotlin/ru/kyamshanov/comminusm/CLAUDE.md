@@ -10,7 +10,7 @@
 **Responsibility:** Minecraft Paper plugin — communism-themed gameplay mechanics
 **Source root:** `src/main/kotlin/ru/kyamshanov/comminusm/`
 **Test root:** `src/test/kotlin/ru/kyamshanov/comminusm/`
-**Gradle:** (not Gradle)
+**Gradle:** (not a Gradle project)
 
 ---
 
@@ -19,20 +19,20 @@
 | Command | Purpose |
 |---------|---------|
 | `./gradlew` | Build project |
-| `./gradlew :[module]:test` | Run tests |
+| `./gradlew :comminusm:test` | Run tests |
 | `./gradlew compileKotlin` | Quick compile |
 
 ---
 
 ## Module-Specific Conventions
 
-(use project-default conventions)
+(use project-default conventions from root CLAUDE.md)
 
 ---
 
 ## Module Dependencies
 
-- `comminusm`: (none)
+- `comminusm`: (none specified)
 
 ---
 
