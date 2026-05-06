@@ -2,7 +2,7 @@
 name: BusinessAnalyst
 description: BA — drafts and updates business requirements from PO task description. Called by @RequirementsPipeline in DRAFT or UPDATE mode.
 tools: Read,Edit,Write,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

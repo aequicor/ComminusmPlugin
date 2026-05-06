@@ -2,7 +2,7 @@
 name: CodeWriter
 description: Developer — implements one stage of the plan, writes tests, validates via LSP, builds the module, returns list of changed files
 tools: Read,Edit,Write,Bash,Grep,Glob,WebFetch,Skill
-model: sonnet
+model: haiku
 ---
 
 

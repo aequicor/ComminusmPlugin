@@ -2,7 +2,7 @@
 name: CoverageChecker
 description: Coverage checker — verifies that every requirement and corner case has at least one test case. Returns PASS or GAPS list. Called by @RequirementsPipeline.
 tools: Read,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

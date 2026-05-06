@@ -2,7 +2,7 @@
 name: Debugger
 description: Debugger — reproduces a bug, isolates root cause, writes failing test. Passes to @BugFixer for the fix. Read-only.
 tools: Read,Bash,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

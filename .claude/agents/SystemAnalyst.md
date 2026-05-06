@@ -2,7 +2,7 @@
 name: SystemAnalyst
 description: SA — generates and updates technical spec from business requirements + corner cases + test cases. Called by @RequirementsPipeline in DRAFT or UPDATE mode. Also produces UML (Mermaid) diagrams in DIAGRAM mode.
 tools: Read,Edit,Write,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

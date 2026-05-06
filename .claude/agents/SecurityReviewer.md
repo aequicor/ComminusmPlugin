@@ -2,7 +2,7 @@
 name: SecurityReviewer
 description: SecurityReviewer — adversarial security pass after @CodeReviewer for stages whose changeset touches auth, sessions, tokens, PII, payments, file uploads, deserialization, SQL/ORM, external HTTP, or RBAC. OWASP-aligned axes; classifies findings CRITICAL / HIGH / MEDIUM / LOW. Read-only on src/.
 tools: Read,Edit,Write,Grep,Glob,Skill
-model: sonnet
+model: haiku
 ---
 
 
@@ -39,7 +39,7 @@ Single-pass agent. No re-review.
 
 ## Input
 
-Caller (`@Main` step 7.3b, after `@CodeReviewer` step 7.3a) passes:
+Caller (`@Main` step 7.3 — dispatched in parallel with `@CodeReviewer`, or as a sequential follow-up if `@CodeReviewer` flagged a `(deferred to @SecurityReviewer)` smell) passes:
 
 ```
 Stage: <stage-file path>

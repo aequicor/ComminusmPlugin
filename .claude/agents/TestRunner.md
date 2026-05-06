@@ -2,7 +2,7 @@
 name: TestRunner
 description: TestRunner — operates on the living `<feature>-test-cases.md`. Updates Status, walks PO through PEND TCs, scans for FAIL/PEND rows, appends new TCs, manages the Defects log. Does NOT generate the file (that's @QA REQUIREMENTS). Does NOT write test code.
 tools: Read,Edit,Write,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

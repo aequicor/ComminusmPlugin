@@ -2,7 +2,7 @@
 name: ConsistencyChecker
 description: Consistency checker — verifies that technical spec does not contradict business requirements, and that test cases align with both. Returns PASS or CONFLICTS list. Final gate before PO sign-off.
 tools: Read,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

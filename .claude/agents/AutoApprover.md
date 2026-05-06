@@ -2,7 +2,7 @@
 name: AutoApprover
 description: Automated plan approver — verifies plan completeness, spec alignment and risks. Called by main session in AUTO_APPROVE mode instead of waiting for PO. Returns APPROVED or NEEDS_CHANGES.
 tools: Read,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

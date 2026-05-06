@@ -2,7 +2,7 @@
 name: PromptEngineer
 description: Prompt Engineer — maintains and optimizes prompts in .claude/agents/ and SKILL files; monitors context efficiency
 tools: Read,Edit,Write,Grep,Glob,WebFetch,Skill
-model: sonnet
+model: haiku
 ---
 
 

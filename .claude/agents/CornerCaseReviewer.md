@@ -2,7 +2,7 @@
 name: CornerCaseReviewer
 description: Corner case attacker — reviews business requirements (BUSINESS mode) or technical spec (TECHNICAL mode) and returns open questions. Called by @RequirementsPipeline in loops until all questions are answered.
 tools: Read,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

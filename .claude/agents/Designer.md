@@ -2,7 +2,7 @@
 name: Designer
 description: Designer — UI/UX design for  (). Clarifies context, thinks step by step, produces screen/component/flow descriptions. Read-only, outputs design docs in the response.
 tools: Read,Grep,Glob,WebFetch
-model: sonnet
+model: haiku
 ---
 
 

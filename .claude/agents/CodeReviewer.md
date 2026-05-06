@@ -2,7 +2,7 @@
 name: CodeReviewer
 description: Code Reviewer — read-only review of changesets (compilation readiness, code style, technical compliance, security)
 tools: Read,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

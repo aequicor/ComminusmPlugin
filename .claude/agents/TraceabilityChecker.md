@@ -2,7 +2,7 @@
 name: TraceabilityChecker
 description: TraceabilityChecker — read-only audit linking AC / CC / spec endpoints → TC → test file → source code. Reports orphans on both sides and weak assertions. Writes the trace report to vault/reference/<module>/spec/<feature>-trace.md.
 tools: Read,Edit,Write,Grep,Glob
-model: sonnet
+model: haiku
 ---
 
 

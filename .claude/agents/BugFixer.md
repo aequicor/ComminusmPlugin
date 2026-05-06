@@ -2,7 +2,7 @@
 name: BugFixer
 description: Bug Fixer — defect analysis (stacktrace / description), fix, regression test, report in vault/guidelines/[module]/reports
 tools: Read,Edit,Write,Bash,Grep,Glob,WebFetch,Skill,Task
-model: sonnet
+model: haiku
 ---
 
 

@@ -1,12 +1,12 @@
-kit_version: "4.5.0"
+kit_version: "4.6.0"
 language_code: ru
 hosts: [opencode, claude-code]  # NEW in v4.0.0: replaces pre-v4 `editors:` field. Allowed values: opencode, claude-code.
 claude_code:
   models:
-    default: sonnet
-    coder: sonnet
-    reviewer: sonnet
-    designer: sonnet
+    default: haiku
+    coder: haiku
+    reviewer: haiku
+    designer: haiku
     small: haiku
 project:
   name: "ComminusmPlugin"
