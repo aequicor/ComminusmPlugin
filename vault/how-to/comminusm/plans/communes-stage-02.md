@@ -3,472 +3,183 @@ genre: how-to
 module: comminusm
 title: Stage 02 — Core Business Logic & Listeners
 topic: communes
+stage: 02
 date: 2026-05-06
 author: "@Main"
+status: Ready for implementation
 related:
-  - vault/reference/comminusm/spec/communes.md
   - vault/concepts/comminusm/plans/communes-plan.md
+  - vault/reference/comminusm/spec/communes.md
+  - vault/reference/comminusm/test-cases/communes-test-cases.md
 ---
 
 # Stage 02 — Core Business Logic & Listeners
 
-**Objective:** Implement commune management logic, cross-order membership, and event-driven cascades.  
-**Duration:** ~1-2 days  
-**Dependencies:** Stage 01 (OrderMembersRepository, CommuneService, CommuneInvitationService)
+**Scope:** Implement commune management logic (create, invite, accept, leave, dissolve), cross-order grants, and event handlers
+
+**Depends on:** Stage 01 (Foundation: models, repos, services)
 
 ---
 
 ## Components to Implement
 
-### 1. CrossOrderMembershipService
+### 1. CrossOrderMembershipService (Service)
+Grant and revoke cross-order member roles (commune ↔ order mapping).
 
-**File:** `src/main/kotlin/ru/kyamshanov/comminusm/service/CrossOrderMembershipService.kt`
+**Methods:**
+- `grantCommuneMember(orderIdTuple: Pair<Long, Long>, playerUuid: UUID): Result<Unit>` — add player to both orders with grantedVia="commune"
+- `revokeCommuneMember(orderIdTuple: Pair<Long, Long>, playerUuid: UUID): Result<Unit>` — remove player from both
+- `revokeAllCommuneMembers(communeId: UUID): Result<Unit>` — cascade revoke when commune dissolves
+- `getOnlineMembers(orderId: Long): Set<UUID>` — for friendly-fire checks (Stage 05)
 
-**Responsibility:** Grant/revoke cross-order Member roles (via `order_members` table). Atomic in-memory + async persist. Suppresses cascading recalculations via batch mode.
+**Concurrency:**
+- `inCascadeMode: ThreadLocal<Boolean>` — prevents O(N²) recalculation during cascade (CC-Q5)
+- Batch mode flag prevents redundant updates during order removal
 
-**Public API:**
+**Invariants:**
+- A player can be both native + commune member of same order (one entry per grantedVia)
+- Revoke-during-cascade is idempotent (no errors if already revoked)
 
-```kotlin
-interface CrossOrderMembershipService {
-    // Grant cross-order membership
-    suspend fun grantCrossOrderMember(
-        nativeOrderId: Long,  // player's native order
-        hostOrderId: Long,    // order to add member into
-        playerUUID: UUID,
-    ): Boolean  // true if granted; false if already member or error
-    
-    // Revoke cross-order membership
-    suspend fun revokeCrossOrderMember(
-        nativeOrderId: Long,
-        hostOrderId: Long,
-        playerUUID: UUID,
-    ): Boolean
-    
-    // Get all cross-order orders for a player
-    suspend fun getCrossOrderOrders(playerUUID: UUID, nativeOrderId: Long): Set<Long>
-    
-    // Recalculate rights for a player (re-evaluate all memberships)
-    suspend fun recalculateCrossOrderRights(playerUUID: UUID)
-}
-```
+### 2. CommuneStartupTask (Startup Listener)
+Load communes from DB at plugin startup, consistency scan (AC-47).
 
-**Batch Cascade Mode (CC-Q5):**
+**Methods:**
+- `onEnable()` — async load from DB, full consistency check
+- Check invariants: communes exist, orders valid, members exist, no orphaned invitations
+- Graceful degrade: if DB unavailable, use in-memory empty state
 
-```kotlin
-private val cascadeModeThreadLocal = ThreadLocal<Boolean>()
+**Behavior:**
+- Called during `ComminusmPlugin.onEnable()` before registering listeners
+- Loads `communes` table, `commune_orders` table, `commune_invitations` table
+- Populates `CommuneService.communes` and `OrderMembersRepository` cache
+- Logs warnings for inconsistencies; does NOT fail startup
 
-fun enterCascadeMode() {
-    cascadeModeThreadLocal.set(true)
-}
+### 3. CommuneOrderDestroyListener (Listener)
+Observe `FlagDeactivatedEvent`, cascade commune exit when order destroyed.
 
-fun exitCascadeMode() {
-    cascadeModeThreadLocal.remove()
-}
+**Event Handler:**
+- `onFlagDeactivated(FlagDeactivatedEvent)` — triggered when order flag is broken/destroyed
+- Find commune containing this order
+- Revoke all cross-order members from this order (cascade via CrossOrderMembershipService)
+- Remove order from commune
+- Dissolve commune if empty
+- Log: "Order [id] exited commune [communeId]"
 
-fun isInCascadeMode(): Boolean = cascadeModeThreadLocal.get() ?: false
-```
+**Concurrency:**
+- Uses `inCascadeMode` flag to batch revokes (prevent N² queries)
 
-**Implementation notes:**
-- When granting: add to cache immediately, then async persist via `OrderMembersRepository.addMember(..., granted_via='commune')`
-- When revoking: remove from cache immediately, then async persist via `OrderMembersRepository.removeMember(...)`
-- `recalculateCrossOrderRights`: called by `OrderMemberRemovedEvent` listener to re-evaluate player's cross-order grants
-  - **UNLESS** `isInCascadeMode()` returns true (in which case skip the call; parent context will call once at end)
-- Atomic semantics: updates happen in-memory first (visible to next call); async persist is eventual
-- On DB error: log at ERROR level; next startup AC-47 reconciles
+### 4. CommuneMembershipListener (Listener)
+Observe `OrderMemberRemovedEvent`, recalculate cross-order rights.
 
-**Tests:**
-- Unit: grant/revoke, batch mode suppression, recalculation logic
-- Integration: concurrent grants, cascade mode context
+**Event Handler:**
+- `onOrderMemberRemoved(OrderMemberRemovedEvent)` — triggered when player leaves order
+- If grantedVia="native": check if player is also commune member (grantedVia="commune")
+- If commune member: revoke cross-order membership (player no longer in any order in commune)
+- If grantedVia="commune": player was removed via cascade (do nothing)
 
----
+**Constraint:**
+- Called AFTER player removed from order (reactive cleanup, not preventive)
 
-### 2. CommuneStartupTask
+### 5. CommunePlayerListener (Listener)
+Observe `PlayerJoinEvent`, consistency check and offline notifications.
 
-**File:** `src/main/kotlin/ru/kyamshanov/comminusm/startup/CommuneStartupTask.kt`
+**Event Handler:**
+- `onPlayerJoin(PlayerJoinEvent)` — check if player is commune member (online notifications)
+- If player is in multiple orders (native + commune): show "You are member of commune [names]"
+- Check for stale state (AC-47): if commune version changed during player offline, show consistency warning
 
-**Responsibility:** Async initialization on `onEnable()`. Load storage, full consistency scan (AC-47), graceful degrade on error.
+**Notifications:**
+- Send offline messages: "You were invited to commune [name] while offline"
+- Send sync warnings if version mismatch detected
 
-**Public API:**
+### 6. FriendlyFireListener (Listener)
+Handle `EntityDamageByEntityEvent`, prevent damage between commune members.
 
-```kotlin
-class CommuneStartupTask(
-    private val databaseManager: DatabaseManager,
-    private val communeService: CommuneService,
-    private val communeInvitationService: CommuneInvitationService,
-    private val orderMembersRepository: OrderMembersRepository,
-    private val orderMembershipService: OrderMembershipService,
-) {
-    suspend fun startup(): StartupResult {
-        return try {
-            // 1. Load communes
-            val communes = databaseManager.loadCommunes()
-            communeService.loadFromStorage(communes)
-            
-            // 2. Load commune orders
-            val communeOrders = databaseManager.loadCommuneOrders()
-            communeOrders.forEach { (communeId, orderId) ->
-                communeService.addOrderToCommune(communeId, orderId)
-            }
-            
-            // 3. Load invitations
-            val invitations = databaseManager.loadCommuneInvitations()
-            communeInvitationService.loadFromStorage(invitations)
-            // Reschedule expiry timers
-            invitations.forEach { invitation ->
-                scheduleExpiry(invitation)
-            }
-            
-            // 4. Consistency scan (AC-47)
-            val issues = performConsistencyScan()
-            
-            StartupResult(success = true, issues = issues)
-        } catch (e: DatabaseUnavailableException) {
-            logger.error("Commune startup failed: database unavailable", e)
-            StartupResult(
-                success = false,
-                issues = listOf("DatabaseManager unavailable: ${e.message}")
-            )
-        }
-    }
-    
-    private suspend fun performConsistencyScan(): List<String> {
-        val issues = mutableListOf<String>()
-        
-        // 1. Verify all commune members are valid orders
-        for (commune in communeService.getAllCommunes()) {
-            for (orderId in commune.orderIds) {
-                if (orderService.getOrderById(orderId) == null) {
-                    issues.add("Orphan order in commune: $orderId in ${commune.id}")
-                }
-            }
-        }
-        
-        // 2. Verify cross-order members have valid native orders
-        for ((orderId, members) in orderMembersRepository.getAllMembers()) {
-            for (member in members.filter { it.grantedVia == "commune" }) {
-                val nativeOrders = orderMembershipService.listNativeOrders(member.playerUUID)
-                if (nativeOrders.isEmpty()) {
-                    issues.add("Cross-order member has no native orders: ${member.playerUUID} in $orderId")
-                    // Cleanup: remove this cross-order grant
-                    orderMembersRepository.removeMember(orderId, member.playerUUID)
-                }
-            }
-        }
-        
-        // 3. Verify orphaned orders are not in any commune
-        // (orders in commune_orders not in communes table)
-        
-        return issues
-    }
-}
+**Event Handler:**
+- `onEntityDamageByEntity(EntityDamageByEntityEvent)` — if damager and damagee are both players
+- Check: are both players in same commune? (query each player's communes via CommuneService)
+- If yes AND both in same native order: cancel damage, send "Friendly fire disabled!"
+- Concurrency: snapshot commune membership, re-validate (AC-25 multi-membership)
 
-data class StartupResult(val success: Boolean, val issues: List<String> = emptyList())
-```
-
-**Graceful Degrade:**
-- If DB error: startup returns `success=false`, app continues (commune system disabled)
-- Log CRITICAL message to alert admins
-- On next startup, AC-47 scan will reconcile if DB is back
-
-**Tests:**
-- Unit: load from DB, AC-47 scan, issue detection
-- Integration: startup with DB, startup without DB, recovery after DB comes back
+**Constraint:**
+- Uses "native orders in same commune" (not just "commune member"). Prevents abuse where cross-order members avoid friendly-fire rules.
 
 ---
 
-### 3. CommuneOrderDestroyListener
+## Key Logic (Spec §6)
 
-**File:** `src/main/kotlin/ru/kyamshanov/comminusm/listener/CommuneOrderDestroyListener.kt`
+### 6.1 Create Commune
+- **Precondition:** Player is leader (AC-03 check via OrderService.isLeader)
+- **Validation:** Order not already in commune
+- **Action:** Create Commune(id=UUID, orderIds={leadingOrderId}, version=0, createdBy=player)
+- **Result:** Commune now exists in-memory, async persist to DB
 
-**Responsibility:** Observe `FlagDeactivatedEvent` (published by `OrderService.deleteByOwner`), trigger cascade commune exit.
+### 6.2 Invite Order to Commune
+- **Precondition:** Caller is leader of commune member order
+- **Validation:** Target order not already member, invite not already pending
+- **Action:** If existing invite to target → replace (cancel old, create new). Schedule 30-min expiry.
+- **Result:** Invitation pending; target leader gets notification on next login (Stage 05+)
 
-**Implementation (spec §6.6, CC-S01):**
+### 6.3 Accept Invitation
+- **Precondition:** Caller is leader of target order
+- **Validation:** Invitation not expired, commune still exists, order not already in commune
+- **Action:** Atomic: increment commune.version, add order to commune, schedule cross-order grants
+- **Result:** Order now in commune; all players in target order get commune-member grants in all native orders within commune
 
-```kotlin
-class CommuneOrderDestroyListener(
-    private val communeService: CommuneService,
-    private val crossOrderMembershipService: CrossOrderMembershipService,
-    private val orderMembershipService: OrderMembershipService,
-    private val communeChatService: CommuneChatService,
-) : Listener {
-    
-    @EventHandler
-    suspend fun onOrderDestroyed(event: FlagDeactivatedEvent) {
-        val orderId = event.orderId
-        val commune = communeService.getCommuneByOrder(orderId) ?: return
-        
-        // Enter cascade mode (suppress individual recalculations)
-        crossOrderMembershipService.enterCascadeMode()
-        val affectedPlayers = mutableSetOf<UUID>()
-        
-        try {
-            // Step 1: Execute commune-leave cascade (spec 6.5 steps 5-11)
-            // Revoke all cross-order rights in both directions
-            val communeMembers = communeService.getOrdersInCommune(commune.id) ?: emptySet()
-            for (otherOrderId in communeMembers) {
-                if (otherOrderId == orderId) continue
-                val members = orderMembershipService.getMembersOfOrder(otherOrderId)
-                for (member in members.filter { it.grantedVia == "commune" }) {
-                    try {
-                        crossOrderMembershipService.revokeCrossOrderMember(
-                            otherOrderId, orderId, member.playerUUID
-                        )
-                        affectedPlayers.add(member.playerUUID)
-                    } catch (e: Exception) {
-                        logger.error("Error revoking cross-order member during cascade: ${member.playerUUID} in $orderId", e)
-                    }
-                }
-            }
-            
-            // Step 2: Remove order from commune
-            communeService.removeOrderFromCommune(commune.id, orderId)
-            
-            // Step 3: Delete native members of destroyed order
-            val nativeMembers = orderMembershipService.getMembersOfOrder(orderId)
-                .filter { it.grantedVia == "native" }
-            for (member in nativeMembers) {
-                try {
-                    orderMembershipService.removeMemberSilently(orderId, member.playerUUID)
-                    affectedPlayers.add(member.playerUUID)
-                } catch (e: Exception) {
-                    logger.error("Error removing native member during cascade: ${member.playerUUID} in $orderId", e)
-                }
-            }
-            
-            // Step 4: Check if commune is now empty
-            if (communeService.getCommuneById(commune.id)?.isEmpty == true) {
-                dissolveCommuneInternal(commune.id)
-            }
-            
-        } finally {
-            // Step 5: Exit cascade mode and recalculate once per player
-            crossOrderMembershipService.exitCascadeMode()
-            for (playerUUID in affectedPlayers) {
-                try {
-                    crossOrderMembershipService.recalculateCrossOrderRights(playerUUID)
-                } catch (e: Exception) {
-                    logger.error("Error recalculating rights for $playerUUID", e)
-                }
-            }
-            logger.info("Order destroy cascade completed for orderId=$orderId (commune=${commune.id}, affected=${affectedPlayers.size} players)")
-        }
-    }
-    
-    private suspend fun dissolveCommuneInternal(communeId: UUID) {
-        // Implement commune dissolution logic from spec 6.7
-        // (stub for now; full implementation in later revision)
-    }
-}
-```
+### 6.4 Decline Invitation
+- **Action:** Remove invitation, cancel expiry timer
 
-**Registration:**
-```kotlin
-// In ComminusmPlugin.onEnable():
-Bukkit.getPluginManager().registerEvents(
-    CommuneOrderDestroyListener(...),
-    this
-)
-```
+### 6.5 Leave Commune
+- **Precondition:** Caller is leader of order in commune
+- **Action:** Show confirm screen (GUI, Stage 04). On confirm: atomically revoke all cross-order members from this order, remove order from commune
+- **Result:** If commune now empty → dissolve (§6.7)
 
-**Tests:**
-- Unit: cascade logic, error recovery, affected player collection
-- Integration: order destruction → commune updates → player right recalc
+### 6.6 Order Destroyed
+- **Trigger:** FlagDeactivatedEvent (order flag broken)
+- **Action:** Cascade leave (§6.5 without confirm screen)
+
+### 6.7 Dissolve Commune
+- **Precondition:** Commune empty (zero orders) OR last order leaving
+- **Action:** Revoke all cross-order rights, cancel pending invitations, reset all players' commune-chat toggle
+- **Result:** Commune removed from memory, async delete from DB
+
+### 6.8 Invite Native Member
+- **Precondition:** Caller is leader of order
+- **Action:** Add player to order with grantedVia="native" (via OrderMembershipService)
+- **Result:** Player can now modify order territory
 
 ---
 
-### 4. CommuneMembershipListener
+## Concurrency & Atomicity
 
-**File:** `src/main/kotlin/ru/kyamshanov/comminusm/listener/CommuneMembershipListener.kt`
-
-**Responsibility:** Observe `OrderMemberRemovedEvent`, trigger cross-order rights recalculation (AC-25).
-
-```kotlin
-class CommuneMembershipListener(
-    private val crossOrderMembershipService: CrossOrderMembershipService,
-) : Listener {
-    
-    @EventHandler
-    suspend fun onMemberRemoved(event: OrderMemberRemovedEvent) {
-        // If a player loses membership in an order, recalculate all their cross-order grants
-        // (because they may have lost access to the native order that granted them commune status)
-        crossOrderMembershipService.recalculateCrossOrderRights(event.playerUUID)
-    }
-}
-```
+- **Per-order locks:** OrderMembersRepository uses ReentrantReadWriteLock
+- **Per-commune locks:** CommuneService uses ReentrantLock for version increments
+- **Cascade mode:** ThreadLocal<Boolean> inCascadeMode flag prevents O(N²) recalculations
+  - Set before cascade, unset after
+  - All revokes during cascade are batched, single DB flush at end
 
 ---
 
-### 5. CommunePlayerListener
-
-**File:** `src/main/kotlin/ru/kyamshanov/comminusm/listener/CommunePlayerListener.kt`
-
-**Responsibility:** Observe `PlayerJoinEvent`, run consistency check (AC-47), deliver offline notifications (CC-14).
-
-```kotlin
-class CommunePlayerListener(
-    private val communeService: CommuneService,
-    private val orderMembershipService: OrderMembershipService,
-    private val communeChatService: CommuneChatService,
-) : Listener {
-    
-    @EventHandler
-    suspend fun onPlayerJoin(event: PlayerJoinEvent) {
-        val player = event.player
-        
-        // 1. Consistency check: verify player's commune memberships are still valid
-        val nativeOrders = orderMembershipService.listNativeOrders(player.uniqueId)
-        for (nativeOrderId in nativeOrders) {
-            val commune = communeService.getCommuneByOrder(nativeOrderId) ?: continue
-            // Verify native order is still in this commune
-            if (nativeOrderId !in (communeService.getOrdersInCommune(commune.id) ?: emptySet())) {
-                // Inconsistency detected: native order no longer in commune (shouldn't happen, but handle)
-                logger.warn("Consistency: player ${player.name} native order $nativeOrderId not in commune ${commune.id}")
-                // Reset commune chat toggle for this player
-                communeChatService.setToggleMode(player.uniqueId, false)
-            }
-        }
-        
-        // 2. Deliver offline notifications (CC-14)
-        // (stub: implementation depends on notification system)
-    }
-}
-```
-
----
-
-### 6. FriendlyFireListener
-
-**File:** `src/main/kotlin/ru/kyamshanov/comminusm/listener/FriendlyFireListener.kt`
-
-**Responsibility:** Handle `EntityDamageByEntityEvent`, prevent damage between commune members (AC-20, AC-22).
-
-**Key rules (spec AC-22):**
-- A player's "native orders" = owner order + all native member orders (granted_via != 'commune')
-- Friendly-fire protection: if attacker's native orders and target's native orders share a commune → block damage
-- Cross-order membership (granted_via='commune') does NOT count for native orders
-
-```kotlin
-class FriendlyFireListener(
-    private val communeService: CommuneService,
-    private val orderMembershipService: OrderMembershipService,
-) : Listener {
-    
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
-    suspend fun onEntityDamage(event: EntityDamageByEntityEvent) {
-        if (event.damager !is Player || event.entity !is Player) return
-        
-        val attacker = event.damager as Player
-        val target = event.entity as Player
-        
-        // Get native orders for both players
-        val attackerNativeOrders = orderMembershipService.listNativeOrders(attacker.uniqueId)
-        val targetNativeOrders = orderMembershipService.listNativeOrders(target.uniqueId)
-        
-        // Check if any native order pair shares a commune
-        for (attackerOrder in attackerNativeOrders) {
-            val attackerCommune = communeService.getCommuneByOrder(attackerOrder) ?: continue
-            for (targetOrder in targetNativeOrders) {
-                if (targetOrder in (communeService.getOrdersInCommune(attackerCommune.id) ?: emptySet())) {
-                    // Friendly fire detected
-                    event.isCancelled = true
-                    attacker.sendMessage("§7Это ваш союзник")
-                    return
-                }
-            }
-        }
-    }
-}
-```
-
----
-
-## Events to Define
-
-### OrderMemberAddedEvent
-
-```kotlin
-class OrderMemberAddedEvent(
-    val orderId: Long,
-    val playerUUID: UUID,
-    val grantedVia: String, // "native" or "commune"
-) : Event() {
-    override fun getHandlers() = handlerList
-    companion object {
-        @JvmStatic
-        val handlerList = HandlerList()
-    }
-}
-```
-
-### OrderMemberRemovedEvent
-
-```kotlin
-class OrderMemberRemovedEvent(
-    val orderId: Long,
-    val playerUUID: UUID,
-    val grantedVia: String,
-) : Event() {
-    override fun getHandlers() = handlerList
-    companion object {
-        @JvmStatic
-        val handlerList = HandlerList()
-    }
-}
-```
-
----
-
-## Tests for Stage 02
+## Testing Strategy
 
 ### Unit Tests
-
-- `CrossOrderMembershipServiceTest`
-  - Grant cross-order member
-  - Revoke cross-order member
-  - Batch cascade mode (suppress recalculations)
-  - Recalculate rights
-
-- `CommuneOrderDestroyListenerTest`
-  - Order destroyed → commune cascade
-  - Affected players collected
-  - Native members removed
-  - Commune dissolved if empty
-
-- `CommuneMembershipListenerTest`
-  - Member removed → recalc triggered
-
-- `CommunePlayerListenerTest`
-  - Join → consistency check
-
-- `FriendlyFireListenerTest`
-  - Same commune → no damage
-  - Different communes → damage allowed
-  - Cross-order membership not counted
-
-- `CommuneStartupTaskTest`
-  - Load from DB
-  - AC-47 consistency scan
-  - Issue detection
-  - Graceful degrade on DB error
+- CommuneService: create, add/remove orders, version increments, dissolution
+- CrossOrderMembershipService: grant/revoke operations, cascade mode
+- CommuneOrderDestroyListener: order destroyed → cascade exit
 
 ### Integration Tests
-
-- Full cascade: order destroyed → all cross-order rights revoked → commune dissolved
-- Concurrent operations: multiple listeners firing simultaneously
-- Event propagation: member added → listeners respond
-
----
-
-## DoD Checklist
-
-- [ ] All classes compile
-- [ ] `./gradlew compileKotlin` passes
-- [ ] Unit tests: `./gradlew test` passes
-- [ ] `./gradlew detekt ktlintCheck` passes
-- [ ] All public APIs documented
-- [ ] Event handlers registered in `ComminusmPlugin.onEnable()`
-- [ ] Cascade error handling implemented (try/catch + continue)
-- [ ] Batch cascade mode working (no N² recalculations)
-- [ ] AC-47 consistency scan implemented
+- Full workflow: create commune, invite, accept, leave
+- Cascade on order destroy: multiple orders, cleanup validation
+- Concurrency: multiple accepts/leaves in parallel, version consistency
+- Offline sync: player offline during invite, notification on login
 
 ---
+
+## Definition of Done
+
+- [ ] All 6 components (services + listeners) compiled
+- [ ] Unit tests: all GREEN
+- [ ] Integration tests: all GREEN
+- [ ] `./gradlew compileKotlin` succeeds
+- [ ] @CodeReviewer approves
+- [ ] Spec coverage: AC-01..AC-60, CC-01..CC-07 traced to code

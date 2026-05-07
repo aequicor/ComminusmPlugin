@@ -33,6 +33,8 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.46.0.0")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.3.20-RC3")
+    testImplementation("io.mockk:mockk:1.13.10")
 }
 
 tasks.test {

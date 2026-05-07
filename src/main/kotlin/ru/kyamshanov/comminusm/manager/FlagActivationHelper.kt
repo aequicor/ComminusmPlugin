@@ -23,6 +23,18 @@ sealed class ActivationCheckResult {
     data class Ok(val chunkKey: String) : ActivationCheckResult()
 }
 
+/** Context data for flag rollback operation. */
+data class RollbackContext(
+    val bannerBlock: Block,
+    val supportBlock: Block,
+    val originalMaterial: Material,
+    val flagId: String,
+    val manager: FlagStabilityManager,
+    val pdc: PersistentDataContainer,
+    val flagKey: NamespacedKey,
+    val supportMatKey: NamespacedKey,
+)
+
 /**
  * Stateless helper that encapsulates the two-phase flag activation flow:
  * synchronous pre-checks + world mutation (main thread) and async DB write
@@ -166,12 +178,16 @@ class FlagActivationHelper(private val plugin: Plugin) {
             Runnable {
                 try {
                     dbWrite()
-                } catch (e: Exception) {
+                } catch (e: RuntimeException) {
                     plugin.logger.severe("DB write failed for flag $flagId: ${e.message}")
+                    val rollbackContext = RollbackContext(
+                        bannerBlock, supportBlock, originalMaterial, flagId, manager, pdc,
+                        flagKey, supportMatKey
+                    )
                     Bukkit.getScheduler().runTask(
                         plugin,
                         Runnable {
-                            rollback(bannerBlock, supportBlock, originalMaterial, flagId, manager, pdc, flagKey, supportMatKey)
+                            rollback(rollbackContext)
                             onDbFailure(Bukkit.getPlayer(ownerUuid))
                         }
                     )
@@ -194,9 +210,9 @@ class FlagActivationHelper(private val plugin: Plugin) {
                                 stand.customName(Component.text(title))
                                 stand.isCustomNameVisible = true
                             }
-                        } catch (e: Exception) {
+                        } catch (e: RuntimeException) {
                             plugin.logger.severe("ArmorStand spawn failed for flag $flagId: ${e.message}")
-                            rollback(bannerBlock, supportBlock, originalMaterial, flagId, manager, pdc, flagKey, supportMatKey)
+                            rollback(RollbackContext(bannerBlock, supportBlock, originalMaterial, flagId, manager, pdc, flagKey, supportMatKey))
                             onDbFailure(Bukkit.getPlayer(ownerUuid))
                             return@Runnable
                         }
@@ -212,26 +228,21 @@ class FlagActivationHelper(private val plugin: Plugin) {
         )
     }
 
-    private fun rollback(
-        bannerBlock: Block,
-        supportBlock: Block,
-        originalMaterial: Material,
-        flagId: String,
-        manager: FlagStabilityManager,
-        pdc: PersistentDataContainer,
-        flagKey: NamespacedKey,
-        supportMatKey: NamespacedKey
-    ) {
-        supportBlock.type = originalMaterial
-        pdc.remove(flagKey)
-        pdc.remove(supportMatKey)
-        manager.removeFromCache(
-            bannerBlock.world.name, bannerBlock.x shr CHUNK_SHIFT, bannerBlock.z shr CHUNK_SHIFT,
-            bannerBlock.x, bannerBlock.y, bannerBlock.z
+    private fun rollback(context: RollbackContext) {
+        context.supportBlock.type = context.originalMaterial
+        context.pdc.remove(context.flagKey)
+        context.pdc.remove(context.supportMatKey)
+        val bannerChunkX = context.bannerBlock.x shr CHUNK_SHIFT
+        val bannerChunkZ = context.bannerBlock.z shr CHUNK_SHIFT
+        context.manager.removeFromCache(
+            context.bannerBlock.world.name, bannerChunkX, bannerChunkZ,
+            context.bannerBlock.x, context.bannerBlock.y, context.bannerBlock.z
         )
-        manager.removeFromCache(
-            supportBlock.world.name, supportBlock.x shr CHUNK_SHIFT, supportBlock.z shr CHUNK_SHIFT,
-            supportBlock.x, supportBlock.y, supportBlock.z
+        val supportChunkX = context.supportBlock.x shr CHUNK_SHIFT
+        val supportChunkZ = context.supportBlock.z shr CHUNK_SHIFT
+        context.manager.removeFromCache(
+            context.supportBlock.world.name, supportChunkX, supportChunkZ,
+            context.supportBlock.x, context.supportBlock.y, context.supportBlock.z
         )
     }
 

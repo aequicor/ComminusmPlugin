@@ -17,8 +17,7 @@ import ru.kyamshanov.comminusm.service.WorkFrontService
 
 class BlockListener(
     private val orderService: OrderService,
-    private val workFrontService: WorkFrontService?,
-    private val manager: FlagStabilityManager? = null
+    private val workFrontService: WorkFrontService?
 ) : Listener {
 
     private fun hasOrder(uuid: UUID): Boolean = orderService.findByOwner(uuid) != null
@@ -31,147 +30,186 @@ class BlockListener(
         val loc = block.location
         val world = loc.world ?: return
 
-        // Prevent breaking Order flags
-        if (block.type == Material.WHITE_BANNER) {
-            val allOrders = orderService.findAllInWorld(world.name)
-            for (order in allOrders) {
-                if (order.centerWorld == world.name
-                    && order.centerX == loc.blockX
-                    && order.centerY == loc.blockY
-                    && order.centerZ == loc.blockZ) {
-                    if (order.ownerUuid != uuid) {
-                        event.isCancelled = true
-                        player.sendMessage(Component.text("§cНельзя сломать чужой флаг Ордера, товарищ!"))
-                        return
-                    } else {
-                        event.isCancelled = true
-                        showDeleteOrderConfirmation(player, order.id)
-                        return
-                    }
-                }
-            }
-        }
+        if (handleOrderFlagBreak(event, player, uuid, block, loc, world)) return
+        if (handleFrontFlagBreak(event, player, uuid, block, loc, world)) return
+        if (handleFlagSupportBreak(event, player, uuid, world, loc)) return
+        if (handleZoneCheck(event, player, uuid, world, loc)) return
+    }
 
-        // Prevent breaking Front flags
-        if (block.type == Material.RED_BANNER) {
-            val front = workFrontService?.getByOwner(uuid)
-            if (front != null && front.centerWorld == world.name
-                && front.centerX == loc.blockX && front.centerY == loc.blockY && front.centerZ == loc.blockZ) {
+    private fun handleOrderFlagBreak(
+        event: BlockBreakEvent,
+        player: org.bukkit.entity.Player,
+        uuid: UUID,
+        block: org.bukkit.block.Block,
+        loc: org.bukkit.Location,
+        world: org.bukkit.World
+    ): Boolean {
+        if (block.type != Material.WHITE_BANNER) return false
+        val allOrders = orderService.findAllInWorld(world.name)
+        for (order in allOrders) {
+            if (order.centerWorld == world.name
+                && order.centerX == loc.blockX
+                && order.centerY == loc.blockY
+                && order.centerZ == loc.blockZ) {
                 event.isCancelled = true
-                val frontRadius = front.radius
-                checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
-                // Remove orphaned banner block from the world
-                event.block.type = Material.AIR
-                val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
-                val meta = flag.itemMeta
-                meta.displayName(Component.text("§6Флаг Трудового Фронта"))
-                meta.lore(listOf(
-                    Component.text("§7Установите в новом месте"),
-                    Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
-                ))
-                flag.itemMeta = meta
-                giveOrNotify(player, flag, "§6☭ Трудовой Фронт удалён. Флаг добавлен в инвентарь.")
-                return
-            }
-            val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
-            for (f in allFronts) {
-                if (f.centerWorld == world.name && f.centerX == loc.blockX
-                    && f.centerY == loc.blockY && f.centerZ == loc.blockZ
-                    && f.ownerUuid != uuid) {
-                    event.isCancelled = true
-                    player.sendMessage(Component.text("§cНельзя сломать чужой флаг Фронта, товарищ!"))
-                    return
-                }
-            }
-        }
-
-        // Check: is this block a support block for any order or front flag?
-        val supportInfo = getFlagSupportInfo(world, loc)
-        if (supportInfo != null) {
-            when (supportInfo.type) {
-                FlagSupportType.ORDER -> {
-                    val order = orderService.findAllInWorld(world.name).firstOrNull { o ->
-                        o.centerX == supportInfo.flagX &&
-                            o.centerY == supportInfo.flagY &&
-                            o.centerZ == supportInfo.flagZ
+                return when {
+                    order.ownerUuid != uuid -> {
+                        player.sendMessage(Component.text("§cНельзя сломать чужой флаг Ордера, товарищ!"))
+                        true
                     }
-                    if (order != null) {
-                        if (order.ownerUuid == uuid) {
-                            // Owner breaking their own order flag support → show deletion confirmation
-                            event.isCancelled = true
-                            showDeleteOrderConfirmation(player, order.id)
-                        } else {
-                            // Foreign player breaking someone's order flag support → deny
-                            event.isCancelled = true
-                            player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Ордера, товарищ!"))
-                        }
-                        return
-                    }
-                }
-                FlagSupportType.FRONT -> {
-                    val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
-                    val front = allFronts.firstOrNull { f ->
-                        f.centerX == supportInfo.flagX &&
-                            f.centerY == supportInfo.flagY &&
-                            f.centerZ == supportInfo.flagZ
-                    }
-                    if (front != null) {
-                        if (front.ownerUuid == uuid) {
-                            // Owner breaking their own front flag support → deactivate front, give flag to inventory
-                            // Note: deactivate() calls FlagCleanupHelper which restores the original support material.
-                            // Do NOT set event.block.type = Material.AIR here — that would overwrite the restoration.
-                            event.isCancelled = true
-                            val frontRadius = front.radius
-                            checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
-                            val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
-                            val meta = flag.itemMeta
-                            meta.displayName(Component.text("§6Флаг Трудового Фронта"))
-                            meta.lore(listOf(
-                                Component.text("§7Установите в новом месте"),
-                                Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
-                            ))
-                            flag.itemMeta = meta
-                            giveOrNotify(player, flag, "§6☭ Трудовой Фронт удалён. Флаг добавлен в инвентарь.")
-                        } else {
-                            // Foreign player breaking someone's front flag support → deny
-                            event.isCancelled = true
-                            player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
-                        }
-                        return
+                    else -> {
+                        showDeleteOrderConfirmation(player, order.id)
+                        true
                     }
                 }
             }
         }
+        return false
+    }
 
-        // 1. Check: inside player's OWN order? → ALLOW
+    private fun handleFrontFlagBreak(
+        event: BlockBreakEvent,
+        player: org.bukkit.entity.Player,
+        uuid: UUID,
+        block: org.bukkit.block.Block,
+        loc: org.bukkit.Location,
+        world: org.bukkit.World
+    ): Boolean {
+        if (block.type != Material.RED_BANNER) return false
+        val front = workFrontService?.getByOwner(uuid)
+        if (front != null && front.centerWorld == world.name
+            && front.centerX == loc.blockX && front.centerY == loc.blockY && front.centerZ == loc.blockZ) {
+            event.isCancelled = true
+            deactivateFrontAndGiveFlag(player, uuid, front)
+            return true
+        }
+        val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
+        for (f in allFronts) {
+            if (f.centerWorld == world.name && f.centerX == loc.blockX
+                && f.centerY == loc.blockY && f.centerZ == loc.blockZ
+                && f.ownerUuid != uuid) {
+                event.isCancelled = true
+                player.sendMessage(Component.text("§cНельзя сломать чужой флаг Фронта, товарищ!"))
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun deactivateFrontAndGiveFlag(
+        player: org.bukkit.entity.Player,
+        uuid: UUID,
+        front: ru.kyamshanov.comminusm.model.WorkFront
+    ) {
+        val frontRadius = front.radius
+        checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
+        val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
+        val meta = flag.itemMeta
+        meta.displayName(Component.text("§6Флаг Трудового Фронта"))
+        meta.lore(listOf(
+            Component.text("§7Установите в новом месте"),
+            Component.text("§7Радиус добычи: §e${frontRadius} §7блоков")
+        ))
+        flag.itemMeta = meta
+        giveOrNotify(player, flag, "§6☭ Трудовой Фронт удалён. Флаг добавлен в инвентарь.")
+    }
+
+    private fun handleFlagSupportBreak(
+        event: BlockBreakEvent,
+        player: org.bukkit.entity.Player,
+        uuid: UUID,
+        world: org.bukkit.World,
+        loc: org.bukkit.Location
+    ): Boolean {
+        val supportInfo = getFlagSupportInfo(world, loc) ?: return false
+        return when (supportInfo.type) {
+            FlagSupportType.ORDER -> handleOrderFlagSupportBreak(event, player, uuid, world, supportInfo)
+            FlagSupportType.FRONT -> handleFrontFlagSupportBreak(event, player, uuid, world, supportInfo)
+        }
+    }
+
+    private fun handleOrderFlagSupportBreak(
+        event: BlockBreakEvent,
+        player: org.bukkit.entity.Player,
+        uuid: UUID,
+        world: org.bukkit.World,
+        supportInfo: FlagSupportInfo
+    ): Boolean {
+        val order = orderService.findAllInWorld(world.name).firstOrNull { o ->
+            o.centerX == supportInfo.flagX &&
+                o.centerY == supportInfo.flagY &&
+                o.centerZ == supportInfo.flagZ
+        } ?: return false
+        event.isCancelled = true
+        return when {
+            order.ownerUuid == uuid -> {
+                showDeleteOrderConfirmation(player, order.id)
+                true
+            }
+            else -> {
+                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Ордера, товарищ!"))
+                true
+            }
+        }
+    }
+
+    private fun handleFrontFlagSupportBreak(
+        event: BlockBreakEvent,
+        player: org.bukkit.entity.Player,
+        uuid: UUID,
+        world: org.bukkit.World,
+        supportInfo: FlagSupportInfo
+    ): Boolean {
+        val allFronts = workFrontService?.getAllInWorld(world.name) ?: emptyList()
+        val front = allFronts.firstOrNull { f ->
+            f.centerX == supportInfo.flagX &&
+                f.centerY == supportInfo.flagY &&
+                f.centerZ == supportInfo.flagZ
+        } ?: return false
+        event.isCancelled = true
+        return when {
+            front.ownerUuid == uuid -> {
+                deactivateFrontAndGiveFlag(player, uuid, front)
+                true
+            }
+            else -> {
+                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
+                true
+            }
+        }
+    }
+
+    private fun handleZoneCheck(
+        event: BlockBreakEvent,
+        player: org.bukkit.entity.Player,
+        uuid: UUID,
+        world: org.bukkit.World,
+        loc: org.bukkit.Location
+    ): Boolean {
         val myOrder = orderService.findByOwner(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
-            return // allowed
+            return true
         }
-
-        // 2. Check: inside SOMEONE ELSE'S order? → DENY
         val allOrders = orderService.findAllInWorld(world.name)
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
                 event.isCancelled = true
                 player.sendMessage(Component.text("§cЧужая жилплощадь, товарищ! Обратитесь в партию за собственным Ордером."))
-                return
+                return true
             }
         }
-
-        // 3. Check: inside player's OWN front? → ALLOW
         val myFront = workFrontService?.getByOwner(uuid)
         if (myFront != null && myFront.centerWorld == world.name && isInsideFront(myFront, loc)) {
-            return // allowed
+            return true
         }
-
-        // 4. No order, no front → DENY
         event.isCancelled = true
-        if (hasOrder(uuid)) {
-            player.sendMessage(Component.text("§cВы находитесь вне вашей жилплощади, товарищ! Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"))
+        val message = if (hasOrder(uuid)) {
+            "§cВы находитесь вне вашей жилплощади, товарищ! Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"
         } else {
-            player.sendMessage(Component.text("§cНесанкционированная добыча ресурсов, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия"))
+            "§cНесанкционированная добыча ресурсов, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия"
         }
+        player.sendMessage(Component.text(message))
+        return true
     }
 
     @EventHandler

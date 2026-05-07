@@ -1,18 +1,25 @@
-package ru.kyamshanov.comminusm.storage
+package ru.kyamshanov.comminusm.infrastructure.repositories
 
+import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.model.Order
 import java.sql.Connection
 import java.util.UUID
 
-class OrderRepository(private val conn: Connection) {
+/**
+ * SQL-based implementation of OrderRepository.
+ * Handles persistence of Order entities using SQLite database.
+ */
+@Suppress("MagicNumber", "MaxLineLength")
+class OrderRepositoryImpl(private val conn: Connection) : OrderRepository {
 
-    fun insert(order: Order): Long {
+    override fun insert(order: Order): Long {
         val stmt = conn.prepareStatement(
-            "INSERT INTO orders (owner_uuid, level, radius) VALUES (?, ?, ?)"
+            "INSERT INTO orders (owner_uuid, name, level, radius) VALUES (?, ?, ?, ?)"
         )
         stmt.setString(1, order.ownerUuid.toString())
-        stmt.setInt(2, order.level)
-        stmt.setInt(3, order.radius)
+        stmt.setString(2, order.name)
+        stmt.setInt(3, order.level)
+        stmt.setInt(4, order.radius)
         stmt.executeUpdate()
         val rs = stmt.generatedKeys
         val id = if (rs.next()) rs.getLong(1) else 0L
@@ -21,9 +28,9 @@ class OrderRepository(private val conn: Connection) {
         return id
     }
 
-    fun findByOwner(uuid: UUID): Order? {
+    override fun findByOwner(uuid: UUID): Order? {
         val stmt = conn.prepareStatement(
-            "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE owner_uuid = ?"
+            "SELECT id, owner_uuid, name, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE owner_uuid = ?"
         )
         stmt.setString(1, uuid.toString())
         val rs = stmt.executeQuery()
@@ -31,6 +38,7 @@ class OrderRepository(private val conn: Connection) {
             Order(
                 id = rs.getLong("id"),
                 ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                name = rs.getString("name") ?: "",
                 level = rs.getInt("level"),
                 centerWorld = rs.getString("center_world"),
                 centerX = rs.getInt("center_x"),
@@ -45,7 +53,7 @@ class OrderRepository(private val conn: Connection) {
         return result
     }
 
-    fun updateLevel(uuid: UUID, newLevel: Int, newRadius: Int) {
+    override fun updateLevel(uuid: UUID, newLevel: Int, newRadius: Int) {
         val stmt = conn.prepareStatement(
             "UPDATE orders SET level = ?, radius = ? WHERE owner_uuid = ?"
         )
@@ -56,7 +64,7 @@ class OrderRepository(private val conn: Connection) {
         stmt.close()
     }
 
-    fun activate(uuid: UUID, world: String, x: Int, y: Int, z: Int) {
+    override fun activate(uuid: UUID, world: String, x: Int, y: Int, z: Int) {
         val stmt = conn.prepareStatement(
             "UPDATE orders SET center_world = ?, center_x = ?, center_y = ?, center_z = ? WHERE owner_uuid = ?"
         )
@@ -69,9 +77,9 @@ class OrderRepository(private val conn: Connection) {
         stmt.close()
     }
 
-    fun findAllInWorld(world: String): List<Order> {
+    override fun findAllInWorld(world: String): List<Order> {
         val stmt = conn.prepareStatement(
-            "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE center_world = ?"
+            "SELECT id, owner_uuid, name, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE center_world = ?"
         )
         stmt.setString(1, world)
         val rs = stmt.executeQuery()
@@ -81,6 +89,7 @@ class OrderRepository(private val conn: Connection) {
                 Order(
                     id = rs.getLong("id"),
                     ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                    name = rs.getString("name") ?: "",
                     level = rs.getInt("level"),
                     centerWorld = rs.getString("center_world"),
                     centerX = rs.getInt("center_x"),
@@ -96,9 +105,9 @@ class OrderRepository(private val conn: Connection) {
         return result
     }
 
-    fun findAllActivated(): List<Order> {
+    override fun findAllActivated(): List<Order> {
         val stmt = conn.prepareStatement(
-            "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE center_world IS NOT NULL"
+            "SELECT id, owner_uuid, name, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE center_world IS NOT NULL"
         )
         val rs = stmt.executeQuery()
         val result = mutableListOf<Order>()
@@ -107,6 +116,7 @@ class OrderRepository(private val conn: Connection) {
                 Order(
                     id = rs.getLong("id"),
                     ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                    name = rs.getString("name") ?: "",
                     level = rs.getInt("level"),
                     centerWorld = rs.getString("center_world"),
                     centerX = rs.getInt("center_x"),
@@ -122,8 +132,8 @@ class OrderRepository(private val conn: Connection) {
         return result
     }
 
-    fun findById(id: Long): Order? {
-        val sql = "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE id = ?"
+    override fun findById(id: Long): Order? {
+        val sql = "SELECT id, owner_uuid, name, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE id = ?"
         conn.prepareStatement(sql).use { stmt ->
             stmt.setLong(1, id)
             val rs = stmt.executeQuery()
@@ -131,6 +141,7 @@ class OrderRepository(private val conn: Connection) {
                 return Order(
                     id = rs.getLong("id"),
                     ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                    name = rs.getString("name") ?: "",
                     level = rs.getInt("level"),
                     centerWorld = rs.getString("center_world"),
                     centerX = rs.getInt("center_x"),
@@ -144,9 +155,26 @@ class OrderRepository(private val conn: Connection) {
         return null
     }
 
-    fun deleteByOwner(uuid: UUID) {
+    override fun deleteByOwner(uuid: UUID) {
         val stmt = conn.prepareStatement("DELETE FROM orders WHERE owner_uuid = ?")
         stmt.setString(1, uuid.toString())
+        stmt.executeUpdate()
+        stmt.close()
+    }
+
+    override fun update(order: Order) {
+        // Not currently used in the codebase, but provided for interface completeness
+        val stmt = conn.prepareStatement(
+            "UPDATE orders SET name = ?, level = ?, radius = ?, center_world = ?, center_x = ?, center_y = ?, center_z = ? WHERE id = ?"
+        )
+        stmt.setString(1, order.name)
+        stmt.setInt(2, order.level)
+        stmt.setInt(3, order.radius)
+        stmt.setString(4, order.centerWorld)
+        stmt.setInt(5, order.centerX)
+        stmt.setInt(6, order.centerY)
+        stmt.setInt(7, order.centerZ)
+        stmt.setLong(8, order.id)
         stmt.executeUpdate()
         stmt.close()
     }

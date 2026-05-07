@@ -1,22 +1,26 @@
 package ru.kyamshanov.comminusm.storage
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.model.WorkFront
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkdaysRepositoryImpl
 import java.util.UUID
 
 class WorkFrontRepositoryTest {
     private lateinit var db: DatabaseManager
-    private lateinit var repo: WorkFrontRepository
-    private lateinit var wdRepo: WorkdaysRepository
+    private lateinit var repo: WorkFrontRepositoryImpl
+    private lateinit var wdRepo: WorkdaysRepositoryImpl
     private val uuid = UUID.randomUUID()
 
     @BeforeEach
     fun setUp() {
         db = DatabaseManager("jdbc:sqlite::memory:")
-        repo = WorkFrontRepository(db.connection)
-        wdRepo = WorkdaysRepository(db.connection)
+        repo = WorkFrontRepositoryImpl(db.connection)
+        wdRepo = WorkdaysRepositoryImpl(db.connection)
     }
 
     @Test

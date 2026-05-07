@@ -13,8 +13,8 @@ import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
-import ru.kyamshanov.comminusm.storage.OrderRepository
-import ru.kyamshanov.comminusm.storage.WorkFrontRepository
+import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
+import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
 import java.util.UUID
 
 /**

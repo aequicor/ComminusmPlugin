@@ -1,0 +1,28 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.8/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :processResources
+> Task :processTestResources NO-SOURCE
+> Task :compileKotlin
+> Task :compileJava NO-SOURCE
+> Task :classes
+> Task :jar
+
+> Task :compileTestKotlin
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/gui/CommuneMenuTest.kt:43:16 Condition is always 'true'.
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/gui/CommuneOrderMenuTest.kt:31:16 Condition is always 'true'.
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/gui/CommunePartyMenuTest.kt:32:16 Condition is always 'true'.
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderMembersMenuTest.kt:33:16 Condition is always 'true'.
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/listener/OrderRespawnListenerTest.kt:156:9 'constructor(p0: Player, p1: Location, p2: Boolean): PlayerRespawnEvent' is deprecated. Deprecated in Java.
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/service/StubPluginBase.kt:12:8 'interface PluginLoader : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/service/StubPluginBase.kt:23:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///C:/Users/kruz18/IdeaProjects/ComminusmPlugin/src/test/kotlin/ru/kyamshanov/comminusm/service/StubPluginBase.kt:45:37 'interface PluginLoader : Any' is deprecated. Deprecated in Java.
+
+> Task :compileTestJava NO-SOURCE
+> Task :testClasses UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :test
+
+BUILD SUCCESSFUL in 17s
+6 actionable tasks: 6 executed

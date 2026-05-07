@@ -1,20 +1,23 @@
 package ru.kyamshanov.comminusm.storage
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.model.Order
+import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
 import java.util.UUID
 
 class OrderRepositoryTest {
     private lateinit var db: DatabaseManager
-    private lateinit var repo: OrderRepository
+    private lateinit var repo: OrderRepositoryImpl
     private val uuid = UUID.randomUUID()
 
     @BeforeEach
     fun setUp() {
         db = DatabaseManager("jdbc:sqlite::memory:")
-        repo = OrderRepository(db.connection)
+        repo = OrderRepositoryImpl(db.connection)
     }
 
     @Test

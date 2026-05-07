@@ -157,13 +157,73 @@ If during Step 3 you discover a new branch the tests didn't cover (a new Critica
 - TODO/FIXME in production code without a tracking entry (issue or DECISIONS.md)
 - Disabled/commented-out tests without an explanation
 - Catching Throwable/Exception generically and swallowing it
-- Hardcoded Bukkit ChatColor strings — use MiniMessage or component API
+- Hardcoded Bukkit ChatColor strings вЂ” use MiniMessage or component API
 - Using deprecated Bukkit API (use Paper-adventure components, not legacy ChatColors)
-- Blocking the main server thread — schedule async with Bukkit schedulers or coroutines
+- Blocking the main server thread вЂ” schedule async with Bukkit schedulers or coroutines
 - Storing Player references past event scope (causes memory leaks)
 - Calling Bukkit API from non-main thread without scheduler bouncing back to main
 - Long-running task in event handler (offload to BukkitScheduler.runTaskAsynchronously)
+- Class with more than one reason to change (god class / service class doing persistence + business logic + formatting simultaneously)
+- Method longer than 30 lines that mixes abstraction levels (orchestration + low-level detail in same function)
+- Repository class containing business rules or validation logic
+- Use case / interactor class containing more than one business operation
+- Switch/when on type tags or string type discriminators instead of polymorphism (adding a new type requires editing existing code)
+- Feature flag inside domain logic instead of strategy/decorator injection
+- Hardcoded algorithm selection inside a class that should delegate to a strategy
+- Subclass that throws UnsupportedOperationException / NotImplementedError for inherited methods
+- Subclass that weakens preconditions or strengthens postconditions of the parent contract
+- Type-checking with instanceof/is inside a method that accepts a base type (violates substitutability)
+- Interface with more than 5-7 methods that clients only partially implement (fat interface)
+- Passing a full service/repository interface to a consumer that uses only one method
+- Marker method implemented as a no-op (empty body) because the interface forced it
+- Concrete class instantiated with 'new' / constructor call inside business logic (use DI / factory)
+- Domain or use-case class importing from infrastructure layer (DB, HTTP, filesystem packages)
+- Static/global access to shared mutable state from domain logic (singletons as hidden dependencies)
+- Test that cannot run without a real database/network because a dependency was not inverted
+- Presentation layer (controller, ViewModel, screen) containing business rules
+- Domain entity importing framework annotations (ORM, serialization, DI) вЂ” keep entities pure
+- Infrastructure class (repository impl, API client) containing business decisions
+- Cross-layer import in wrong direction: inner layer importing outer layer package
+- Duplicate business logic in two or more use cases instead of extracting a shared domain service
+- Abstract base class or interface created speculatively with only one concrete implementation and no planned extension
+- Over-engineered abstraction for a one-time operation (factory-of-factories, generic pipeline for a single fixed flow)
+- Mutable public field on a domain entity or value object (use val / readonly / private setter)
+- Method that mutates its argument instead of returning a new value (unexpected side effect)
+- Shared mutable state accessed without synchronisation in concurrent context
+- Long method chain on a foreign object reaching 3+ levels deep (a.b().c().doSomething()) вЂ” violates LoD
+- Caller extracting data from an object and making decisions on its behalf instead of telling the object to act
+- Deep inheritance hierarchy (3+ levels) for code reuse вЂ” prefer composition or delegation
+- Inheriting from a concrete class solely to reuse implementation (not to extend the contract)
 
+## Step 3a — Stage Atomicity (no stubs)
+
+A stage file is **atomic**: it lands complete, or it is escalated. There is no third option. If during Step 3 you encounter a method whose body you cannot fully implement in this stage:
+
+- depends on a future stage's deliverable (a class, table, or endpoint that doesn't exist yet)
+- needs an API the project doesn't have yet (no usable example to copy, vault/context7/webfetch all empty)
+- requires PO clarification on behavior the spec does not pin down
+
+…**stop and return BLOCKED**. Do **not** commit `// TODO` placeholders, empty method bodies, or "for now: …" comments as a substitute for completing the stage. Replace your normal output table with:
+
+```markdown
+## BLOCKED — Stage [NN]
+
+Reason: <one line — what cannot be implemented and why>
+Affected ACs: <AC-NN, AC-NN>
+Affected files: <path:line, path:line>
+Proposed resolution: <split stage / await dependency / PO question>
+```
+
+`@Main` interprets this as an escalation, not a failure. The pipeline already has escalation handling in its Anti-Loop section. Half-written stages do not — they pass `@TestExecutor` (tests written against an empty body assert "no exception" and pass), pass `@CodeReviewer`'s former checklist, and the per-stage checkpoint records the AC as DONE while the body is `// TODO`. By the time the end-of-feature gates (`@CornerCaseReviewer IMPL`, `@TraceabilityChecker`, `@DoDGate`) catch the gap, several subsequent stages have been built atop the false-positive.
+
+Forbidden alternatives (every one of these has been observed to slip through previous gate chains — that's exactly why this rule exists):
+
+- `// TODO: implement in stage NN` in a method body the stage was supposed to deliver
+- An empty method body that compiles but does nothing useful (`fun loadCommunes() { /* ... */ }`)
+- `// For now: <noop or minimal placeholder>` — same problem with worse symptoms
+- Returning the normal "Changed Files" table while leaving any owned AC's implementation hollow
+
+If you are unsure whether a half-implementation qualifies, default to BLOCKED. The cost of pausing is low; the cost of a false-positive stage close multiplies across the remaining stage count.
 
 ## Step 4 — LSP Validation
 
@@ -176,7 +236,6 @@ After each logically complete block:
 
 ```bash
 # build command for comminusm: ./gradlew build
-
 ```
 
 If build fails — read the error, fix, rebuild. **Do not move forward until successful.**
@@ -233,7 +292,7 @@ Cap: max 5 entries per stage. Real bugs, security issues, and anything **inside*
 - DO NOT set stage status.
 - DO NOT make business/architectural decisions outside the stage file and guidelines.
 - DO NOT write or change code outside the current stage scope.
-- DO NOT leave unimplemented stubs in production code — implement or escalate.
+- DO NOT leave unimplemented stubs in production code — implement, or return BLOCKED per Step 3a. `// TODO: implement in stage N+1` is not a valid substitute for completing the stage.
 - **DO NOT write production code before its tests fail (Step 2 → Step 3 ordering is mandatory).** If you skip Step 2, your output is incomplete — the discipline exists for a reason (see "Why TDD here").
 - **DO NOT pad tests with vacuous assertions** (`assertNotNull(x)`, "no exception thrown"). Every test must assert against the TC's "To be" outcome — if you can't make the test fail with a wrong implementation, the assertion is too weak.
 - DO NOT guess API — vault → context7 → webfetch → verify → escalate.

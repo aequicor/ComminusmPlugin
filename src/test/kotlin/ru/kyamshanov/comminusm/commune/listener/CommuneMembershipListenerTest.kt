@@ -30,8 +30,7 @@ class CommuneMembershipListenerTest {
     fun setUp() {
         communeService = spyk(CommuneService(mutableMapOf(), mutableMapOf()))
         membershipService = mockk()
-        crossOrderService = mockk()
-        listener = CommuneMembershipListener(crossOrderService, communeService, membershipService)
+        listener = CommuneMembershipListener(communeService, membershipService)
     }
 
     /**

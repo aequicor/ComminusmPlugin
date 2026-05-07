@@ -35,7 +35,7 @@ class CommuneStartupTaskTest {
      */
     @Test
     fun testLoadCommunesCompletes() {
-        val task = CommuneStartupTask(communeService, membershipService, orderService)
+        val task = CommuneStartupTask(communeService)
 
         // Act - should not throw
         task.loadCommunes()
@@ -49,7 +49,7 @@ class CommuneStartupTaskTest {
      */
     @Test
     fun testConsistencyCheckCompletes() {
-        val task = CommuneStartupTask(communeService, membershipService, orderService)
+        val task = CommuneStartupTask(communeService)
 
         // Act - should not throw
         task.loadCommunes()
@@ -64,7 +64,7 @@ class CommuneStartupTaskTest {
      */
     @Test
     fun testStorageLoadFailedFlagOnSuccess() {
-        val task = CommuneStartupTask(communeService, membershipService, orderService)
+        val task = CommuneStartupTask(communeService)
 
         // Initially false
         assertFalse(task.storageLoadFailed, "storageLoadFailed should start as false")

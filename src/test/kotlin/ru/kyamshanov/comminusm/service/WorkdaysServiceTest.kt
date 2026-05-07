@@ -1,21 +1,23 @@
 package ru.kyamshanov.comminusm.service
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.storage.DatabaseManager
-import ru.kyamshanov.comminusm.storage.WorkdaysRepository
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkdaysRepositoryImpl
 import java.util.UUID
 
 class WorkdaysServiceTest {
-    private lateinit var repo: WorkdaysRepository
+    private lateinit var repo: WorkdaysRepositoryImpl
     private lateinit var service: WorkdaysService
     private val uuid = UUID.randomUUID()
 
     @BeforeEach
     fun setUp() {
         val db = DatabaseManager("jdbc:sqlite::memory:")
-        repo = WorkdaysRepository(db.connection)
+        repo = WorkdaysRepositoryImpl(db.connection)
         service = WorkdaysService(repo)
     }
 

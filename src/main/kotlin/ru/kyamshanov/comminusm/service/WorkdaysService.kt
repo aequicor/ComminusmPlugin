@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.service
 
-import ru.kyamshanov.comminusm.storage.WorkdaysRepository
+import ru.kyamshanov.comminusm.domain.repositories.WorkdaysRepository
 import java.util.UUID
 
 class WorkdaysService(private val repository: WorkdaysRepository) {

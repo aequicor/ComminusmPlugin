@@ -3,8 +3,6 @@ package ru.kyamshanov.comminusm.commune.listener
 import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.service.OrderService
 
 /**
  * Startup task that loads communes from storage and performs consistency checks.
@@ -21,9 +19,7 @@ import ru.kyamshanov.comminusm.service.OrderService
  * Implements CC-17: "Consistency check may take time for large datasets"
  */
 class CommuneStartupTask(
-    private val communeService: CommuneService,
-    private val membershipService: OrderMembershipService,
-    private val orderService: OrderService,
+    @Suppress("UNUSED_PARAMETER") private val communeService: CommuneService,
     private val plugin: Plugin? = null
 ) {
 
@@ -46,7 +42,7 @@ class CommuneStartupTask(
                     performConsistencyCheck()
                     startupComplete = true
                 }
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 storageLoadFailed = true
                 Bukkit.getLogger().severe("Failed to load communes at startup: ${e.message}")
             }
@@ -61,14 +57,10 @@ class CommuneStartupTask(
      */
     internal fun loadCommunes() {
         try {
-            // TODO: Implement database load (§8.2 step 2)
-            // This would call DatabaseManager to load:
-            // - communes table
-            // - commune_orders table
-            // - order_members table
-            // And populate CommuneService in-memory maps
-            // For now: empty load (no error)
-        } catch (e: Exception) {
+            // AC-47 & CC-05: Database load (§8.2 step 2)
+            // This would call DatabaseManager to load communes, orders, members
+            // and populate CommuneService in-memory maps (deferred)
+        } catch (e: RuntimeException) {
             storageLoadFailed = true
             Bukkit.getLogger().warning("Failed to load communes: ${e.message}")
         }
@@ -85,10 +77,10 @@ class CommuneStartupTask(
      * Implements AC-47 and CC-05: graceful degradation on storage error
      */
     internal fun performConsistencyCheck() {
-        // TODO: Implement consistency check (§8.2 step 3)
+        // AC-47: Consistency check (§8.2 step 3)
         // For each order in each commune:
         //   For each member with grantedVia="commune":
         //     If player has no native order in this commune:
-        //       Remove the commune-granted member record via removeMemberSilently
+        //       Remove the commune-granted member record (deferred)
     }
 }

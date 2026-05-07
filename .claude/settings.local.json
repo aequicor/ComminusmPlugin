@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /tmp/kitupdate)",
+      "Read(//tmp/**)",
+      "Bash(python3 -c \"import json,sys; [print\\(i['name']\\) for i in json.load\\(sys.stdin\\)]\")"
+    ]
+  }
+}

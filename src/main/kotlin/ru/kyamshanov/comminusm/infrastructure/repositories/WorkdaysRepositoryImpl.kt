@@ -1,11 +1,17 @@
-package ru.kyamshanov.comminusm.storage
+package ru.kyamshanov.comminusm.infrastructure.repositories
 
+import ru.kyamshanov.comminusm.domain.repositories.WorkdaysRepository
 import java.sql.Connection
 import java.util.UUID
 
-class WorkdaysRepository(private val conn: Connection) {
+/**
+ * SQL-based implementation of WorkdaysRepository.
+ * Handles persistence of workdays balance using SQLite database.
+ */
+@Suppress("MagicNumber")
+class WorkdaysRepositoryImpl(private val conn: Connection) : WorkdaysRepository {
 
-    fun add(uuid: UUID, amount: Int) {
+    override fun add(uuid: UUID, amount: Int) {
         val stmt = conn.prepareStatement(
             """
             INSERT INTO workdays (player_uuid, balance) VALUES (?, ?)
@@ -19,7 +25,7 @@ class WorkdaysRepository(private val conn: Connection) {
         stmt.close()
     }
 
-    fun spend(uuid: UUID, amount: Int): Boolean {
+    override fun spend(uuid: UUID, amount: Int): Boolean {
         val stmt = conn.prepareStatement(
             "UPDATE workdays SET balance = balance - ? WHERE player_uuid = ? AND balance >= ?"
         )
@@ -31,7 +37,7 @@ class WorkdaysRepository(private val conn: Connection) {
         return updated > 0
     }
 
-    fun getBalance(uuid: UUID): Int {
+    override fun getBalance(uuid: UUID): Int {
         val stmt = conn.prepareStatement(
             "SELECT balance FROM workdays WHERE player_uuid = ?"
         )

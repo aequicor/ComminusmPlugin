@@ -36,11 +36,35 @@ import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
 import ru.kyamshanov.comminusm.storage.DatabaseManager
-import ru.kyamshanov.comminusm.storage.OrderRepository
-import ru.kyamshanov.comminusm.storage.WorkFrontRepository
-import ru.kyamshanov.comminusm.storage.WorkdaysRepository
+import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
+import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
+import ru.kyamshanov.comminusm.domain.repositories.WorkdaysRepository
+import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkdaysRepositoryImpl
+import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
+import ru.kyamshanov.comminusm.commune.service.CommuneService
+import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
+import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
+import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
+import ru.kyamshanov.comminusm.commune.service.CommuneChatServiceImpl
+import ru.kyamshanov.comminusm.commune.listener.CommuneStartupTask
+import ru.kyamshanov.comminusm.commune.listener.CommuneOrderDestroyListener
+import ru.kyamshanov.comminusm.commune.listener.CommuneMembershipListener
+import ru.kyamshanov.comminusm.commune.listener.CommunePlayerListener
+import ru.kyamshanov.comminusm.commune.listener.FriendlyFireListener
+import ru.kyamshanov.comminusm.commune.listener.AsyncChatEventListener
+import ru.kyamshanov.comminusm.command.CommuneCommand
+import ru.kyamshanov.comminusm.command.OrderCommuneInfoCommand
+import ru.kyamshanov.comminusm.command.DelegatingCommandExecutor
+import ru.kyamshanov.comminusm.gui.CommuneMenu
+import ru.kyamshanov.comminusm.gui.CommunePartyMenu
+import ru.kyamshanov.comminusm.gui.CommuneOrderMenu
+import ru.kyamshanov.comminusm.gui.OrderMembersMenu
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("TooManyFunctions")
 class ComminusmPlugin : JavaPlugin() {
 
     lateinit var flagStabilityManager: FlagStabilityManager
@@ -66,94 +90,358 @@ class ComminusmPlugin : JavaPlugin() {
         val bz: Int,
     )
 
+    private data class FlagListenersDependencies(
+        val orderService: OrderService,
+        val workFrontService: WorkFrontService,
+        val pluginConfig: PluginConfig,
+        val workdaysService: WorkdaysService,
+        val flagActivationHelper: FlagActivationHelper,
+        val flagCleanupHelper: FlagCleanupHelper,
+        val orderRepo: OrderRepository,
+        val frontRepo: WorkFrontRepository,
+    )
+
+    private data class MenuDependencies(
+        val orderService: OrderService,
+        val workdaysService: WorkdaysService,
+        val pluginConfig: PluginConfig,
+        val workFrontService: WorkFrontService,
+        val htManager: HomeTimerManager,
+        val orderFlagStabilityManager: OrderFlagStabilityManager,
+    )
+
+    private data class ListenerDependencies(
+        val orderService: OrderService,
+        val workFrontService: WorkFrontService,
+        val pluginConfig: PluginConfig,
+        val workdaysService: WorkdaysService,
+        val flagActivationHelper: FlagActivationHelper,
+        val flagCleanupHelper: FlagCleanupHelper,
+        val orderRepo: OrderRepository,
+        val frontRepo: WorkFrontRepository,
+    )
+
     override fun onEnable() {
         INSTANCE = this
+        saveDefaultConfig()
+
         flagStabilityManager = FlagStabilityManager(this)
         val flagActivationHelper = FlagActivationHelper(this)
         val flagCleanupHelper = FlagCleanupHelper(this)
 
-        // Save default config
-        saveDefaultConfig()
+        val db = initializePersistence()
+        val services = initializeServicesAndRepos(db, flagCleanupHelper)
 
-        // Database
+        registerAllListeners(
+            ListenerDependencies(
+                services.orderService,
+                services.workFrontService,
+                services.pluginConfig,
+                services.workdaysService,
+                flagActivationHelper,
+                flagCleanupHelper,
+                services.orderRepo,
+                services.frontRepo
+            )
+        )
+
+        val orderFlagStabilityManager = OrderFlagStabilityManager(services.orderRepo, logger)
+        val htManager = HomeTimerManager(this, orderFlagStabilityManager)
+        homeTimerManager = htManager
+        registerMenusAndHomeTimer(
+            MenuDependencies(
+                services.orderService,
+                services.workdaysService,
+                services.pluginConfig,
+                services.workFrontService,
+                htManager,
+                orderFlagStabilityManager
+            )
+        )
+
+        val communeResources = wireCommuneSystem(services.orderService, services.orderRepo)
+        registerCommands(services.pluginConfig, services.workdaysService, services.orderService,
+            services.workFrontService)
+
+        logger.info("☭ Плагин активирован! Трудодни начисляются, Ордера выдаются.")
+        startupRepairScan(services.orderRepo, services.frontRepo, services.pluginConfig.flagStartupScanBatchSize)
+        server.scheduler.runTaskAsynchronously(this, Runnable {
+            communeResources.communeStartupTask.onEnable()
+        })
+    }
+
+    private fun initializePersistence(): DatabaseManager {
         val db = DatabaseManager(this)
         if (!db.integrityCheck()) {
             logger.severe("☭ БАЗА ДАННЫХ ПОВРЕЖДЕНА! Плагин отключён.")
             server.pluginManager.disablePlugin(this)
-            return
+            error("Database integrity check failed")
         }
+        return db
+    }
 
-        // Config
+    private data class InitializedServices(
+        val orderService: OrderService,
+        val workFrontService: WorkFrontService,
+        val orderRepo: OrderRepository,
+        val frontRepo: WorkFrontRepository,
+        val pluginConfig: PluginConfig,
+        val workdaysService: WorkdaysService,
+        val chunkCache: ChunkCacheManager,
+    )
+
+    private fun initializeServicesAndRepos(
+        db: DatabaseManager,
+        flagCleanupHelper: FlagCleanupHelper,
+    ): InitializedServices {
         val pluginConfig = PluginConfig(config)
-
-        // Repositories
-        val orderRepo = OrderRepository(db.connection)
-        val frontRepo = WorkFrontRepository(db.connection)
-        val workdaysRepo = WorkdaysRepository(db.connection)
-
-        // Services
         val chunkCache = ChunkCacheManager()
-        val workdaysService = WorkdaysService(workdaysRepo)
-        val orderService = OrderService(orderRepo, pluginConfig.orderLevels, workdaysService, pluginConfig.minDistanceBetweenCenters, chunkCache, flagCleanupHelper, flagStabilityManager, this)
-        val workFrontService = WorkFrontService(frontRepo, pluginConfig.frontRadius, chunkCache, this, flagCleanupHelper, flagStabilityManager)
-
-        // Register listeners
-        server.pluginManager.registerEvents(PlayerJoinHandler(), this)
-        server.pluginManager.registerEvents(PlayerListener(workdaysService, pluginConfig), this)
-
-        // Register order flag listener
-        server.pluginManager.registerEvents(OrderFlagListener(orderService, workdaysService, pluginConfig, workFrontService, this, flagActivationHelper, flagStabilityManager), this)
-
-        // Register block protection
-        server.pluginManager.registerEvents(BlockListener(orderService, workFrontService, flagStabilityManager), this)
-
-        // Register explosion protection for flags
-        server.pluginManager.registerEvents(ExplosionListener(orderService, workFrontService, flagStabilityManager), this)
-
-        // Register front flag listener
-        server.pluginManager.registerEvents(FrontFlagListener(workFrontService, orderService, this, flagActivationHelper, flagCleanupHelper, flagStabilityManager, pluginConfig), this)
-
-        // Register flag deletion confirmation listener
-        server.pluginManager.registerEvents(FlagDeletionConfirmListener(orderService, workFrontService), this)
-
-        // Flag item protection (no dropping, no chesting)
-        server.pluginManager.registerEvents(FlagItemProtectionListener(), this)
-
-        // Indirect destruction protection (pistons, water flow, entity block changes)
-        server.pluginManager.registerEvents(FlagProtectionListener(flagStabilityManager), this)
-
-        // Chunk load/unload: crash recovery, passive verification, dirty_armorstand cleanup
-        server.pluginManager.registerEvents(
-            FlagChunkListener(this, flagStabilityManager, orderRepo, frontRepo),
-            this,
+        val orderRepo: OrderRepository = OrderRepositoryImpl(db.connection)
+        val frontRepo: WorkFrontRepository = WorkFrontRepositoryImpl(db.connection)
+        val workdaysRepository: WorkdaysRepository = WorkdaysRepositoryImpl(db.connection)
+        val workdaysService = WorkdaysService(workdaysRepository)
+        val orderService = initializeOrderService(
+            orderRepo,
+            pluginConfig,
+            chunkCache,
+            workdaysService,
+            flagCleanupHelper
         )
+        val workFrontService = WorkFrontService(
+            frontRepo,
+            pluginConfig.frontRadius,
+            chunkCache,
+            this,
+            flagCleanupHelper,
+            flagStabilityManager
+        )
+        return InitializedServices(orderService, workFrontService, orderRepo, frontRepo,
+            pluginConfig, workdaysService, chunkCache)
+    }
 
-        // Home spawn feature
-        val orderFlagStabilityManager = OrderFlagStabilityManager(orderRepo, logger)
-        val htManager = HomeTimerManager(this, orderFlagStabilityManager)
-        homeTimerManager = htManager
+    private fun registerAllListeners(deps: ListenerDependencies) {
+        wireFlagListeners(
+            FlagListenersDependencies(
+                deps.orderService,
+                deps.workFrontService,
+                deps.pluginConfig,
+                deps.workdaysService,
+                deps.flagActivationHelper,
+                deps.flagCleanupHelper,
+                deps.orderRepo,
+                deps.frontRepo
+            )
+        )
+    }
+
+    private fun registerMenusAndHomeTimer(deps: MenuDependencies) {
+        wireHomeTimerListeners(deps.htManager, deps.orderService, deps.orderFlagStabilityManager)
+        wireMenus(deps)
+    }
+
+    private fun registerCommands(
+        pluginConfig: PluginConfig,
+        workdaysService: WorkdaysService,
+        orderService: OrderService,
+        workFrontService: WorkFrontService,
+    ) {
+        val partyCmd = checkNotNull(getCommand("party")) {
+            "Команда 'party' не объявлена в plugin.yml"
+        }
+        partyCmd.setExecutor(PartyCommand(pluginConfig, workdaysService, orderService, workFrontService))
+    }
+
+    private fun initializeOrderService(
+        orderRepo: OrderRepository,
+        pluginConfig: PluginConfig,
+        chunkCache: ChunkCacheManager,
+        workdaysService: WorkdaysService,
+        flagCleanupHelper: FlagCleanupHelper,
+    ): OrderService {
+        return OrderService(
+            orderRepo,
+            pluginConfig.orderLevels,
+            workdaysService,
+            pluginConfig.minDistanceBetweenCenters,
+            chunkCache,
+            flagCleanupHelper,
+            flagStabilityManager,
+            this
+        )
+    }
+
+    private fun wireFlagListeners(deps: FlagListenersDependencies) {
+        server.pluginManager.registerEvents(PlayerJoinHandler(), this)
+        server.pluginManager.registerEvents(PlayerListener(deps.workdaysService, deps.pluginConfig), this)
+        server.pluginManager.registerEvents(
+            OrderFlagListener(
+                deps.orderService,
+                deps.workdaysService,
+                deps.pluginConfig,
+                deps.workFrontService,
+                this,
+                deps.flagActivationHelper,
+                flagStabilityManager
+            ),
+            this
+        )
+        server.pluginManager.registerEvents(
+            BlockListener(deps.orderService, deps.workFrontService),
+            this
+        )
+        server.pluginManager.registerEvents(
+            ExplosionListener(deps.orderService, deps.workFrontService, flagStabilityManager),
+            this
+        )
+        server.pluginManager.registerEvents(
+            FrontFlagListener(
+                deps.workFrontService,
+                deps.orderService,
+                this,
+                deps.flagActivationHelper,
+                deps.flagCleanupHelper,
+                flagStabilityManager,
+                deps.pluginConfig
+            ),
+            this
+        )
+        server.pluginManager.registerEvents(
+            FlagDeletionConfirmListener(deps.orderService),
+            this
+        )
+        server.pluginManager.registerEvents(FlagItemProtectionListener(), this)
+        server.pluginManager.registerEvents(FlagProtectionListener(flagStabilityManager), this)
+        server.pluginManager.registerEvents(
+            FlagChunkListener(this, flagStabilityManager, deps.orderRepo, deps.frontRepo),
+            this
+        )
+    }
+
+    private fun wireHomeTimerListeners(
+        htManager: HomeTimerManager,
+        orderService: OrderService,
+        orderFlagStabilityManager: OrderFlagStabilityManager,
+    ) {
         server.pluginManager.registerEvents(HomeTimerCancelListener(htManager), this)
         server.pluginManager.registerEvents(
             OrderRespawnListener(orderService, orderFlagStabilityManager, logger),
-            this,
+            this
         )
         server.pluginManager.registerEvents(FlagEventListener(htManager), this)
+    }
 
-        // Register GUI listeners
-        val orderMenu = OrderMenu(orderService, workdaysService, pluginConfig, workFrontService, htManager, orderFlagStabilityManager, this)
-        server.pluginManager.registerEvents(PartyMenu(pluginConfig, workdaysService, orderService, workFrontService, this, orderMenu), this)
+    private fun wireMenus(deps: MenuDependencies) {
+        val orderMenu = OrderMenu(
+            deps.orderService,
+            deps.workdaysService,
+            deps.pluginConfig,
+            deps.workFrontService,
+            deps.htManager,
+            deps.orderFlagStabilityManager,
+            this
+        )
+        server.pluginManager.registerEvents(
+            PartyMenu(
+                deps.pluginConfig,
+                deps.workdaysService,
+                deps.orderService,
+                deps.workFrontService,
+                this,
+                orderMenu
+            ),
+            this
+        )
         server.pluginManager.registerEvents(orderMenu, this)
-        server.pluginManager.registerEvents(FrontMenu(workFrontService), this)
-        server.pluginManager.registerEvents(TreasuryMenu(pluginConfig, workdaysService), this)
-        server.pluginManager.registerEvents(AdminMenu(pluginConfig, orderService, workFrontService, workdaysService), this)
+        server.pluginManager.registerEvents(FrontMenu(deps.workFrontService), this)
+        server.pluginManager.registerEvents(TreasuryMenu(deps.pluginConfig, deps.workdaysService), this)
+        server.pluginManager.registerEvents(
+            AdminMenu(deps.orderService, deps.workFrontService),
+            this
+        )
+    }
 
-        // Register command
-        val partyCmd = checkNotNull(getCommand("party")) { "Команда 'party' не объявлена в plugin.yml" }
-        partyCmd.setExecutor(PartyCommand(pluginConfig, workdaysService, orderService, workFrontService))
+    private data class CommuneResources(
+        val communeStartupTask: CommuneStartupTask,
+    )
 
-        logger.info("☭ Плагин активирован! Трудодни начисляются, Ордера выдаются.")
+    private fun wireCommuneSystem(
+        orderService: OrderService,
+        orderRepo: OrderRepository,
+    ): CommuneResources {
+        // In-memory caches for communes
+        val communes = ConcurrentHashMap<UUID, ru.kyamshanov.comminusm.commune.model.Commune>()
+        val orderToCommuneId = ConcurrentHashMap<Long, UUID>()
+        val invitations = ConcurrentHashMap<UUID, ru.kyamshanov.comminusm.commune.model.CommuneInvitation>()
+        val invitationTimers = ConcurrentHashMap<UUID, Any>()
 
-        startupRepairScan(orderRepo, frontRepo, pluginConfig.flagStartupScanBatchSize)
+        // Repositories & Services
+        val orderMembersRepository = OrderMembersRepository(ConcurrentHashMap())
+        val orderMembershipService = OrderMembershipService(orderMembersRepository)
+        val communeService = CommuneService(communes, orderToCommuneId)
+        val communeInvitationService = CommuneInvitationService(invitations, invitationTimers)
+        val crossOrderMembershipService = CrossOrderMembershipService(orderMembershipService)
+        val communeChatService = CommuneChatServiceImpl(communeService, orderMembershipService)
+
+        // Startup task for commune initialization
+        val communeStartupTask = CommuneStartupTask(communeService, this)
+
+        // Listeners - Stage 06
+        server.pluginManager.registerEvents(
+            CommuneOrderDestroyListener(communeService, crossOrderMembershipService),
+            this
+        )
+        server.pluginManager.registerEvents(
+            CommuneMembershipListener(communeService, orderMembershipService),
+            this
+        )
+        server.pluginManager.registerEvents(
+            CommunePlayerListener(communeService, orderService),
+            this
+        )
+        server.pluginManager.registerEvents(
+            FriendlyFireListener(communeService, orderMembershipService),
+            this
+        )
+
+        // Chat system
+        server.pluginManager.registerEvents(
+            AsyncChatEventListener(communeChatService),
+            this
+        )
+
+        // Commands
+        getCommand("cc")?.setExecutor(
+            CommuneCommand(communeService, orderMembershipService, communeChatService, null)
+        )
+
+        getCommand("order")?.let { orderCmd ->
+            val existingExecutor = orderCmd.executor
+            orderCmd.setExecutor(
+                DelegatingCommandExecutor(
+                    existingExecutor,
+                    OrderCommuneInfoCommand(orderRepo, communeService)
+                )
+            )
+        }
+
+        // Menus - Stage 06 Decorators
+        val communePartyMenu = CommunePartyMenu(communeService, orderService)
+        server.pluginManager.registerEvents(communePartyMenu, this)
+
+        val communeOrderMenu = CommuneOrderMenu(orderService, orderMembershipService)
+        server.pluginManager.registerEvents(communeOrderMenu, this)
+
+        server.pluginManager.registerEvents(
+            CommuneMenu(communeService, orderService, communeInvitationService, orderMembershipService),
+            this
+        )
+
+        server.pluginManager.registerEvents(
+            OrderMembersMenu(orderMembershipService, orderService),
+            this
+        )
+
+        return CommuneResources(communeStartupTask)
     }
 
     private fun startupRepairScan(

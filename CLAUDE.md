@@ -13,7 +13,7 @@
 
 First communism plugin
 
-**Stack:** ComminusmPlugin — kotlin stack
+**Stack:** ComminusmPlugin вЂ” kotlin stack
 
 ---
 
@@ -21,7 +21,7 @@ First communism plugin
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | `вЂ”` | `vault/comminusm/` | Minecraft Paper plugin вЂ” communism-themed gameplay mechanics |
 
 
 ---
@@ -56,13 +56,43 @@ First communism plugin
 - TODO/FIXME in production code without a tracking entry (issue or DECISIONS.md)
 - Disabled/commented-out tests without an explanation
 - Catching Throwable/Exception generically and swallowing it
-- Hardcoded Bukkit ChatColor strings — use MiniMessage or component API
+- Hardcoded Bukkit ChatColor strings вЂ” use MiniMessage or component API
 - Using deprecated Bukkit API (use Paper-adventure components, not legacy ChatColors)
-- Blocking the main server thread — schedule async with Bukkit schedulers or coroutines
+- Blocking the main server thread вЂ” schedule async with Bukkit schedulers or coroutines
 - Storing Player references past event scope (causes memory leaks)
 - Calling Bukkit API from non-main thread without scheduler bouncing back to main
 - Long-running task in event handler (offload to BukkitScheduler.runTaskAsynchronously)
-
+- Class with more than one reason to change (god class / service class doing persistence + business logic + formatting simultaneously)
+- Method longer than 30 lines that mixes abstraction levels (orchestration + low-level detail in same function)
+- Repository class containing business rules or validation logic
+- Use case / interactor class containing more than one business operation
+- Switch/when on type tags or string type discriminators instead of polymorphism (adding a new type requires editing existing code)
+- Feature flag inside domain logic instead of strategy/decorator injection
+- Hardcoded algorithm selection inside a class that should delegate to a strategy
+- Subclass that throws UnsupportedOperationException / NotImplementedError for inherited methods
+- Subclass that weakens preconditions or strengthens postconditions of the parent contract
+- Type-checking with instanceof/is inside a method that accepts a base type (violates substitutability)
+- Interface with more than 5-7 methods that clients only partially implement (fat interface)
+- Passing a full service/repository interface to a consumer that uses only one method
+- Marker method implemented as a no-op (empty body) because the interface forced it
+- Concrete class instantiated with 'new' / constructor call inside business logic (use DI / factory)
+- Domain or use-case class importing from infrastructure layer (DB, HTTP, filesystem packages)
+- Static/global access to shared mutable state from domain logic (singletons as hidden dependencies)
+- Test that cannot run without a real database/network because a dependency was not inverted
+- Presentation layer (controller, ViewModel, screen) containing business rules
+- Domain entity importing framework annotations (ORM, serialization, DI) вЂ” keep entities pure
+- Infrastructure class (repository impl, API client) containing business decisions
+- Cross-layer import in wrong direction: inner layer importing outer layer package
+- Duplicate business logic in two or more use cases instead of extracting a shared domain service
+- Abstract base class or interface created speculatively with only one concrete implementation and no planned extension
+- Over-engineered abstraction for a one-time operation (factory-of-factories, generic pipeline for a single fixed flow)
+- Mutable public field on a domain entity or value object (use val / readonly / private setter)
+- Method that mutates its argument instead of returning a new value (unexpected side effect)
+- Shared mutable state accessed without synchronisation in concurrent context
+- Long method chain on a foreign object reaching 3+ levels deep (a.b().c().doSomething()) вЂ” violates LoD
+- Caller extracting data from an object and making decisions on its behalf instead of telling the object to act
+- Deep inheritance hierarchy (3+ levels) for code reuse вЂ” prefer composition or delegation
+- Inheriting from a concrete class solely to reuse implementation (not to extend the contract)
 
 ### Style
 
@@ -115,6 +145,18 @@ Do NOT modify without explicit instruction:
 - `.planning/DECISIONS.md` — append-only
 - `.claude/settings.json` — runtime configuration
 - Any credential file: `.env*`, `~/.ssh/`, `~/.aws/`
+
+---
+
+## Tool Use Discipline
+
+Three rules before any `edit` / `write` call — they prevent the most common context-burning errors:
+
+1. **Read before Edit.** `edit <path>` requires a `read <path>` earlier in **this session**; memory of the file from another session/agent does not count. `write` to a brand-new file is fine without read; `write` to an existing file needs `read` first.
+2. **No empty diffs.** `old_string` must differ from `new_string`; otherwise the call is rejected. Plan the diff you want, not the final file content.
+3. **Paths from CWD, not memory.** Never paste absolute paths from docs, `AUTO_MEMORY.md`, or prior sessions — they may be from a different OS or developer's checkout. Default to project-relative paths (`vault/...`, `src/...`); derive absolute paths from `bash pwd` if needed.
+
+Full rules + pre-flight checklist: `.claude/_shared.md` → "Tool Use Discipline".
 
 ---
 
@@ -252,7 +294,7 @@ Then:
 | `@CodeWriter` returned success but no `@TestExecutor` dispatched yet for this stage | STOP. Dispatch `@TestExecutor` now (step 7.2a). Author's "build green" is not verification. |
 | `@TestExecutor` returned `ALL_GREEN` but `@TestRunner AUTO_VERIFY` (step 7.2b) not dispatched yet | STOP. Dispatch `@TestRunner` Mode=AUTO_VERIFY with the per-TC mapping table. Without it, Status stays PEND and `@DoDGate` will block at Group 1.1. |
 | `@TestExecutor` returned `ALL_GREEN` but `@CodeReviewer` not dispatched yet | STOP. Dispatch `@CodeReviewer`. Tests passing alone does not certify code quality / spec alignment. |
-| `@CodeReviewer` returned `APPROVED` but `@SecurityReviewer` not dispatched on a security-relevant stage | STOP. Dispatch `@SecurityReviewer`. See step 7.3b for the trigger surface list. |
+| `@CodeReviewer` returned `APPROVED` but `@SecurityReviewer` not dispatched on a security-relevant stage | STOP. Dispatch `@SecurityReviewer`. See step 7.3 for the trigger surface list. |
 | `@DoDGate` returned `BLOCK` but stage moved to CLOSE | STOP. CLOSE is gated on `@DoDGate` PASS. PO override is `/kit-approve-with-dod-waiver`, **not** `/kit-approve`. |
 
 **Rule:** better to stop and ask than burn context in a loop.
@@ -415,14 +457,14 @@ After receiving answers from PO:
              Every sub-step is required; do NOT skip any. Do NOT self-verify by
              reading the changed files yourself — `@TestExecutor` (independent
              test run) and `@CodeReviewer` (independent review) dispatches are
-             non-negotiable (see steps 7.2a and 7.3a).
+             non-negotiable (see steps 7.2a and 7.3).
 
              `superpowers:executing-plans` MAY be used as a helper for stage
              iteration / progress tracking, but it does NOT replace this loop
              and it does NOT include the `@TestExecutor` / `@CodeReviewer` /
              `@SecurityReviewer` / `@TestRunner AUTO_VERIFY` steps. Ownership
-             of every sub-step in this section (7.1, 7.2, 7.2a, 7.2b, 7.3a,
-             7.3b, 7.4, 7.5, 7.6) stays here in `@Main`.
+             of every sub-step in this section (7.1, 7.2, 7.2a, 7.2b, 7.3,
+             7.4, 7.5, 7.6) stays here in `@Main`.
 
    7.1  READ — stage file + every guideline it references.
    7.2  WRITE — dispatch `@CodeWriter` with stage file and context.
@@ -451,20 +493,43 @@ After receiving answers from PO:
                 This step closes the gap between "tests passed (per author)" and
                 "test-cases.md Status reflects independent verification" — without it,
                 rows would stay PEND and `@DoDGate` would always block.
-   7.3a REVIEW (style + spec) — dispatch `@CodeReviewer`. **MANDATORY** after
-                `@TestExecutor` returns ALL_GREEN. Self-reading files is NOT a
-                substitute. Returns issues classified CRITICAL / HIGH / MEDIUM / LOW.
-   7.3b SECURITY REVIEW (conditional) — if the changeset touches any security
-                surface (auth, sessions, tokens, PII, payments, file uploads,
-                deserialization, SQL/ORM, external HTTP, RBAC, or
-                @CodeReviewer flagged a `(deferred to @SecurityReviewer)` smell),
-                dispatch `@SecurityReviewer` with the trigger surface name.
-                Cost of running on a non-security stage is low; cost of skipping
-                on a security stage is high — when unclear, dispatch.
-   7.4  FIX — if any of (`@CodeReviewer`, `@SecurityReviewer`) returned
+   7.3  REVIEW (parallel) — **MANDATORY** after `@TestExecutor` returns ALL_GREEN.
+                Both reviewers read the same changed files, emit independent
+                verdicts, and write nothing — so dispatch them in **one turn as
+                parallel calls**:
+                  a. `@CodeReviewer` — always dispatched. Returns issues
+                     classified CRITICAL / HIGH / MEDIUM / LOW.
+                  b. `@SecurityReviewer` — dispatch in the same turn iff the
+                     changeset touches any security surface (auth, sessions,
+                     tokens, PII, payments, file uploads, deserialization,
+                     SQL/ORM, external HTTP, RBAC). When unclear, dispatch.
+                     Cost on a non-security stage is low; cost of skipping on a
+                     security stage is high.
+                Self-reading files is NOT a substitute for either dispatch.
+
+                **Late security trigger:** if `@CodeReviewer`'s verdict flags a
+                `(deferred to @SecurityReviewer)` smell and `@SecurityReviewer`
+                was NOT dispatched in the parallel call (no surface match),
+                dispatch `@SecurityReviewer` now as a sequential follow-up.
+   7.3c STUB-SCAN — for every file in the changed-files list returned by 7.2,
+                run a regex scan over the file body for:
+                  `TODO|FIXME|XXX|HACK|stage [0-9]|later|TBD`
+                Hits in **production code** (non-test, non-doc) that are NOT paired
+                with a `.planning/DECISIONS.md` reference, an external tracker ID
+                (`#123`, `JIRA-456`, `TC-NN`), or an explicit deferral entry in
+                the stage file → fold into the review findings as **CRITICAL**.
+                Defense-in-depth backstop for `@CodeReviewer` focus area 6 — the
+                grep is mechanical and cannot regress when prompt prose drifts.
+                Without this gate, a `// TODO` body for an AC method passes
+                CodeWriter (claims success) → TestExecutor (tests assert
+                "no exception") → CodeReviewer (no rule) and the stage
+                checkpoint silently asserts an unimplemented AC is done.
+                Loop into 7.4 FIX with the combined findings; cap follows the
+                7.4 review-fix retry budget (max 3).
+   7.4  FIX — if any of (`@CodeReviewer`, `@SecurityReviewer`, 7.3c STUB-SCAN) returned
                 CRITICAL or HIGH:
                 dispatch `@CodeWriter` again with the combined findings, then
-                loop 7.2 → 7.2a → 7.3a → (7.3b). Max 3 review-fix cycles per
+                loop 7.2 → 7.2a → 7.3. Max 3 review-fix cycles per
                 stage; then STOP and escalate to PO with full review history.
                 MEDIUM/LOW issues → log them in the checkpoint (DONE line)
                 but do not block stage completion.
@@ -476,24 +541,37 @@ After receiving answers from PO:
                Reconciles test-cases.md with the test files @CodeWriter actually wrote.
                Attaches `(impl: <path>)` references per the spec-to-code-trace skill.
                Marks any spec scenario without a TC as "NOT IMPLEMENTED".
+               **MUST complete before 7b/7c** — both consume the post-FINAL test-cases.md.
 
-7b. CCR IMPLEMENTATION — dispatch `@CornerCaseReviewer` (Mode=IMPLEMENTATION) with
-               the corner-case register, test-cases file, full list of changed source
-               and test files, and spec. CCR attacks the **code**, not the documents:
-               for every Critical/High CC it verifies a real branch / guard exists in
-               source AND a test drives it. Verdicts per CC:
-                 HANDLED | MISSING_BRANCH | UNTESTED_BRANCH | WRONG_BEHAVIOR | DEFERRED.
-               If overall = OPEN_QUESTIONS → dispatch `@CodeWriter` for the gaps,
-               then loop 7.2 → 7.2a → 7.3 → 7b. Max 2 CCR-IMPL cycles per feature;
-               then STOP and escalate to PO with the gap list.
+7b ‖ 7c. POST-IMPL CHECKS (parallel) — once `@QA` FINAL returns, dispatch
+               `@CornerCaseReviewer` (Mode=IMPLEMENTATION) and `@TraceabilityChecker`
+               in **one turn as parallel calls**. Both are read-only verifiers
+               over the same post-FINAL artifacts (test-cases.md, spec, source);
+               neither writes, so order is irrelevant.
 
-7c. TRACEABILITY — dispatch `@TraceabilityChecker` with all four artifact paths
-               (requirements, corner cases, spec, test-cases). It builds the matrix
-               AC/CC/spec-endpoint → TC → test file → source symbol; reports orphans
-               on both sides + WEAK_ASSERTION flags on Critical/High coverage.
-               If verdict = GAPS → either dispatch `@CodeWriter` to fix (e.g. add
-               missing handler, strengthen weak assertion) or `@QA` to attach a
-               missing impl link. Max 2 trace-fix cycles; then STOP and escalate.
+   7b. CCR IMPLEMENTATION — `@CornerCaseReviewer` (Mode=IMPLEMENTATION) gets
+                the corner-case register, test-cases file, full list of changed
+                source and test files, and spec. CCR attacks the **code**, not
+                the documents: for every Critical/High CC it verifies a real
+                branch / guard exists in source AND a test drives it. Verdicts
+                per CC: HANDLED | MISSING_BRANCH | UNTESTED_BRANCH |
+                WRONG_BEHAVIOR | DEFERRED.
+
+   7c. TRACEABILITY — `@TraceabilityChecker` gets all four artifact paths
+                (requirements, corner cases, spec, test-cases). It builds the
+                matrix AC/CC/spec-endpoint → TC → test file → source symbol;
+                reports orphans on both sides + WEAK_ASSERTION flags on
+                Critical/High coverage.
+
+   **Aggregate verdicts** after both return:
+   - Both PASS / DONE → proceed to 7d.
+   - 7b OPEN_QUESTIONS → dispatch `@CodeWriter` for CCR gaps, then re-loop
+     7.2 → 7.2a → 7.3 → re-dispatch 7b ‖ 7c. Max 2 CCR-IMPL cycles per feature.
+   - 7c GAPS → dispatch `@CodeWriter` (missing handler / weak assertion) or
+     `@QA` (missing impl link), then re-dispatch 7b ‖ 7c. Max 2 trace-fix cycles.
+   - Both fail → fix the union of issues in one `@CodeWriter` dispatch, then
+     re-loop. Cycle counters tracked independently.
+   On any cycle cap exceeded → STOP and escalate to PO with the gap list.
 
 7d. WALKTHROUGH — gate logic:
                1. Read test-cases.md. Count rows with (Status=PEND AND Type=manual).
@@ -617,8 +695,8 @@ Key rules:
              AUTO_APPROVE=false → wait for PO /kit-approve.
              AUTO_APPROVE=true  → dispatch @AutoApprover (see AUTO_APPROVE mode section).
              CHECKPOINT: .planning/tasks/<active_task>.md.
-4. EXECUTE — same cycle as FEATURE step 7 (7.1 → 7.2 → 7.2a TestExecutor → 7.3a CodeReviewer →
-             7.3b SecurityReviewer if applicable → 7.4 fix → 7.5 → 7.6).
+4. EXECUTE — same cycle as FEATURE step 7 (7.1 → 7.2 → 7.2a TestExecutor → 7.3
+             CodeReviewer ‖ SecurityReviewer if applicable → 7.4 fix → 7.5 → 7.6).
 4a. TRACEABILITY — for TECH tasks where the change touches public APIs, run
              `@TraceabilityChecker` to verify no spec endpoints became orphans.
              Skip for purely internal refactors with no public surface change.
@@ -668,13 +746,14 @@ When calling `knowledge-my-app_search_docs`:
 - **DO NOT start EXECUTE without explicit PO approve** on the plan.
 - **DO NOT skip `@TestExecutor` (step 7.2a)** — `@CodeWriter`'s "build green" is the author's claim, not verification. Independent dispatch is mandatory after every CodeWriter return.
 - **DO NOT skip `@TestRunner AUTO_VERIFY` (step 7.2b)** — without it, automatically-verified TCs stay PEND in test-cases.md and `@DoDGate` blocks at Group 1.1. This is the bookkeeping bridge between `@TestExecutor`'s independent verdict and the live test-cases document.
-- **DO NOT skip `@CodeReviewer` (step 7.3a)** — reading the diff yourself is not a code review.
-- **DO NOT skip `@SecurityReviewer` (step 7.3b)** for security-relevant stages — when unclear, dispatch.
+- **DO NOT skip `@CodeReviewer` (step 7.3)** — reading the diff yourself is not a code review.
+- **DO NOT skip `@SecurityReviewer` (step 7.3)** for security-relevant stages — when unclear, dispatch.
+- **DO NOT skip step 7.3c STUB-SCAN** — three-line grep over the changeset that catches `TODO`/`FIXME`/`stage N` markers `@CodeReviewer` may miss. Without it, an AC's method body can be `// TODO` and the stage will close green.
 - **DO NOT skip `@CornerCaseReviewer` IMPLEMENTATION mode (step 7b)** — tests passing alone does not certify that every Critical CC has a real branch in code.
 - **DO NOT skip `@TraceabilityChecker` (step 7c)** — orphan endpoints, missing impl refs, weak assertions are exactly what this agent catches.
 - **DO NOT skip `@DoDGate` (step 7e)** — CLOSE is gated on PASS. PO override is `/kit-approve-with-dod-waiver`, not `/kit-approve`. A FAIL in the DoD checklist cannot be waived; it must be fixed.
 - **DO NOT skip pre-mortem (step 5b for FEATURE / 2a for TECH)** for non-trivial tasks. Five minutes of structured pessimism is the cheapest quality intervention you have.
-- **DO NOT delegate the EXECUTE loop to `superpowers:executing-plans`** — it's a helper, not a replacement. Ownership of steps 7.1–7.6 (and the new gates 7.2a, 7.3a, 7.3b, 7b, 7c, 7e) stays in `@Main`; the helper does not dispatch any reviewer / executor / gate.
+- **DO NOT delegate the EXECUTE loop to `superpowers:executing-plans`** — it's a helper, not a replacement. Ownership of steps 7.1–7.6 (and the new gates 7.2a, 7.3, 7b, 7c, 7e) stays in `@Main`; the helper does not dispatch any reviewer / executor / gate.
 - **DO NOT write code or tests** — that's @CodeWriter.
 - **DO NOT fix bugs** — that's @BugFixer.
 - **DO NOT dispatch @CodeWriter without a stage file** — stage file is mandatory.

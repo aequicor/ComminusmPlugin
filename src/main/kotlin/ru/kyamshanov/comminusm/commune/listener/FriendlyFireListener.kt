@@ -7,7 +7,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.service.OrderService
 
 /**
  * Listener that prevents friendly-fire damage between commune members.
@@ -19,18 +18,23 @@ import ru.kyamshanov.comminusm.service.OrderService
  */
 class FriendlyFireListener(
     private val communeService: CommuneService,
-    private val membershipService: OrderMembershipService,
-    private val orderService: OrderService
+    private val membershipService: OrderMembershipService
 ) : Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
     fun onEntityDamageByEntity(event: EntityDamageByEntityEvent) {
-        val damagee = event.entity
-        val damager = event.damager
+        if (shouldCancelFriendlyFire(event.entity, event.damager)) {
+            event.isCancelled = true
+            if (event.damager is Player) {
+                (event.damager as Player).sendMessage("Это ваш союзник!")
+            }
+        }
+    }
 
+    private fun shouldCancelFriendlyFire(damagee: Any, damager: Any): Boolean {
         // Both must be players
         if (damagee !is Player || damager !is Player) {
-            return
+            return false
         }
 
         val damageeUuid = damagee.uniqueId
@@ -39,27 +43,21 @@ class FriendlyFireListener(
         // Get all native orders for damager (spec §6.17 step 4: ownerUuid OR granted_via='native')
         val damagerNativeOrders = membershipService.getNativeOrdersOfPlayer(damagerUuid)
         if (damagerNativeOrders.isEmpty()) {
-            return
+            return false
         }
 
         // Get all native orders for damagee
         val damageeNativeOrders = membershipService.getNativeOrdersOfPlayer(damageeUuid)
         if (damageeNativeOrders.isEmpty()) {
-            return
+            return false
         }
 
         // Check if any native orders are in the same commune
-        for (damagerOrderId in damagerNativeOrders) {
-            val damagerCommune = communeService.getCommuneOfOrder(damagerOrderId) ?: continue
-            for (damageeOrderId in damageeNativeOrders) {
-                val damageeCommune = communeService.getCommuneOfOrder(damageeOrderId) ?: continue
-                if (damagerCommune.id == damageeCommune.id) {
-                    // Both have native orders in same commune - cancel damage
-                    event.isCancelled = true
-                    // Send notification using Component API (not hardcoded §)
-                    damager.sendMessage("Это ваш союзник!")
-                    return
-                }
+        return damagerNativeOrders.any { damagerOrderId ->
+            val damagerCommune = communeService.getCommuneOfOrder(damagerOrderId)
+            damagerCommune != null && damageeNativeOrders.any { damageeOrderId ->
+                val damageeCommune = communeService.getCommuneOfOrder(damageeOrderId)
+                damageeCommune != null && damagerCommune.id == damageeCommune.id
             }
         }
     }

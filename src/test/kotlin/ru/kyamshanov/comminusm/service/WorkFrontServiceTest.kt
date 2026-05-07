@@ -1,14 +1,17 @@
 package ru.kyamshanov.comminusm.service
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.storage.DatabaseManager
-import ru.kyamshanov.comminusm.storage.WorkFrontRepository
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
 import java.util.UUID
 
 class WorkFrontServiceTest {
-    private lateinit var repo: WorkFrontRepository
+    private lateinit var repo: WorkFrontRepositoryImpl
     private lateinit var service: WorkFrontService
     private val uuid = UUID.randomUUID()
     private val uuid2 = UUID.randomUUID()
@@ -16,7 +19,7 @@ class WorkFrontServiceTest {
     @BeforeEach
     fun setUp() {
         val db = DatabaseManager("jdbc:sqlite::memory:")
-        repo = WorkFrontRepository(db.connection)
+        repo = WorkFrontRepositoryImpl(db.connection)
         service = WorkFrontService(repo, 25)
     }
 

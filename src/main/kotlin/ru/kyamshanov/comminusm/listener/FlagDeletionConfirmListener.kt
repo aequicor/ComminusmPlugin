@@ -7,24 +7,27 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import ru.kyamshanov.comminusm.service.OrderService
-import ru.kyamshanov.comminusm.service.WorkFrontService
 
 class FlagDeletionConfirmListener(
-    private val orderService: OrderService,
-    private val workFrontService: WorkFrontService?
+    private val orderService: OrderService
 ) : Listener {
+    companion object {
+        private const val CONFIRM_DELETION_TITLE = "Подтверждение удаления"
+        private const val CONFIRM_SLOT = 2
+        private const val CANCEL_SLOT = 6
+    }
 
     @EventHandler
     fun onClick(event: InventoryClickEvent) {
         val title = event.view.title().toString()
-        if (!title.contains("Подтверждение удаления")) return
+        if (!title.contains(CONFIRM_DELETION_TITLE)) return
         event.isCancelled = true
 
         val player = event.whoClicked as Player
         val uuid = player.uniqueId
 
         when (event.slot) {
-            2 -> {
+            CONFIRM_SLOT -> {
                 // Delete order, drop custom flag, break block
                 val order = orderService.findByOwner(uuid)
                 orderService.deleteByOwner(uuid)
@@ -40,7 +43,7 @@ class FlagDeletionConfirmListener(
                 player.sendMessage(Component.text("§c☭ Ордер аннулирован."))
                 player.closeInventory()
             }
-            6 -> {
+            CANCEL_SLOT -> {
                 player.sendMessage(Component.text("§aУдаление отменено, товарищ."))
                 player.closeInventory()
             }

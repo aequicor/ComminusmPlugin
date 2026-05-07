@@ -60,7 +60,7 @@ class OrderMembershipService(
             // Publish OrderMemberAddedEvent
             try {
                 Bukkit.getPluginManager().callEvent(OrderMemberAddedEvent(orderId, playerUuid, grantedVia))
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 // Bukkit may not be initialized in tests; ignore event publication errors
             }
 
@@ -101,7 +101,7 @@ class OrderMembershipService(
             // Publish OrderMemberRemovedEvent with correct grantedVia
             try {
                 Bukkit.getPluginManager().callEvent(OrderMemberRemovedEvent(orderId, playerUuid, grantedVia))
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 // Bukkit may not be initialized in tests; ignore event publication errors
             }
 

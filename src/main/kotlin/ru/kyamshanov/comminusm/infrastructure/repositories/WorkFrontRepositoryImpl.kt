@@ -1,12 +1,18 @@
-package ru.kyamshanov.comminusm.storage
+package ru.kyamshanov.comminusm.infrastructure.repositories
 
+import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
 import ru.kyamshanov.comminusm.model.WorkFront
 import java.sql.Connection
 import java.util.UUID
 
-class WorkFrontRepository(private val conn: Connection) {
+/**
+ * SQL-based implementation of WorkFrontRepository.
+ * Handles persistence of WorkFront entities using SQLite database.
+ */
+@Suppress("MagicNumber", "MaxLineLength")
+class WorkFrontRepositoryImpl(private val conn: Connection) : WorkFrontRepository {
 
-    fun upsert(front: WorkFront) {
+    override fun upsert(front: WorkFront) {
         val stmt = conn.prepareStatement(
             """
             INSERT INTO work_fronts (owner_uuid, center_world, center_x, center_y, center_z, radius)
@@ -30,7 +36,7 @@ class WorkFrontRepository(private val conn: Connection) {
         stmt.close()
     }
 
-    fun findByOwner(uuid: UUID): WorkFront? {
+    override fun findByOwner(uuid: UUID): WorkFront? {
         val stmt = conn.prepareStatement(
             "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE owner_uuid = ?"
         )
@@ -52,14 +58,14 @@ class WorkFrontRepository(private val conn: Connection) {
         return result
     }
 
-    fun deleteByOwner(uuid: UUID) {
+    override fun deleteByOwner(uuid: UUID) {
         val stmt = conn.prepareStatement("DELETE FROM work_fronts WHERE owner_uuid = ?")
         stmt.setString(1, uuid.toString())
         stmt.executeUpdate()
         stmt.close()
     }
 
-    fun findAllActivated(): List<WorkFront> {
+    override fun findAllActivated(): List<WorkFront> {
         val stmt = conn.prepareStatement(
             "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts"
         )
@@ -83,7 +89,7 @@ class WorkFrontRepository(private val conn: Connection) {
         return result
     }
 
-    fun findAllInWorld(world: String): List<WorkFront> {
+    override fun findAllInWorld(world: String): List<WorkFront> {
         val stmt = conn.prepareStatement(
             "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE center_world = ?"
         )

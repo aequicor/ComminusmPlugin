@@ -29,8 +29,7 @@ class FriendlyFireListenerTest {
     fun setUp() {
         communeService = mockk<CommuneService>()
         membershipService = mockk<OrderMembershipService>()
-        orderService = mockk<OrderService>()
-        listener = FriendlyFireListener(communeService, membershipService, orderService)
+        listener = FriendlyFireListener(communeService, membershipService)
     }
 
     /**

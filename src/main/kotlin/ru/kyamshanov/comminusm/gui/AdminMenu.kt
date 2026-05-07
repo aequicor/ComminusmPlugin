@@ -7,48 +7,44 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
-import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
-import ru.kyamshanov.comminusm.service.WorkdaysService
 
 class AdminMenu(
-    private val config: PluginConfig,
     private val orderService: OrderService?,
-    private val workFrontService: WorkFrontService?,
-    private val workdaysService: WorkdaysService?
+    private val workFrontService: WorkFrontService?
 ) : Listener {
-    private val deleteOrdersSlot = 11
-    private val deleteFrontsSlot = 15
-    private val statsSlot = 22
-    private val backSlot = 26
 
     fun open(player: Player) {
-        val inv = Bukkit.createInventory(null, 27, Component.text("\u00a7c\u0410\u0434\u043c\u0438\u043d-\u043f\u0430\u043d\u0435\u043b\u044c"))
+        val inv = Bukkit.createInventory(
+            null,
+            GuiConstants.SMALL_INVENTORY_SIZE,
+            Component.text(GuiConstants.ADMIN_PANEL_TITLE)
+        )
         GuiUtils.fillBorder(inv)
 
-        inv.setItem(deleteOrdersSlot, GuiUtils.namedItem(
-            "\u00a7c\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0441\u0435 \u041e\u0440\u0434\u0435\u0440\u0430",
+        inv.setItem(GuiConstants.ADMIN_DELETE_ORDERS_SLOT, GuiUtils.namedItem(
+            GuiConstants.DELETE_ORDERS_TEXT,
             Material.BARRIER,
-            "\u00a77\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435: \u044d\u0442\u043e \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043d\u0435\u043e\u0431\u0440\u0430\u0442\u0438\u043c\u043e!"
+            GuiConstants.DELETE_WARNING
         ))
 
-        inv.setItem(deleteFrontsSlot, GuiUtils.namedItem(
-            "\u00a7c\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0441\u0435 \u0424\u0440\u043e\u043d\u0442\u044b",
+        inv.setItem(GuiConstants.ADMIN_DELETE_FRONTS_SLOT, GuiUtils.namedItem(
+            GuiConstants.DELETE_FRONTS_TEXT,
             Material.BARRIER,
-            "\u00a77\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435: \u044d\u0442\u043e \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043d\u0435\u043e\u0431\u0440\u0430\u0442\u0438\u043c\u043e!"
+            GuiConstants.DELETE_WARNING
         ))
 
         val orderCount = orderService?.findAllInWorld(player.world.name)?.size ?: 0
         val frontCount = workFrontService?.getAllInWorld(player.world.name)?.size ?: 0
-        inv.setItem(statsSlot, GuiUtils.namedItem(
-            "\u00a7e\u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430 \u043c\u0438\u0440\u0430",
+        inv.setItem(GuiConstants.ADMIN_STATS_SLOT, GuiUtils.namedItem(
+            GuiConstants.STATS_TEXT,
             Material.BOOK,
-            "\u00a77\u041e\u0440\u0434\u0435\u0440\u043e\u0432: \u00a7e$orderCount",
-            "\u00a77\u0424\u0440\u043e\u043d\u0442\u043e\u0432: \u00a7e$frontCount"
+            "${GuiConstants.ORDERS_PREFIX}$orderCount",
+            "${GuiConstants.FRONTS_PREFIX}$frontCount"
         ))
 
-        inv.setItem(backSlot, GuiUtils.namedItem("\u00a7c\u041d\u0430\u0437\u0430\u0434", Material.BARRIER))
+        inv.setItem(GuiConstants.ADMIN_BACK_SLOT, GuiUtils.namedItem(GuiConstants.BACK_TEXT, Material.BARRIER))
 
         player.openInventory(inv)
     }
@@ -63,32 +59,36 @@ class AdminMenu(
         val world = player.world.name
 
         when (event.slot) {
-            deleteOrdersSlot -> {
-                val orders = orderService?.findAllInWorld(world) ?: emptyList()
-                for (order in orders) {
-                    orderService?.deleteByOwner(order.ownerUuid)
-                }
-                player.sendMessage(Component.text("\u00a7c\u262d \u0412\u0441\u0435 \u041e\u0440\u0434\u0435\u0440\u0430 \u0432 \u043c\u0438\u0440\u0435 \u0443\u0434\u0430\u043b\u0435\u043d\u044b."))
-                player.closeInventory()
-            }
-            deleteFrontsSlot -> {
-                val fronts = workFrontService?.getAllInWorld(world) ?: emptyList()
-                for (front in fronts) {
-                    workFrontService?.deactivate(front.ownerUuid)
-                }
-                player.sendMessage(Component.text("\u00a7c\u262d \u0412\u0441\u0435 \u0424\u0440\u043e\u043d\u0442\u044b \u0432 \u043c\u0438\u0440\u0435 \u0443\u0434\u0430\u043b\u0435\u043d\u044b."))
-                player.closeInventory()
-            }
-            statsSlot -> {
-                val orderCount = orderService?.findAllInWorld(world)?.size ?: 0
-                val frontCount = workFrontService?.getAllInWorld(world)?.size ?: 0
-                player.sendMessage(Component.text("\u00a7e\u262d \u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430 \u043c\u0438\u0440\u0430 \u00a7f$world\u00a7e:"))
-                player.sendMessage(Component.text("\u00a77  \u041e\u0440\u0434\u0435\u0440\u043e\u0432: \u00a7e$orderCount"))
-                player.sendMessage(Component.text("\u00a77  \u0424\u0440\u043e\u043d\u0442\u043e\u0432: \u00a7e$frontCount"))
-            }
-            backSlot -> {
-                player.closeInventory()
-            }
+            GuiConstants.ADMIN_DELETE_ORDERS_SLOT -> deleteAllOrders(player, world)
+            GuiConstants.ADMIN_DELETE_FRONTS_SLOT -> deleteAllFronts(player, world)
+            GuiConstants.ADMIN_STATS_SLOT -> showWorldStats(player, world)
+            GuiConstants.ADMIN_BACK_SLOT -> player.closeInventory()
         }
+    }
+
+    private fun deleteAllOrders(player: Player, world: String) {
+        val orders = orderService?.findAllInWorld(world) ?: emptyList()
+        for (order in orders) {
+            orderService?.deleteByOwner(order.ownerUuid)
+        }
+        player.sendMessage(Component.text(GuiConstants.ORDERS_DELETED_TEXT))
+        player.closeInventory()
+    }
+
+    private fun deleteAllFronts(player: Player, world: String) {
+        val fronts = workFrontService?.getAllInWorld(world) ?: emptyList()
+        for (front in fronts) {
+            workFrontService?.deactivate(front.ownerUuid)
+        }
+        player.sendMessage(Component.text(GuiConstants.FRONTS_DELETED_TEXT))
+        player.closeInventory()
+    }
+
+    private fun showWorldStats(player: Player, world: String) {
+        val orderCount = orderService?.findAllInWorld(world)?.size ?: 0
+        val frontCount = workFrontService?.getAllInWorld(world)?.size ?: 0
+        player.sendMessage(Component.text("${GuiConstants.STATS_PREFIX}\u00a7f$world\u00a7e:"))
+        player.sendMessage(Component.text("\u00a77  \u041e\u0440\u0434\u0435\u0440\u043e\u0432: \u00a7e$orderCount"))
+        player.sendMessage(Component.text("\u00a77  \u0424\u0440\u043e\u043d\u0442\u043e\u0432: \u00a7e$frontCount"))
     }
 }

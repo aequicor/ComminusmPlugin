@@ -2,7 +2,7 @@ package ru.kyamshanov.comminusm.service
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
-import ru.kyamshanov.comminusm.storage.OrderRepository
+import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import java.util.logging.Logger
 
 /**

@@ -4,7 +4,7 @@ import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.model.WorkFront
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
-import ru.kyamshanov.comminusm.storage.WorkFrontRepository
+import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
 import java.util.UUID
 
 class WorkFrontService(

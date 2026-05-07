@@ -17,7 +17,6 @@ import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
  * Implements AC-25: "Player leaves order, cross-order member-status automatically revoked"
  */
 class CommuneMembershipListener(
-    private val crossOrderService: CrossOrderMembershipService,
     private val communeService: CommuneService,
     private val membershipService: OrderMembershipService? = null
 ) : Listener {
@@ -50,7 +49,10 @@ class CommuneMembershipListener(
      * 3. For each cross-order membership: if player has no native order in that commune, revoke
      * 4. Revocations use Internal API (removeMemberSilently) to avoid event loops
      */
-    private fun recalculateCrossOrderRights(playerUuid: java.util.UUID, commune: ru.kyamshanov.comminusm.commune.model.Commune) {
+    private fun recalculateCrossOrderRights(
+        playerUuid: java.util.UUID,
+        commune: ru.kyamshanov.comminusm.commune.model.Commune
+    ) {
         // Step 1: Collect all native orders of the player in this commune
         val nativeOrdersInCommune = commune.orderIds.filter { orderId ->
             membershipService?.isNativeMember(orderId, playerUuid) ?: false ||

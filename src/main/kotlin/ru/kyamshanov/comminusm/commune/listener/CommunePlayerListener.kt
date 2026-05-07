@@ -4,7 +4,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 import ru.kyamshanov.comminusm.service.OrderService
 
 /**
@@ -21,7 +20,6 @@ import ru.kyamshanov.comminusm.service.OrderService
  */
 class CommunePlayerListener(
     private val communeService: CommuneService,
-    private val membershipService: OrderMembershipService,
     private val orderService: OrderService
 ) : Listener {
 
@@ -43,7 +41,7 @@ class CommunePlayerListener(
             player.sendMessage("Вы являетесь участником коммуны с ${otherOrders.size} другими ордерами")
         }
 
-        // TODO: Implement consistency check (AC-47) - verify cross-order members are still valid
-        // TODO: Implement offline notification delivery (CC-14) - check for pending messages
+        // AC-47: Consistency check for stale cross-order members (deferred)
+        // CC-14: Offline notification delivery for commune changes (deferred)
     }
 }

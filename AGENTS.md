@@ -11,7 +11,7 @@
 
 First communism plugin
 
-**Stack:** ComminusmPlugin — kotlin stack
+**Stack:** ComminusmPlugin вЂ” kotlin stack
 
 ---
 
@@ -19,7 +19,7 @@ First communism plugin
 
 | Module | Gradle module | Docs | Responsibility |
 |--------|---------------|------|----------------|
-| `comminusm` | `—` | `vault/comminusm/` | Minecraft Paper plugin — communism-themed gameplay mechanics |
+| `comminusm` | `вЂ”` | `vault/comminusm/` | Minecraft Paper plugin вЂ” communism-themed gameplay mechanics |
 
 
 ---
@@ -54,13 +54,43 @@ First communism plugin
 - TODO/FIXME in production code without a tracking entry (issue or DECISIONS.md)
 - Disabled/commented-out tests without an explanation
 - Catching Throwable/Exception generically and swallowing it
-- Hardcoded Bukkit ChatColor strings — use MiniMessage or component API
+- Hardcoded Bukkit ChatColor strings вЂ” use MiniMessage or component API
 - Using deprecated Bukkit API (use Paper-adventure components, not legacy ChatColors)
-- Blocking the main server thread — schedule async with Bukkit schedulers or coroutines
+- Blocking the main server thread вЂ” schedule async with Bukkit schedulers or coroutines
 - Storing Player references past event scope (causes memory leaks)
 - Calling Bukkit API from non-main thread without scheduler bouncing back to main
 - Long-running task in event handler (offload to BukkitScheduler.runTaskAsynchronously)
-
+- Class with more than one reason to change (god class / service class doing persistence + business logic + formatting simultaneously)
+- Method longer than 30 lines that mixes abstraction levels (orchestration + low-level detail in same function)
+- Repository class containing business rules or validation logic
+- Use case / interactor class containing more than one business operation
+- Switch/when on type tags or string type discriminators instead of polymorphism (adding a new type requires editing existing code)
+- Feature flag inside domain logic instead of strategy/decorator injection
+- Hardcoded algorithm selection inside a class that should delegate to a strategy
+- Subclass that throws UnsupportedOperationException / NotImplementedError for inherited methods
+- Subclass that weakens preconditions or strengthens postconditions of the parent contract
+- Type-checking with instanceof/is inside a method that accepts a base type (violates substitutability)
+- Interface with more than 5-7 methods that clients only partially implement (fat interface)
+- Passing a full service/repository interface to a consumer that uses only one method
+- Marker method implemented as a no-op (empty body) because the interface forced it
+- Concrete class instantiated with 'new' / constructor call inside business logic (use DI / factory)
+- Domain or use-case class importing from infrastructure layer (DB, HTTP, filesystem packages)
+- Static/global access to shared mutable state from domain logic (singletons as hidden dependencies)
+- Test that cannot run without a real database/network because a dependency was not inverted
+- Presentation layer (controller, ViewModel, screen) containing business rules
+- Domain entity importing framework annotations (ORM, serialization, DI) вЂ” keep entities pure
+- Infrastructure class (repository impl, API client) containing business decisions
+- Cross-layer import in wrong direction: inner layer importing outer layer package
+- Duplicate business logic in two or more use cases instead of extracting a shared domain service
+- Abstract base class or interface created speculatively with only one concrete implementation and no planned extension
+- Over-engineered abstraction for a one-time operation (factory-of-factories, generic pipeline for a single fixed flow)
+- Mutable public field on a domain entity or value object (use val / readonly / private setter)
+- Method that mutates its argument instead of returning a new value (unexpected side effect)
+- Shared mutable state accessed without synchronisation in concurrent context
+- Long method chain on a foreign object reaching 3+ levels deep (a.b().c().doSomething()) вЂ” violates LoD
+- Caller extracting data from an object and making decisions on its behalf instead of telling the object to act
+- Deep inheritance hierarchy (3+ levels) for code reuse вЂ” prefer composition or delegation
+- Inheriting from a concrete class solely to reuse implementation (not to extend the contract)
 
 ### Style
 
@@ -113,6 +143,18 @@ Do NOT modify without explicit instruction:
 - `.planning/DECISIONS.md` — append-only
 - `opencode.json` — runtime configuration
 - Any credential file: `.env*`, `~/.ssh/`, `~/.aws/`
+
+---
+
+## Tool Use Discipline
+
+Three rules before any `edit` / `write` call — they prevent the most common context-burning errors:
+
+1. **Read before Edit.** `edit <path>` requires a `read <path>` earlier in **this session**; memory of the file from another session/agent does not count. `write` to a brand-new file is fine without read; `write` to an existing file needs `read` first.
+2. **No empty diffs.** `old_string` must differ from `new_string`; otherwise the call is rejected. Plan the diff you want, not the final file content.
+3. **Paths from CWD, not memory.** Never paste absolute paths from docs, `AUTO_MEMORY.md`, or prior sessions — they may be from a different OS or developer's checkout. Default to project-relative paths (`vault/...`, `src/...`); derive absolute paths from `bash pwd` if needed.
+
+Full rules + pre-flight checklist: `.opencode/_shared.md` → "Tool Use Discipline".
 
 ---
 

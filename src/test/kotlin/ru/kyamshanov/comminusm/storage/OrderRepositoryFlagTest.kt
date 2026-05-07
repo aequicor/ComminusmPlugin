@@ -5,16 +5,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.model.Order
+import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
 import java.util.UUID
 
 class OrderRepositoryFlagTest {
     private lateinit var db: DatabaseManager
-    private lateinit var repo: OrderRepository
+    private lateinit var repo: OrderRepositoryImpl
 
     @BeforeEach
     fun setUp() {
         db = DatabaseManager("jdbc:sqlite::memory:")
-        repo = OrderRepository(db.connection)
+        repo = OrderRepositoryImpl(db.connection)
     }
 
     @Test

@@ -8,11 +8,11 @@ import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
-import ru.kyamshanov.comminusm.storage.OrderRepository
+import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import java.util.UUID
 import kotlin.math.abs
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class OrderService(
     private val orderRepository: OrderRepository,
     private val levels: List<OrderLevelConfig>,
@@ -55,6 +55,11 @@ class OrderService(
 
     fun findAllInWorld(world: String): List<Order> = orderRepository.findAllInWorld(world)
 
+    fun getOrderById(id: Long): Order? = orderRepository.findById(id)
+
+    fun isLeader(uuid: UUID): Boolean = orderRepository.findByOwner(uuid) != null
+
+    @Suppress("UNUSED_PARAMETER")
     fun checkOverlap(orders: List<Order>, x: Int, y: Int, z: Int, radius: Int): Boolean {
         return orders.any { existing ->
             if (existing.centerWorld == null) return@any false

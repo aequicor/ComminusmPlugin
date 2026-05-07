@@ -127,7 +127,7 @@ class OrderMenuTest {
                )""",
         )
         val orderService = ru.kyamshanov.comminusm.service.OrderService(
-            orderRepository = ru.kyamshanov.comminusm.storage.OrderRepository(conn),
+            orderRepository = ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl(conn),
             levels = emptyList(),
             workdaysService = null,
             minDistanceBetweenCenters = 100,

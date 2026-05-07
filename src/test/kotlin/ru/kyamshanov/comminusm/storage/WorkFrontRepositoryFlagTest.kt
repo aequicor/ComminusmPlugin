@@ -5,16 +5,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.model.WorkFront
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
 import java.util.UUID
 
 class WorkFrontRepositoryFlagTest {
     private lateinit var db: DatabaseManager
-    private lateinit var repo: WorkFrontRepository
+    private lateinit var repo: WorkFrontRepositoryImpl
 
     @BeforeEach
     fun setUp() {
         db = DatabaseManager("jdbc:sqlite::memory:")
-        repo = WorkFrontRepository(db.connection)
+        repo = WorkFrontRepositoryImpl(db.connection)
     }
 
     @Test

@@ -18,7 +18,7 @@ import java.util.logging.Logger
  * Minimal [Plugin] stub for unit tests. Override what you need.
  * All other methods throw [UnsupportedOperationException].
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "EmptyFunctionBlock")
 abstract class StubPluginBase : Plugin {
     override fun getDescription(): PluginDescriptionFile = throw UnsupportedOperationException()
     override fun getConfig(): FileConfiguration = throw UnsupportedOperationException()
