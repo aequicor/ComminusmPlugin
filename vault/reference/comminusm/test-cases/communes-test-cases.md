@@ -5,7 +5,7 @@ title: Test Cases — Communes
 topic: communes
 status: Living
 generated: 2026-05-06
-last_updated: 2026-05-07 (ADDED: TC-124 — party menu commune button issue; TC-123 — order menu item enhancement; TC-155 — order menu interactive issue; FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict; TC-155 — menu non-interactive issue; TC-123 — participants button material and position)
+last_updated: 2026-05-07 (ADDED: TC-124 — party menu commune button issue; TC-123 — order menu item enhancement; TC-155 — order menu interactive issue; FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict; TC-155 — menu non-interactive issue; TC-123 — participants button material and position; TC-124 — menu not closing after commune creation)
 author: "@QA"
 related:
   - vault/concepts/comminusm/requirements/communes.md
@@ -249,4 +249,4 @@ These test cases focus on unit-edge scenarios, integration workflows, error path
 | DEF-03 | TC-120 | FIXED | Commune creation placeholder: CommunePartyMenu.openCommuneMenu only sent message, didn't create commune or check for existing commune. Implemented commune creation logic with persistence check. |
 | DEF-04 | TC-155 | FIXED | Menu non-interactive issue: CommuneOrderMenu, OrderMembersMenu, and CommunePartyMenu only cancelled clicks on button slots, allowing items to be dragged from inventory. Fixed by cancelling ALL clicks in the menu before processing button logic. |
 | DEF-05 | TC-123 | FIXED | Participants button visual appearance: Button used Material.PAPER (same as restore flag) and was positioned at slot 23. Changed to Material.PLAYER_HEAD for better semantics and moved to slot 21 for better menu layout harmony. |
-| DEF-06 | TC-124 | OPEN | Party menu "Commune" button: first click shows "commune created" but menu remains open (should close); second click shows placeholder instead of opening commune menu. |
+| DEF-06 | TC-124 | FIXED | Party menu "Commune" button: first click shows "commune created" but menu remains open (should close); second click shows placeholder instead of opening commune menu. Fixed by calling player.closeInventory() after commune creation and when opening existing commune. |
