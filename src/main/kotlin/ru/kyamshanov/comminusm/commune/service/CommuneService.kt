@@ -166,4 +166,28 @@ class CommuneService(
         lock.read {
             communes[communeId]?.orderIds ?: emptySet()
         }
+
+    /**
+     * Restore a commune from storage without triggering creation logic.
+     * Used during plugin startup to reload existing communes from the database.
+     * Updates both the communes map and the orderToCommuneId mapping.
+     *
+     * @param commune The commune to restore into the in-memory cache
+     */
+    fun restoreCommune(commune: Commune) {
+        lock.write {
+            communes[commune.id] = commune
+            commune.orderIds.forEach { orderId ->
+                orderToCommuneId[orderId] = commune.id
+            }
+        }
+    }
+
+    /**
+     * Get all communes currently in the in-memory cache.
+     * Used for consistency checks and inspection purposes.
+     *
+     * @return List of all communes
+     */
+    fun getAllCommunes(): List<Commune> = lock.read { communes.values.toList() }
 }

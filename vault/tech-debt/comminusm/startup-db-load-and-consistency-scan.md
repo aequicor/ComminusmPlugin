@@ -10,6 +10,7 @@ triggers:
 confidence: high
 source: human
 updated: 2026-05-06T00:00:00Z
+status: in-progress
 ---
 
 # Tech Debt: Commune startup — DB load + AC-47 consistency scan

@@ -305,7 +305,7 @@ class DIContainer(
     }
 
     val communeStartupTask by lazy {
-        CommuneStartupTask(communeService, plugin)
+        CommuneStartupTask(communeService, orderMembersRepository, database.connection, plugin)
     }
 
     // ========== Menu Creation (lazy properties for dependency injection) ==========
