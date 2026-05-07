@@ -2,6 +2,7 @@
     "MagicNumber",
     "LongMethod",
     "SwallowedException",
+    "Deprecation",
 )
 
 package ru.kyamshanov.comminusm.gui

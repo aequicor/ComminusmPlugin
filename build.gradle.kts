@@ -27,6 +27,9 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/") {
         name = "papermc-repo"
     }
+    maven("https://maven.mockbukkit.org/releases/") {
+        name = "mockbukkit-repo"
+    }
 }
 
 dependencies {
@@ -37,6 +40,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.3.20-RC3")
     testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
 }
 
 tasks.test {

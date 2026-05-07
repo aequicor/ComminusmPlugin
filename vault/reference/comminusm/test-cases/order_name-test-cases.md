@@ -6,7 +6,7 @@ topic: order-name
 status: Draft
 date: 07.05.2026
 author: "@QA"
-last_updated: 2026-05-07 (FINAL: reconciled with impl test files — TC-01,05,06,07,09,19,20,24,25,26,27,28,29,30,31,36,52-67,82,83 PASS marked with impl refs)
+last_updated: 2026-05-07 (AUTO_VERIFY: TC-27b, TC-27c, TC-32, TC-33 PASS marked by @TestExecutor; TC-27b, TC-27c added as new integration TCs)
 spec: vault/reference/comminusm/spec/order_name.md
 requirements: vault/concepts/comminusm/requirements/order_name.md
 ---
@@ -56,12 +56,14 @@ PEND  •  PASS  •  FAIL  •  SKIP
 | TC-25 | PASS   | —     | corner case | [CC-01] Leader demoted while Anvil open, then confirms rename; must be rejected (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/RenameOrderUseCaseTest.kt)           | Rename rejected, error: "Вы больше не лидер..."    |
 | TC-26 | PASS   | —     | corner case | [CC-02] Order disbanded while Anvil open, player confirms rename (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/RenameOrderUseCaseTest.kt)                         | Rename fails, error: "Этот ордер был расформирован" |
 | TC-27 | PASS   | —     | corner case | [CC-03] ArmorStand entity missing, rename confirmed; DB updates, ArmorStand skip logged (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderRenameMenuTest.kt) | DB updated, warning logged, no NullPointerException |
+| TC-27b | PASS   | —     | integration | MockBukkit: order rename Anvil open, confirm changes reflected in menu (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderRenameMenuIntegrationTest.kt) | Menu updates after rename confirmation                |
+| TC-27c | PASS   | —     | integration | MockBukkit: ArmorStand entity display name updated after rename confirm (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderRenameMenuIntegrationTest.kt) | ArmorStand custom name reflects new order name       |
 | TC-28 | PASS   | —     | corner case | [CC-04] Name is only hyphens/underscores (e.g. "---", "___"); all chars valid (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/RenameOrderUseCaseTest.kt)            | Name accepted and persisted as-is                   |
 | TC-29 | PASS   | —     | corner case | [CC-05] Single character name (e.g. "A", "Я", "1"); valid per character set (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/RenameOrderUseCaseTest.kt)             | 1-char name accepted and persisted                  |
 | TC-30 | PASS   | —     | corner case | [CC-06] Double-click Rename button opens Anvil twice in rapid succession (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderRenameMenuTest.kt)                 | Second Anvil ignored, only one active per player    |
 | TC-31 | PASS   | —     | corner case | [CC-07] Player disconnects while Anvil open before confirming rename (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderRenameMenuTest.kt)                     | Anvil closes, no rename stored, name stays old      |
-| TC-32 | PEND   | —     | corner case | [CC-08] ArmorStand in unloaded chunk when rename confirmed                               | DB write succeeds, entity update deferred/skipped   |
-| TC-33 | PEND   | —     | corner case | [CC-09] Non-leader calls rename confirm via crafted packet, bypassing button guard       | Rename rejected at confirm time, permission re-checked |
+| TC-32 | PASS   | —     | corner case | [CC-08] ArmorStand in unloaded chunk when rename confirmed (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderRenameMenuIntegrationTest.kt) | DB write succeeds, entity update deferred/skipped   |
+| TC-33 | PASS   | —     | corner case | [CC-09] Non-leader calls rename confirm via crafted packet, bypassing button guard (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderMenuIntegrationTest.kt) | Rename rejected at confirm time, permission re-checked |
 | TC-34 | PEND   | —     | corner case | [CC-10] Name has leading/trailing hyphens (e.g. "_Name_", "-Guild", "Order-")            | Name stored as-is, no auto-trimming                 |
 | TC-35 | PEND   | —     | corner case | [CC-11] Default nickname exactly 20 chars, all valid; no truncation needed              | Full 20-char nickname set as default name           |
 | TC-36 | PASS   | —     | corner case | [CC-12] Default nickname >20 chars, first 20 valid chars extracted (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/OrderNameTest.kt) | Name truncated to first 20 chars, notification sent |
