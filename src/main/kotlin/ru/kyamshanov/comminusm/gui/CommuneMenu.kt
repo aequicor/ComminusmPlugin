@@ -7,10 +7,10 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByIdUseCase
 import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
 import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.service.OrderService
 import java.util.UUID
 
 /**
@@ -18,14 +18,12 @@ import java.util.UUID
  * Displays member orders, invitations, and management buttons.
  * Layout: 45-slot inventory with border, content area, and footer.
  */
-@Suppress("UnusedPrivateProperty")
+@Suppress("LongParameterList")
 class CommuneMenu(
     private val communeService: CommuneService,
-    private val orderService: OrderService,
-    @Suppress("UNUSED_PARAMETER")
+    private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
+    private val getOrderByIdUseCase: GetOrderByIdUseCase,
     private val communeInvitationService: CommuneInvitationService,
-    @Suppress("UNUSED_PARAMETER")
-    private val orderMembershipService: OrderMembershipService,
 ) : Listener {
     @Suppress("LongMethod", "MagicNumber")
     fun open(
@@ -36,7 +34,7 @@ class CommuneMenu(
             communeService.getCommune(communeId)
                 ?: return player.sendMessage(Component.text("§cКоммуна не найдена"))
 
-        val isLeader = orderService.isLeader(player.uniqueId)
+        val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
 
         val inv = Bukkit.createInventory(null, 45, Component.text("§8Коммуна"))
         GuiUtils.fillBorder(inv)
@@ -53,7 +51,7 @@ class CommuneMenu(
         )
 
         // Orders list (slots 19-34, max 7 orders for simple pagination)
-        val orders = commune.orderIds.mapNotNull { orderService.getOrderById(it) }
+        val orders = commune.orderIds.mapNotNull { getOrderByIdUseCase(it) }
         var slot = ORDERS_START_SLOT
         for (order in orders) {
             if (slot > ORDERS_END_SLOT) {

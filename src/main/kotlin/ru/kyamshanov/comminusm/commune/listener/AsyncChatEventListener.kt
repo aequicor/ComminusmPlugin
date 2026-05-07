@@ -6,25 +6,24 @@ import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import ru.kyamshanov.comminusm.commune.service.CommuneChatService
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.application.usecases.commune.BroadcastToCommuneUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetToggleModeUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
 
 /**
  * Listener for AsyncChatEvent that handles commune chat messages.
- * Integrates with CommuneChatService to route messages to the correct channel.
  *
  * Implements AC-18: "Commune chat mode - toggle and single message dispatch"
  *
- * Handles routing of commune chat messages through CommuneChatService.
- * This listener processes async chat events and delegates message routing
- * to the service layer. For each commune-enabled player, routes messages
- * to commune members only (if in commune chat toggle mode).
+ * Processes async chat events and routes messages to commune members when
+ * the player has commune chat toggle mode enabled.
  */
 class AsyncChatEventListener(
-    private val communeChatService: CommuneChatService,
-    private val communeService: CommuneService,
-    private val orderService: OrderService,
+    private val getToggleModeUseCase: GetToggleModeUseCase,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
+    private val getCommuneOfOrderUseCase: GetCommuneOfOrderUseCase,
+    private val broadcastToCommuneUseCase: BroadcastToCommuneUseCase,
 ) : Listener {
     companion object {
         // CC-08: Message length limit (max 256 chars per spec §6.15)
@@ -49,7 +48,7 @@ class AsyncChatEventListener(
         val playerUUID = player.uniqueId
 
         // Check if commune chat toggle mode is enabled — skip if not
-        if (!communeChatService.getToggleMode(playerUUID)) {
+        if (!getToggleModeUseCase(playerUUID)) {
             return
         }
 
@@ -80,12 +79,12 @@ class AsyncChatEventListener(
 
             else -> {
                 // Find player's native order and check if they're in a commune
-                val playerOrder = orderService.findByOwner(playerUUID)
-                val commune = playerOrder?.let { communeService.getCommuneOfOrder(it.id) }
+                val playerOrder = getOrderByOwnerUseCase(playerUUID)
+                val commune = playerOrder?.let { getCommuneOfOrderUseCase(it.id) }
 
                 // Route to all online commune members
                 if (commune != null) {
-                    communeChatService.broadcastToCommune(commune.id, player, messageText)
+                    broadcastToCommuneUseCase(commune.id, playerUUID, messageText)
                 }
             }
         }

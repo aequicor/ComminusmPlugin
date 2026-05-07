@@ -8,12 +8,14 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import ru.kyamshanov.comminusm.application.usecases.workdays.GetWorkdaysBalanceUseCase
+import ru.kyamshanov.comminusm.application.usecases.workdays.IncrementWorkdaysUseCase
 import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
-import ru.kyamshanov.comminusm.service.WorkdaysService
 
 class TreasuryMenu(
     private val config: PluginConfig,
-    private val workdaysService: WorkdaysService,
+    private val incrementWorkdaysUseCase: IncrementWorkdaysUseCase,
+    private val getWorkdaysBalanceUseCase: GetWorkdaysBalanceUseCase,
 ) : Listener {
     private val submitItem =
         GuiUtils.namedItem(
@@ -77,13 +79,13 @@ class TreasuryMenu(
         }
 
         if (totalEarned > 0) {
-            workdaysService.earn(player.uniqueId, totalEarned)
+            incrementWorkdaysUseCase(player.uniqueId, totalEarned)
             player.sendMessage(
                 Component.text(
                     "§a☭ Партия благодарит за вклад! Зачислено §e$totalEarned §aтрудодней.",
                 ),
             )
-            val currentBalance = workdaysService.getBalance(player.uniqueId)
+            val currentBalance = getWorkdaysBalanceUseCase(player.uniqueId)
             player.sendMessage(Component.text("§7Текущий баланс: §e$currentBalance §7трудодней."))
         } else {
             player.sendMessage(Component.text("§cВ казне нет подходящих ресурсов, товарищ."))

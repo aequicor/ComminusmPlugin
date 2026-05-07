@@ -3,8 +3,8 @@ package ru.kyamshanov.comminusm.commune.listener
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
 
 /**
  * Listener that observes PlayerJoinEvent and performs consistency checks and notifications.
@@ -19,8 +19,8 @@ import ru.kyamshanov.comminusm.service.OrderService
  * Implements CC-14: "Player joins after being offline during commune changes"
  */
 class CommunePlayerListener(
-    private val communeService: CommuneService,
-    private val orderService: OrderService,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
+    private val getCommuneOfOrderUseCase: GetCommuneOfOrderUseCase,
 ) : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
@@ -28,10 +28,10 @@ class CommunePlayerListener(
         val playerUuid = player.uniqueId
 
         // Find player's native order (if any - they are the owner)
-        val playerOrder = orderService.findByOwner(playerUuid) ?: return
+        val playerOrder = getOrderByOwnerUseCase(playerUuid) ?: return
 
         // Check if order is in a commune
-        val commune = communeService.getCommuneOfOrder(playerOrder.id) ?: return
+        val commune = getCommuneOfOrderUseCase(playerOrder.id) ?: return
 
         // Get all other orders in the commune and inform player
         val otherOrders = commune.orderIds.filter { it != playerOrder.id }

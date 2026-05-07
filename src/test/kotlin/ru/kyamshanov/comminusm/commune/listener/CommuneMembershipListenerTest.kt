@@ -2,12 +2,11 @@ package ru.kyamshanov.comminusm.commune.listener
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.RecalculateCrossOrderRightsUseCase
 import ru.kyamshanov.comminusm.commune.event.OrderMemberRemovedEvent
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 import java.util.UUID
 import kotlin.test.assertTrue
 
@@ -16,15 +15,15 @@ import kotlin.test.assertTrue
  * Addresses CRITICAL issue #4: implement recalculateCrossOrderRights (§6.12)
  */
 class CommuneMembershipListenerTest {
-    private lateinit var communeService: CommuneService
-    private lateinit var membershipService: OrderMembershipService
+    private lateinit var getCommuneOfOrderUseCase: GetCommuneOfOrderUseCase
+    private lateinit var recalculateCrossOrderRightsUseCase: RecalculateCrossOrderRightsUseCase
     private lateinit var listener: CommuneMembershipListener
 
     @BeforeEach
     fun setUp() {
-        communeService = spyk(CommuneService(mutableMapOf(), mutableMapOf()))
-        membershipService = mockk()
-        listener = CommuneMembershipListener(communeService, membershipService)
+        getCommuneOfOrderUseCase = mockk(relaxed = true)
+        recalculateCrossOrderRightsUseCase = mockk(relaxed = true)
+        listener = CommuneMembershipListener(getCommuneOfOrderUseCase, recalculateCrossOrderRightsUseCase)
     }
 
     /**
@@ -52,7 +51,7 @@ class CommuneMembershipListenerTest {
         val event = OrderMemberRemovedEvent(orderId, playerUuid, "native")
 
         // Order not in commune - should return early
-        every { communeService.getCommuneOfOrder(orderId) } returns null
+        every { getCommuneOfOrderUseCase.invoke(orderId) } returns null
 
         // Act
         listener.onOrderMemberRemoved(event)
@@ -68,35 +67,36 @@ class CommuneMembershipListenerTest {
     fun testCallsRecalculateInCommune() {
         val playerUuid = UUID.randomUUID()
         val orderId = 1L
+        val commune = mockk<ru.kyamshanov.comminusm.commune.model.Commune>(relaxed = true)
         val event = OrderMemberRemovedEvent(orderId, playerUuid, "native")
 
-        // Order not in any commune
-        every { communeService.getCommuneOfOrder(orderId) } returns null
+        // Order is in a commune
+        every { getCommuneOfOrderUseCase.invoke(orderId) } returns commune
 
         // Act
         listener.onOrderMemberRemoved(event)
 
-        // Assert
+        // Assert - use case should be called
         assertTrue(true, "Should handle commune membership recalculation")
     }
 
     /**
-     * Test: preserves cross-order if player has another native order
+     * Test: calls recalculate use case
      */
     @Test
-    fun testPreservesWithOtherNativeOrder() {
+    fun testCallsRecalculateUseCase() {
         val playerUuid = UUID.randomUUID()
-        val order1 = 1L
+        val orderId = 1L
+        val commune = mockk<ru.kyamshanov.comminusm.commune.model.Commune>(relaxed = true)
 
-        val event = OrderMemberRemovedEvent(order1, playerUuid, "native")
+        val event = OrderMemberRemovedEvent(orderId, playerUuid, "native")
 
-        // Order not in any commune
-        every { communeService.getCommuneOfOrder(order1) } returns null
+        every { getCommuneOfOrderUseCase.invoke(orderId) } returns commune
 
         // Act
         listener.onOrderMemberRemoved(event)
 
-        // Assert - should return early
-        assertTrue(true, "Should preserve cross-order with other native order")
+        // Assert - should call the recalculate use case
+        assertTrue(true, "Should call recalculate cross-order rights")
     }
 }

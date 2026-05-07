@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package ru.kyamshanov.comminusm.gui
 
 import org.bukkit.Location
@@ -6,6 +8,13 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.kyamshanov.comminusm.application.usecases.order.GetMaxOrderLevelUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderCostForLevelUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetRadiusForLevelUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.UpgradeOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.workdays.GetWorkdaysBalanceUseCase
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontByOwnerUseCase
 import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.service.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.HomeTimerManager
@@ -141,13 +150,44 @@ class OrderMenuTest {
                 minDistanceBetweenCenters = 100,
             )
         return OrderMenu(
-            orderService = orderService,
-            workdaysService = null,
+            getMaxOrderLevelUseCase =
+                object : GetMaxOrderLevelUseCase {
+                    override fun invoke(): Int = 10
+                },
+            getOrderCostForLevelUseCase =
+                object : GetOrderCostForLevelUseCase {
+                    override fun invoke(level: Int): Int = 100
+                },
+            getRadiusForLevelUseCase =
+                object : GetRadiusForLevelUseCase {
+                    override fun invoke(level: Int): Int = 5
+                },
+            getWorkdaysBalanceUseCase =
+                object : GetWorkdaysBalanceUseCase {
+                    override fun invoke(playerUuid: UUID): Int = 200
+                },
+            getOrderByOwnerUseCase =
+                object : GetOrderByOwnerUseCase {
+                    override fun invoke(ownerUuid: UUID): ru.kyamshanov.comminusm.domain.entities.Order? = null
+                },
+            upgradeOrderUseCase =
+                object : UpgradeOrderUseCase {
+                    override fun invoke(
+                        ownerUuid: UUID,
+                    ): ru.kyamshanov.comminusm.domain.value_objects.Result<ru.kyamshanov.comminusm.domain.entities.Order> =
+                        ru.kyamshanov.comminusm.domain.value_objects.Result
+                            .Failure("Not implemented")
+                },
+            getWorkFrontByOwnerUseCase =
+                object : GetWorkFrontByOwnerUseCase {
+                    override fun invoke(ownerUuid: UUID): ru.kyamshanov.comminusm.model.WorkFront? = null
+                },
             config =
                 PluginConfig(
                     org.bukkit.configuration.file
                         .YamlConfiguration(),
                 ),
+            orderService = orderService,
             workFrontService = null,
             homeTimerManager = fakeHtm,
             flagStabilityManager = fakeFsm,

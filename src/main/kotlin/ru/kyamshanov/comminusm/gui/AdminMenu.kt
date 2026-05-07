@@ -7,12 +7,16 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
-import ru.kyamshanov.comminusm.service.OrderService
-import ru.kyamshanov.comminusm.service.WorkFrontService
+import ru.kyamshanov.comminusm.application.usecases.order.DeleteOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.FindOrdersInWorldUseCase
+import ru.kyamshanov.comminusm.application.usecases.workfront.DeactivateWorkFrontUseCase
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontsInWorldUseCase
 
 class AdminMenu(
-    private val orderService: OrderService?,
-    private val workFrontService: WorkFrontService?,
+    private val findOrdersInWorldUseCase: FindOrdersInWorldUseCase,
+    private val getWorkFrontsInWorldUseCase: GetWorkFrontsInWorldUseCase,
+    private val deleteOrderUseCase: DeleteOrderUseCase,
+    private val deactivateWorkFrontUseCase: DeactivateWorkFrontUseCase,
 ) : Listener {
     fun open(player: Player) {
         val inv =
@@ -41,8 +45,8 @@ class AdminMenu(
             ),
         )
 
-        val orderCount = orderService?.findAllInWorld(player.world.name)?.size ?: 0
-        val frontCount = workFrontService?.getAllInWorld(player.world.name)?.size ?: 0
+        val orderCount = findOrdersInWorldUseCase(player.world.name).size
+        val frontCount = getWorkFrontsInWorldUseCase(player.world.name).size
         inv.setItem(
             GuiConstants.ADMIN_STATS_SLOT,
             GuiUtils.namedItem(
@@ -79,9 +83,9 @@ class AdminMenu(
         player: Player,
         world: String,
     ) {
-        val orders = orderService?.findAllInWorld(world) ?: emptyList()
+        val orders = findOrdersInWorldUseCase(world)
         for (order in orders) {
-            orderService?.deleteByOwner(order.ownerUuid)
+            deleteOrderUseCase(order.ownerUuid)
         }
         player.sendMessage(Component.text(GuiConstants.ORDERS_DELETED_TEXT))
         player.closeInventory()
@@ -91,9 +95,9 @@ class AdminMenu(
         player: Player,
         world: String,
     ) {
-        val fronts = workFrontService?.getAllInWorld(world) ?: emptyList()
+        val fronts = getWorkFrontsInWorldUseCase(world)
         for (front in fronts) {
-            workFrontService?.deactivate(front.ownerUuid)
+            deactivateWorkFrontUseCase(front.ownerUuid)
         }
         player.sendMessage(Component.text(GuiConstants.FRONTS_DELETED_TEXT))
         player.closeInventory()
@@ -103,8 +107,8 @@ class AdminMenu(
         player: Player,
         world: String,
     ) {
-        val orderCount = orderService?.findAllInWorld(world)?.size ?: 0
-        val frontCount = workFrontService?.getAllInWorld(world)?.size ?: 0
+        val orderCount = findOrdersInWorldUseCase(world).size
+        val frontCount = getWorkFrontsInWorldUseCase(world).size
         player.sendMessage(Component.text("${GuiConstants.STATS_PREFIX}\u00a7f$world\u00a7e:"))
         player.sendMessage(Component.text("\u00a77  \u041e\u0440\u0434\u0435\u0440\u043e\u0432: \u00a7e$orderCount"))
         player.sendMessage(Component.text("\u00a77  \u0424\u0440\u043e\u043d\u0442\u043e\u0432: \u00a7e$frontCount"))

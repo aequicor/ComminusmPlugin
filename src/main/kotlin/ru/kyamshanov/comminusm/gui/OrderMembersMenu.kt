@@ -7,8 +7,8 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.service.OrderService
 
 /**
  * GUI for viewing and managing native and cross-order members of an order.
@@ -17,8 +17,8 @@ import ru.kyamshanov.comminusm.service.OrderService
  */
 @Suppress("MagicNumber")
 class OrderMembersMenu(
+    private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
     private val orderMembershipService: OrderMembershipService,
-    private val orderService: OrderService,
 ) : Listener {
     private val occupiedMemberSlots = mutableSetOf<Int>()
 
@@ -26,7 +26,7 @@ class OrderMembersMenu(
         player: Player,
         orderId: Long,
     ) {
-        val isLeader = orderService.isLeader(player.uniqueId)
+        val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
 
         val inv = Bukkit.createInventory(null, 45, Component.text("§8Участники ордера №$orderId"))
         GuiUtils.fillBorder(inv)

@@ -32,6 +32,7 @@ class FrontFlagListener(
     private val flagCleanupHelper: FlagCleanupHelper,
     private val manager: FlagStabilityManager,
     private val config: PluginConfig,
+    private val frontMenu: FrontMenu,
 ) : Listener {
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     @EventHandler
@@ -187,7 +188,7 @@ class FrontFlagListener(
         if (loc.blockX != front.centerX || loc.blockY != front.centerY || loc.blockZ != front.centerZ) return
 
         event.isCancelled = true
-        FrontMenu(workFrontService).open(player, front)
+        frontMenu.open(player, front)
     }
 
     private companion object {

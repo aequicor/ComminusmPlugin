@@ -10,7 +10,8 @@ import org.bukkit.event.player.PlayerRespawnEvent
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.model.Order
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
+import ru.kyamshanov.comminusm.domain.entities.Order
 import ru.kyamshanov.comminusm.service.FlagStabilityManager
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -162,11 +163,15 @@ class OrderRespawnListenerTest {
         ordersByUuid.clear()
         recordingChunk = RecordingChunk()
         testWorld = fakeWorld("world", recordingChunk.proxy)
+        val getOrderByOwnerUseCase =
+            object : GetOrderByOwnerUseCase {
+                override fun invoke(uuid: UUID): Order? = ordersByUuid[uuid]
+            }
         listener =
             OrderRespawnListener(
                 flagStabilityManager = flagManager,
                 logger = logger,
-                findOrderByOwner = { uuid -> ordersByUuid[uuid] },
+                getOrderByOwnerUseCase = getOrderByOwnerUseCase,
             )
     }
 
@@ -336,11 +341,15 @@ class OrderRespawnListenerTest {
         val order = Order(id = orderId, ownerUuid = playerUuid)
         ordersByUuid[playerUuid] = order
 
+        val getOrderByOwnerUseCaseForError =
+            object : GetOrderByOwnerUseCase {
+                override fun invoke(uuid: UUID): Order? = ordersByUuid[uuid]
+            }
         val safeListener =
             OrderRespawnListener(
                 flagStabilityManager = throwingFlagManager,
                 logger = logger,
-                findOrderByOwner = { uuid -> ordersByUuid[uuid] },
+                getOrderByOwnerUseCase = getOrderByOwnerUseCaseForError,
             )
         val player = fakePlayer(playerUuid)
         val defaultLoc = Location(null, 0.0, 64.0, 0.0)

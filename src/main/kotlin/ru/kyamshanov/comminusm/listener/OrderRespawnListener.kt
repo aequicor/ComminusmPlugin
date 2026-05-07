@@ -5,9 +5,8 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerRespawnEvent
-import ru.kyamshanov.comminusm.model.Order
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
 import ru.kyamshanov.comminusm.service.FlagStabilityManager
-import ru.kyamshanov.comminusm.service.OrderService
 import java.util.UUID
 import java.util.logging.Logger
 
@@ -26,22 +25,8 @@ import java.util.logging.Logger
 class OrderRespawnListener(
     private val flagStabilityManager: FlagStabilityManager,
     private val logger: Logger,
-    private val findOrderByOwner: (UUID) -> Order?,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
 ) : Listener {
-    /**
-     * Convenience constructor for production use — delegates [findOrderByOwner]
-     * to [OrderService.findByOwner].
-     */
-    constructor(
-        orderService: OrderService,
-        flagStabilityManager: FlagStabilityManager,
-        logger: Logger,
-    ) : this(
-        flagStabilityManager = flagStabilityManager,
-        logger = logger,
-        findOrderByOwner = { uuid -> orderService.findByOwner(uuid) },
-    )
-
     /**
      * Intercepts respawn and redirects the player to their order flag when:
      * - The player owns an active order (AC-11)
@@ -79,7 +64,7 @@ class OrderRespawnListener(
      */
     @Suppress("ReturnCount")
     private fun resolveFlagLocation(playerUuid: UUID): Location? {
-        val order = findOrderByOwner(playerUuid) ?: return null // AC-11
+        val order = getOrderByOwnerUseCase(playerUuid) ?: return null // AC-11
         val flagLoc = flagStabilityManager.getFlagLocation(order.id) ?: return null // AC-10/AC-22
         if (!flagStabilityManager.isFlagActive(order.id)) return null // CC-01/CC-02
         val world = flagLoc.world ?: return null // unloaded world guard

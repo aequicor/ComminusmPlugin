@@ -8,8 +8,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 
 /**
  * Decorator pattern wrapper around PartyMenu.
@@ -17,11 +16,8 @@ import ru.kyamshanov.comminusm.service.OrderService
  * For leaders: button opens CommuneMenu.
  * For non-leaders: button is disabled with explanatory lore.
  */
-@Suppress("UnusedPrivateProperty")
 class CommunePartyMenu(
-    @Suppress("UNUSED_PARAMETER")
-    private val communeService: CommuneService,
-    private val orderService: OrderService,
+    private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
 ) : Listener {
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
@@ -32,7 +28,7 @@ class CommunePartyMenu(
         val player = event.player as Player
         val inv = event.view.topInventory
 
-        val isLeader = orderService.isLeader(player.uniqueId)
+        val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
 
         if (isLeader) {
             inv.setItem(
@@ -69,7 +65,7 @@ class CommunePartyMenu(
         event.isCancelled = true
         val player = event.whoClicked as Player
 
-        val isLeader = orderService.isLeader(player.uniqueId)
+        val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
         if (!isLeader) {
             player.sendMessage(Component.text("§cТолько лидер ордера может управлять коммуной"))
             return

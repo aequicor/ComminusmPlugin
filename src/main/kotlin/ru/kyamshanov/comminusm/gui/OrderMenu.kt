@@ -14,20 +14,33 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
+import ru.kyamshanov.comminusm.application.usecases.order.GetMaxOrderLevelUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderCostForLevelUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetRadiusForLevelUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.UpgradeOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.workdays.GetWorkdaysBalanceUseCase
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontByOwnerUseCase
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.service.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.HomeTimerManager
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
-import ru.kyamshanov.comminusm.service.WorkdaysService
 import java.util.UUID
 
 @Suppress("LongParameterList")
 class OrderMenu(
-    private val orderService: OrderService,
-    private val workdaysService: WorkdaysService?,
+    private val getMaxOrderLevelUseCase: GetMaxOrderLevelUseCase,
+    private val getOrderCostForLevelUseCase: GetOrderCostForLevelUseCase,
+    private val getRadiusForLevelUseCase: GetRadiusForLevelUseCase,
+    private val getWorkdaysBalanceUseCase: GetWorkdaysBalanceUseCase,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
+    private val upgradeOrderUseCase: UpgradeOrderUseCase,
+    private val getWorkFrontByOwnerUseCase: GetWorkFrontByOwnerUseCase,
     private val config: PluginConfig,
+    private val orderService: OrderService,
     private val workFrontService: WorkFrontService? = null,
     private val homeTimerManager: HomeTimerManager? = null,
     private val flagStabilityManager: FlagStabilityManager? = null,
@@ -52,7 +65,7 @@ class OrderMenu(
             GuiUtils.namedItem(
                 "§eОрдер №${order.id}",
                 Material.WHITE_BANNER,
-                "§7Уровень: §e${order.level}/${orderService.getMaxLevel()}",
+                "§7Уровень: §e${order.level}/${getMaxOrderLevelUseCase()}",
                 "§7Владелец: §e${player.name}",
             ),
         )
@@ -69,10 +82,10 @@ class OrderMenu(
         )
 
         val nextLevel = order.level + 1
-        if (nextLevel <= orderService.getMaxLevel()) {
-            val cost = orderService.getCostForLevel(nextLevel)
-            val newRadius = orderService.getRadiusForLevel(nextLevel)
-            val balance = workdaysService?.getBalance(player.uniqueId) ?: 0
+        if (nextLevel <= getMaxOrderLevelUseCase()) {
+            val cost = getOrderCostForLevelUseCase(nextLevel)
+            val newRadius = getRadiusForLevelUseCase(nextLevel)
+            val balance = getWorkdaysBalanceUseCase(player.uniqueId)
             inv.setItem(
                 upgradeSlot,
                 GuiUtils.namedItem(
@@ -176,23 +189,21 @@ class OrderMenu(
 
         when (event.slot) {
             upgradeSlot -> {
-                val success = orderService.upgrade(player.uniqueId)
-                if (success) {
-                    val updatedOrder = orderService.findByOwner(player.uniqueId)
-                    if (updatedOrder != null) {
-                        player.sendMessage(
-                            Component.text(
-                                "§a☭ Партия расширила вашу жилплощадь до уровня ${updatedOrder.level}. Слава труду!",
-                            ),
-                        )
-                        open(player, updatedOrder)
-                    }
-                } else {
-                    val order = orderService.findByOwner(player.uniqueId)
+                val result = upgradeOrderUseCase(player.uniqueId)
+                if (result is ru.kyamshanov.comminusm.domain.value_objects.Result.Success) {
+                    val updatedOrder = DomainToModelAdapter.toPresentationModel(result.data)
+                    player.sendMessage(
+                        Component.text(
+                            "§a☭ Партия расширила вашу жилплощадь до уровня ${updatedOrder.level}. Слава труду!",
+                        ),
+                    )
+                    open(player, updatedOrder)
+                } else if (result is ru.kyamshanov.comminusm.domain.value_objects.Result.Failure) {
+                    val order = getOrderByOwnerUseCase(player.uniqueId)
                     if (order != null) {
                         val nextLevel = order.level + 1
-                        val cost = orderService.getCostForLevel(nextLevel)
-                        val balance = workdaysService?.getBalance(player.uniqueId) ?: 0
+                        val cost = getOrderCostForLevelUseCase(nextLevel)
+                        val balance = getWorkdaysBalanceUseCase(player.uniqueId)
                         val missing = cost - balance
                         player.sendMessage(
                             Component.text(
@@ -203,7 +214,7 @@ class OrderMenu(
                 }
             }
             restoreSlot -> {
-                val order = orderService.findByOwner(player.uniqueId)
+                val order = getOrderByOwnerUseCase(player.uniqueId)
                 if (order == null) {
                     player.sendMessage(Component.text("§cУ вас нет активного Ордера, товарищ."))
                     player.closeInventory()
@@ -257,14 +268,18 @@ class OrderMenu(
                     sendMessage = { msg -> player.sendMessage(MiniMessage.miniMessage().deserialize(msg)) },
                     closeInventory = { player.closeInventory() },
                     getFlagWorldName = { loc -> loc.world?.name },
-                    checkOwner = { uuid -> orderService.findByOwner(uuid)?.id == orderId },
+                    checkOwner = { uuid -> getOrderByOwnerUseCase(uuid)?.id == orderId },
                 )
             }
             backSlot -> {
-                val wds = workdaysService
-                if (wds != null) {
-                    PartyMenu(config, wds, orderService, workFrontService).open(player)
-                }
+                PartyMenu(
+                    config,
+                    getWorkdaysBalanceUseCase,
+                    getOrderByOwnerUseCase,
+                    getWorkFrontByOwnerUseCase,
+                    orderService,
+                    workFrontService,
+                ).open(player)
             }
         }
     }

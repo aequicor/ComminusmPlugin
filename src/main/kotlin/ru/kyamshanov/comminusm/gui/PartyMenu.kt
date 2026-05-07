@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList")
+
 package ru.kyamshanov.comminusm.gui
 
 import net.kyori.adventure.text.Component
@@ -11,20 +13,27 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
+import ru.kyamshanov.comminusm.application.usecases.workdays.GetWorkdaysBalanceUseCase
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontByOwnerUseCase
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.listener.FlagItemProtectionListener
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
-import ru.kyamshanov.comminusm.service.WorkdaysService
 import java.util.Base64
 
 class PartyMenu(
     private val config: PluginConfig,
-    private val workdaysService: WorkdaysService?,
+    private val getWorkdaysBalanceUseCase: GetWorkdaysBalanceUseCase,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
+    private val getWorkFrontByOwnerUseCase: GetWorkFrontByOwnerUseCase,
     private val orderService: OrderService?,
     private val workFrontService: WorkFrontService?,
     private val plugin: Plugin? = null,
     private val orderMenu: OrderMenu? = null,
+    private val frontMenu: FrontMenu? = null,
+    private val treasuryMenu: TreasuryMenu? = null,
 ) : Listener {
     fun open(player: Player) {
         val inv =
@@ -36,8 +45,8 @@ class PartyMenu(
         GuiUtils.fillBorder(inv)
 
         val uuid = player.uniqueId
-        val hasOrder = orderService?.findByOwner(uuid) != null
-        val hasFront = workFrontService?.getByOwner(uuid) != null
+        val hasOrder = getOrderByOwnerUseCase(uuid) != null
+        val hasFront = getWorkFrontByOwnerUseCase(uuid) != null
 
         inv.setItem(
             GuiConstants.PARTY_MENU_ORDER_SLOT,
@@ -74,7 +83,7 @@ class PartyMenu(
             ),
         )
 
-        val balance = workdaysService?.getBalance(uuid) ?: 0
+        val balance = getWorkdaysBalanceUseCase(uuid)
         inv.setItem(
             GuiConstants.PARTY_MENU_BALANCE_SLOT,
             GuiUtils.namedItem(
@@ -100,21 +109,22 @@ class PartyMenu(
             GuiConstants.PARTY_MENU_ORDER_SLOT -> handleOrderClick(player)
             GuiConstants.PARTY_MENU_FRONT_SLOT -> handleFrontClick(player)
             GuiConstants.PARTY_MENU_TREASURY_SLOT -> {
-                val wds = workdaysService
-                if (wds != null) {
-                    TreasuryMenu(config, wds).open(player)
+                val menu = treasuryMenu
+                if (menu != null) {
+                    menu.open(player)
                 }
             }
         }
     }
 
     private fun handleOrderClick(player: Player) {
-        val orderService = this.orderService ?: return
-        val order = orderService.findByOwner(player.uniqueId)
-        if (order != null) {
-            (orderMenu ?: OrderMenu(orderService, workdaysService, config, workFrontService))
-                .open(player, order)
+        val domainOrder = getOrderByOwnerUseCase(player.uniqueId)
+        if (domainOrder != null) {
+            val menu = orderMenu ?: return
+            val modelOrder = DomainToModelAdapter.toPresentationModel(domainOrder)
+            menu.open(player, modelOrder)
         } else {
+            val orderService = this.orderService ?: return
             createAndIssueOrderFlag(player, orderService)
         }
     }
@@ -149,9 +159,10 @@ class PartyMenu(
             player.sendMessage(Component.text("§cТрудовой фронт временно недоступен, товарищ."))
             return
         }
-        val front = workFrontService.getByOwner(player.uniqueId)
+        val front = getWorkFrontByOwnerUseCase(player.uniqueId)
         if (front != null) {
-            FrontMenu(workFrontService).open(player, front)
+            val menu = frontMenu ?: return
+            menu.open(player, front)
         } else {
             createAndIssueFrontFlag(player)
         }

@@ -1,4 +1,4 @@
-@file:Suppress("ReturnCount", "MaxLineLength")
+@file:Suppress("ReturnCount", "MaxLineLength", "LongParameterList")
 
 package ru.kyamshanov.comminusm.command
 
@@ -7,18 +7,24 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
+import ru.kyamshanov.comminusm.application.usecases.workdays.GetWorkdaysBalanceUseCase
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontByOwnerUseCase
 import ru.kyamshanov.comminusm.gui.AdminMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
 import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
-import ru.kyamshanov.comminusm.service.WorkdaysService
 
 class PartyCommand(
     private val config: PluginConfig,
-    private val workdaysService: WorkdaysService?,
+    private val getWorkdaysBalanceUseCase: GetWorkdaysBalanceUseCase,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
+    private val getWorkFrontByOwnerUseCase: GetWorkFrontByOwnerUseCase,
     private val orderService: OrderService?,
     private val workFrontService: WorkFrontService?,
+    private val plugin: org.bukkit.plugin.Plugin? = null,
+    private val adminMenu: AdminMenu? = null,
 ) : CommandExecutor {
     override fun onCommand(
         sender: CommandSender,
@@ -38,7 +44,15 @@ class PartyCommand(
             return handleAdminCommand(player)
         }
 
-        PartyMenu(config, workdaysService, orderService, workFrontService).open(player)
+        PartyMenu(
+            config,
+            getWorkdaysBalanceUseCase,
+            getOrderByOwnerUseCase,
+            getWorkFrontByOwnerUseCase,
+            orderService,
+            workFrontService,
+            plugin,
+        ).open(player)
         return true
     }
 
@@ -53,7 +67,10 @@ class PartyCommand(
             )
             return true
         }
-        AdminMenu(orderService, workFrontService).open(player)
+        val menu = adminMenu
+        if (menu != null) {
+            menu.open(player)
+        }
         return true
     }
 }

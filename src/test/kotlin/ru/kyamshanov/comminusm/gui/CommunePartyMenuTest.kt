@@ -5,8 +5,7 @@ package ru.kyamshanov.comminusm.gui
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 
 /**
  * Unit tests for [CommunePartyMenu] decorator.
@@ -17,14 +16,13 @@ import ru.kyamshanov.comminusm.service.OrderService
  * - AC-14b: Non-leader button is disabled with proper lore
  */
 class CommunePartyMenuTest {
-    private val communeService = mockk<CommuneService>()
-    private val orderService = mockk<OrderService>()
+    private val checkOrderLeadershipUseCase = mockk<CheckOrderLeadershipUseCase>()
 
     private lateinit var menu: CommunePartyMenu
 
     @BeforeEach
     fun setUp() {
-        menu = CommunePartyMenu(communeService, orderService)
+        menu = CommunePartyMenu(checkOrderLeadershipUseCase)
     }
 
     @Test

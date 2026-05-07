@@ -4,17 +4,31 @@ package ru.kyamshanov.comminusm.di
 
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
+import ru.kyamshanov.comminusm.application.usecases.commune.BroadcastToCommuneUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.commune.CheckCommuneFriendlyFireUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.commune.GetToggleModeUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.commune.RecalculateCrossOrderRightsUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.commune.RemoveOrderFromCommuneWithCascadeUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.ActivateOrderUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderOverlapUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.CreateOrderUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.DeleteOrderUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.FindOrdersInWorldUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.order.GetMaxOrderLevelUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.order.GetNativeOrdersOfPlayerUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByIdUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderCostForLevelUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.order.GetRadiusForLevelUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.UpgradeOrderUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.workdays.GetWorkdaysBalanceUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.workdays.IncrementWorkdaysUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.workdays.SpendWorkdaysUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.workfront.DeactivateWorkFrontUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontByOwnerUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontsInWorldUseCaseImpl
 import ru.kyamshanov.comminusm.command.CommuneCommand
 import ru.kyamshanov.comminusm.command.DelegatingCommandExecutor
 import ru.kyamshanov.comminusm.command.OrderCommuneInfoCommand
@@ -162,6 +176,51 @@ class DIContainer(
         FindOrdersInWorldUseCaseImpl(orderRepository)
     }
 
+    val getNativeOrdersOfPlayerUseCase by lazy {
+        GetNativeOrdersOfPlayerUseCaseImpl(orderMembershipService)
+    }
+
+    val checkOrderLeadershipUseCase by lazy {
+        CheckOrderLeadershipUseCaseImpl(orderRepository)
+    }
+
+    val getOrderCostForLevelUseCase by lazy {
+        GetOrderCostForLevelUseCaseImpl(pluginConfig.orderLevels)
+    }
+
+    val getMaxOrderLevelUseCase by lazy {
+        GetMaxOrderLevelUseCaseImpl(pluginConfig.orderLevels)
+    }
+
+    val getRadiusForLevelUseCase by lazy {
+        GetRadiusForLevelUseCaseImpl(pluginConfig.orderLevels)
+    }
+
+    // ========== Commune Use Cases ==========
+    val getToggleModeUseCase by lazy {
+        GetToggleModeUseCaseImpl(communeChatService)
+    }
+
+    val getCommuneOfOrderUseCase by lazy {
+        GetCommuneOfOrderUseCaseImpl(communeService)
+    }
+
+    val broadcastToCommuneUseCase by lazy {
+        BroadcastToCommuneUseCaseImpl(communeChatService)
+    }
+
+    val removeOrderFromCommuneWithCascadeUseCase by lazy {
+        RemoveOrderFromCommuneWithCascadeUseCaseImpl(communeService, crossOrderMembershipService)
+    }
+
+    val checkCommuneFriendlyFireUseCase by lazy {
+        CheckCommuneFriendlyFireUseCaseImpl(communeService, orderMembershipService)
+    }
+
+    val recalculateCrossOrderRightsUseCase by lazy {
+        RecalculateCrossOrderRightsUseCaseImpl(orderMembershipService)
+    }
+
     // ========== Workdays Use Cases ==========
     val incrementWorkdaysUseCase by lazy {
         IncrementWorkdaysUseCaseImpl(workdaysRepository)
@@ -173,6 +232,19 @@ class DIContainer(
 
     val getWorkdaysBalanceUseCase by lazy {
         GetWorkdaysBalanceUseCaseImpl(workdaysRepository)
+    }
+
+    // ========== WorkFront Use Cases ==========
+    val getWorkFrontByOwnerUseCase by lazy {
+        GetWorkFrontByOwnerUseCaseImpl(workFrontRepository)
+    }
+
+    val getWorkFrontsInWorldUseCase by lazy {
+        GetWorkFrontsInWorldUseCaseImpl(workFrontRepository)
+    }
+
+    val deactivateWorkFrontUseCase by lazy {
+        DeactivateWorkFrontUseCaseImpl(workFrontService)
     }
 
     // ========== Services ==========
@@ -216,7 +288,7 @@ class DIContainer(
     }
 
     @Suppress("MaxLineLength")
-    private val communeService by lazy {
+    val communeService by lazy {
         CommuneService(communeModels, orderToCommuneId)
     }
 
@@ -236,6 +308,49 @@ class DIContainer(
         CommuneStartupTask(communeService, plugin)
     }
 
+    // ========== Menu Creation (lazy properties for dependency injection) ==========
+    val orderMenu by lazy {
+        OrderMenu(
+            getMaxOrderLevelUseCase,
+            getOrderCostForLevelUseCase,
+            getRadiusForLevelUseCase,
+            getWorkdaysBalanceUseCase,
+            getOrderByOwnerUseCase,
+            upgradeOrderUseCase,
+            getWorkFrontByOwnerUseCase,
+            pluginConfig,
+            orderService,
+            workFrontService,
+            homeTimerManager,
+            orderFlagStabilityManager,
+            plugin,
+        )
+    }
+
+    val frontMenu by lazy {
+        FrontMenu(
+            getWorkFrontByOwnerUseCase,
+            deactivateWorkFrontUseCase,
+        )
+    }
+
+    val treasuryMenu by lazy {
+        TreasuryMenu(
+            pluginConfig,
+            incrementWorkdaysUseCase,
+            getWorkdaysBalanceUseCase,
+        )
+    }
+
+    val adminMenu by lazy {
+        AdminMenu(
+            findOrdersInWorldUseCase,
+            getWorkFrontsInWorldUseCase,
+            deleteOrderUseCase,
+            deactivateWorkFrontUseCase,
+        )
+    }
+
     // ========== Listener Creation ==========
     fun createListeners(): List<Listener> =
         listOf(
@@ -243,14 +358,13 @@ class DIContainer(
             PlayerListener(workdaysService, pluginConfig),
             OrderFlagListener(
                 orderService,
-                workdaysService,
                 pluginConfig,
-                workFrontService,
+                orderMenu,
                 plugin,
                 flagActivationHelper,
                 flagStabilityManager,
             ),
-            BlockListener(orderService, workFrontService),
+            BlockListener(getOrderByOwnerUseCase, findOrdersInWorldUseCase, workFrontService),
             ExplosionListener(orderService, workFrontService, flagStabilityManager),
             FrontFlagListener(
                 workFrontService,
@@ -260,64 +374,84 @@ class DIContainer(
                 flagCleanupHelper,
                 flagStabilityManager,
                 pluginConfig,
+                frontMenu,
             ),
             FlagDeletionConfirmListener(orderService),
             FlagItemProtectionListener(),
             FlagProtectionListener(flagStabilityManager),
             FlagChunkListener(plugin, flagStabilityManager, orderRepository, workFrontRepository),
             HomeTimerCancelListener(homeTimerManager),
-            OrderRespawnListener(orderService, orderFlagStabilityManager, plugin.logger),
+            OrderRespawnListener(orderFlagStabilityManager, plugin.logger, getOrderByOwnerUseCase),
             FlagEventListener(homeTimerManager),
-            CommuneOrderDestroyListener(communeService, crossOrderMembershipService),
-            CommuneMembershipListener(communeService, orderMembershipService),
-            CommunePlayerListener(communeService, orderService),
-            FriendlyFireListener(communeService, orderMembershipService),
-            AsyncChatEventListener(communeChatService, communeService, orderService),
+            CommuneOrderDestroyListener(removeOrderFromCommuneWithCascadeUseCase),
+            CommuneMembershipListener(getCommuneOfOrderUseCase, recalculateCrossOrderRightsUseCase),
+            CommunePlayerListener(getOrderByOwnerUseCase, getCommuneOfOrderUseCase),
+            FriendlyFireListener(checkCommuneFriendlyFireUseCase),
+            AsyncChatEventListener(
+                getToggleModeUseCase,
+                getOrderByOwnerUseCase,
+                getCommuneOfOrderUseCase,
+                broadcastToCommuneUseCase,
+            ),
         )
 
     // ========== Menu Creation ==========
-    fun createMenus(): List<Listener> {
-        val orderMenu =
-            OrderMenu(
-                orderService,
-                workdaysService,
-                pluginConfig,
-                workFrontService,
-                homeTimerManager,
-                orderFlagStabilityManager,
-                plugin,
-            )
-
-        return listOf(
+    fun createMenus(): List<Listener> =
+        listOf(
             PartyMenu(
                 pluginConfig,
-                workdaysService,
+                getWorkdaysBalanceUseCase,
+                getOrderByOwnerUseCase,
+                getWorkFrontByOwnerUseCase,
                 orderService,
                 workFrontService,
                 plugin,
                 orderMenu,
+                frontMenu,
+                treasuryMenu,
             ),
             orderMenu,
-            FrontMenu(workFrontService),
-            TreasuryMenu(pluginConfig, workdaysService),
-            AdminMenu(orderService, workFrontService),
-            CommunePartyMenu(communeService, orderService),
-            CommuneOrderMenu(orderService, orderMembershipService),
-            CommuneMenu(communeService, orderService, communeInvitationService, orderMembershipService),
-            OrderMembersMenu(orderMembershipService, orderService),
+            frontMenu,
+            treasuryMenu,
+            adminMenu,
+            CommunePartyMenu(checkOrderLeadershipUseCase),
+            CommuneOrderMenu(checkOrderLeadershipUseCase, orderMembershipService),
+            CommuneMenu(
+                communeService,
+                checkOrderLeadershipUseCase,
+                getOrderByIdUseCase,
+                communeInvitationService,
+            ),
+            OrderMembersMenu(checkOrderLeadershipUseCase, orderMembershipService),
         )
-    }
 
     // ========== Command Creation ==========
     fun createCommands(): List<Pair<String, org.bukkit.command.CommandExecutor>> =
         listOf(
             "party" to
-                PartyCommand(pluginConfig, workdaysService, orderService, workFrontService),
-            "cc" to CommuneCommand(communeService, orderMembershipService, communeChatService, null),
+                PartyCommand(
+                    pluginConfig,
+                    getWorkdaysBalanceUseCase,
+                    getOrderByOwnerUseCase,
+                    getWorkFrontByOwnerUseCase,
+                    orderService,
+                    workFrontService,
+                    plugin,
+                    adminMenu,
+                ),
+            "cc" to
+                CommuneCommand(
+                    getNativeOrdersOfPlayerUseCase,
+                    getCommuneOfOrderUseCase,
+                    getToggleModeUseCase,
+                    broadcastToCommuneUseCase,
+                    communeChatService,
+                    null,
+                ),
             "order" to
                 DelegatingCommandExecutor(
                     null,
-                    OrderCommuneInfoCommand(orderRepository, communeService),
+                    OrderCommuneInfoCommand(orderRepository, getCommuneOfOrderUseCase, communeService),
                 ),
         )
 

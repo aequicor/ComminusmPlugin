@@ -9,12 +9,14 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import ru.kyamshanov.comminusm.application.usecases.workfront.DeactivateWorkFrontUseCase
+import ru.kyamshanov.comminusm.application.usecases.workfront.GetWorkFrontByOwnerUseCase
 import ru.kyamshanov.comminusm.listener.FlagItemProtectionListener
 import ru.kyamshanov.comminusm.model.WorkFront
-import ru.kyamshanov.comminusm.service.WorkFrontService
 
 class FrontMenu(
-    private val workFrontService: WorkFrontService,
+    private val getWorkFrontByOwnerUseCase: GetWorkFrontByOwnerUseCase,
+    private val deactivateWorkFrontUseCase: DeactivateWorkFrontUseCase,
 ) : Listener {
     private val infoSlot = 20
     private val radiusSlot = 22
@@ -77,8 +79,8 @@ class FrontMenu(
                     player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."))
                     return
                 }
-                val frontRadius = workFrontService.getByOwner(player.uniqueId)?.radius ?: 25
-                workFrontService.deactivate(player.uniqueId)
+                val frontRadius = getWorkFrontByOwnerUseCase(player.uniqueId)?.radius ?: 25
+                deactivateWorkFrontUseCase(player.uniqueId)
                 val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
                 val meta = flag.itemMeta
                 meta.displayName(Component.text("§6Флаг Трудового Фронта"))

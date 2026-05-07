@@ -1,0 +1,26 @@
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :compileKotlin UP-TO-DATE
+> Task :compileJava NO-SOURCE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :jar UP-TO-DATE
+> Task :assemble UP-TO-DATE
+> Task :detekt UP-TO-DATE
+> Task :loadKtlintReporters UP-TO-DATE
+> Task :runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :ktlintKotlinScriptCheck UP-TO-DATE
+> Task :runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :ktlintMainSourceSetCheck UP-TO-DATE
+> Task :runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :ktlintTestSourceSetCheck UP-TO-DATE
+> Task :shadowJar
+> Task :compileTestKotlin UP-TO-DATE
+> Task :compileTestJava NO-SOURCE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+> Task :test UP-TO-DATE
+> Task :check UP-TO-DATE
+> Task :build
+
+BUILD SUCCESSFUL in 2s
+14 actionable tasks: 1 executed, 13 up-to-date

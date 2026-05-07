@@ -17,16 +17,13 @@ import ru.kyamshanov.comminusm.manager.ActivationCheckResult
 import ru.kyamshanov.comminusm.manager.FlagActivationHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.OrderService
-import ru.kyamshanov.comminusm.service.WorkFrontService
-import ru.kyamshanov.comminusm.service.WorkdaysService
 import java.util.concurrent.locks.ReentrantLock
 
 @Suppress("LongParameterList")
 class OrderFlagListener(
     private val orderService: OrderService,
-    private val workdaysService: WorkdaysService?,
     private val config: PluginConfig,
-    private val workFrontService: WorkFrontService? = null,
+    private val orderMenu: OrderMenu,
     private val plugin: Plugin,
     private val flagActivationHelper: FlagActivationHelper,
     private val manager: FlagStabilityManager,
@@ -143,7 +140,7 @@ class OrderFlagListener(
         if (loc.blockX != order.centerX || loc.blockY != order.centerY || loc.blockZ != order.centerZ) return
 
         event.isCancelled = true
-        OrderMenu(orderService, workdaysService, config, workFrontService).open(player, order)
+        orderMenu.open(player, order)
     }
 
     private companion object {

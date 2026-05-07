@@ -4,6 +4,7 @@ import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCase
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.domain.entities.Order
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
@@ -26,6 +27,7 @@ import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
  */
 class OrderCommuneInfoCommand(
     private val orderRepository: OrderRepository,
+    private val getCommuneOfOrderUseCase: GetCommuneOfOrderUseCase,
     private val communeService: CommuneService,
     private val startupComplete: () -> Boolean = { true }, // Injected startup check
 ) : CommandExecutor {
@@ -44,7 +46,7 @@ class OrderCommuneInfoCommand(
         args: Array<String>,
     ): Boolean {
         val order = lookupOrder(sender, args) ?: return true
-        val commune = communeService.getCommuneOfOrder(order.id)
+        val commune = getCommuneOfOrderUseCase(order.id)
         return if (commune == null) {
             displayNotInCommune(sender, order)
         } else {

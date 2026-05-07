@@ -8,18 +8,16 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
+import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.service.OrderService
 
 /**
  * Decorator pattern wrapper around OrderMenu.
  * Adds a "Участники" button at slot 22 to access order members management.
  * Visible only to order leaders and native members (AC-60).
  */
-@Suppress("UnusedPrivateProperty")
 class CommuneOrderMenu(
-    @Suppress("UNUSED_PARAMETER")
-    private val orderService: OrderService,
+    private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
     private val orderMembershipService: OrderMembershipService,
 ) : Listener {
     @EventHandler(priority = EventPriority.HIGH)
@@ -32,7 +30,7 @@ class CommuneOrderMenu(
         val inv = event.view.topInventory
 
         val nativeOrders = orderMembershipService.getNativeOrdersOfPlayer(player.uniqueId)
-        val isLeader = orderService.isLeader(player.uniqueId)
+        val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
 
         // Only show button to leaders and native members
         if (nativeOrders.isNotEmpty() || isLeader) {

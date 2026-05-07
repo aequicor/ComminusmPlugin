@@ -18,17 +18,19 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import ru.kyamshanov.comminusm.application.usecases.order.FindOrdersInWorldUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
 import ru.kyamshanov.comminusm.gui.GuiUtils
-import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import java.util.UUID
 import kotlin.math.abs
 
 class BlockListener(
-    private val orderService: OrderService,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
+    private val findOrdersInWorldUseCase: FindOrdersInWorldUseCase,
     private val workFrontService: WorkFrontService?,
 ) : Listener {
-    private fun hasOrder(uuid: UUID): Boolean = orderService.findByOwner(uuid) != null
+    private fun hasOrder(uuid: UUID): Boolean = getOrderByOwnerUseCase(uuid) != null
 
     @EventHandler
     @Suppress("ReturnCount")
@@ -55,7 +57,7 @@ class BlockListener(
         world: org.bukkit.World,
     ): Boolean {
         if (block.type != Material.WHITE_BANNER) return false
-        val allOrders = orderService.findAllInWorld(world.name)
+        val allOrders = findOrdersInWorldUseCase(world.name)
         for (order in allOrders) {
             if (order.centerWorld == world.name &&
                 order.centerX == loc.blockX &&
@@ -157,7 +159,7 @@ class BlockListener(
         supportInfo: FlagSupportInfo,
     ): Boolean {
         val order =
-            orderService.findAllInWorld(world.name).firstOrNull { o ->
+            findOrdersInWorldUseCase(world.name).firstOrNull { o ->
                 o.centerX == supportInfo.flagX &&
                     o.centerY == supportInfo.flagY &&
                     o.centerZ == supportInfo.flagZ
@@ -209,11 +211,11 @@ class BlockListener(
         world: org.bukkit.World,
         loc: org.bukkit.Location,
     ) {
-        val myOrder = orderService.findByOwner(uuid)
+        val myOrder = getOrderByOwnerUseCase(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
             return
         }
-        val allOrders = orderService.findAllInWorld(world.name)
+        val allOrders = findOrdersInWorldUseCase(world.name)
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
                 event.isCancelled = true
@@ -257,13 +259,13 @@ class BlockListener(
         }
 
         // 1. Check: inside player's OWN order? → ALLOW
-        val myOrder = orderService.findByOwner(uuid)
+        val myOrder = getOrderByOwnerUseCase(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
             return
         }
 
         // 2. Check: inside SOMEONE ELSE'S order? → DENY
-        val allOrders = orderService.findAllInWorld(world.name)
+        val allOrders = findOrdersInWorldUseCase(world.name)
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
                 event.isCancelled = true
@@ -324,13 +326,13 @@ class BlockListener(
         val world = loc.world ?: return
 
         // 1. Check: inside player's OWN order? → ALLOW
-        val myOrder = orderService.findByOwner(uuid)
+        val myOrder = getOrderByOwnerUseCase(uuid)
         if (myOrder != null && myOrder.centerWorld == world.name && isInsideOrder(myOrder, loc)) {
             return
         }
 
         // 2. Check: inside SOMEONE ELSE'S order? → DENY
-        val allOrders = orderService.findAllInWorld(world.name)
+        val allOrders = findOrdersInWorldUseCase(world.name)
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
                 event.isCancelled = true
@@ -372,7 +374,7 @@ class BlockListener(
     }
 
     private fun isInsideOrder(
-        order: ru.kyamshanov.comminusm.model.Order,
+        order: ru.kyamshanov.comminusm.domain.entities.Order,
         loc: org.bukkit.Location,
     ): Boolean {
         val worldName = order.centerWorld ?: return false
@@ -481,7 +483,7 @@ class BlockListener(
         world: org.bukkit.World,
         block: org.bukkit.block.Block,
     ): FlagSupportInfo? {
-        val allOrders = orderService.findAllInWorld(world.name)
+        val allOrders = findOrdersInWorldUseCase(world.name)
         for (o in allOrders) {
             if (o.centerWorld == world.name && o.centerX == block.x && o.centerY == block.y && o.centerZ == block.z) {
                 return FlagSupportInfo(FlagSupportType.ORDER, o.centerX, o.centerY, o.centerZ)

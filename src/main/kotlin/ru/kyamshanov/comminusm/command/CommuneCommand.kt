@@ -4,10 +4,12 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import ru.kyamshanov.comminusm.application.usecases.commune.BroadcastToCommuneUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetToggleModeUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetNativeOrdersOfPlayerUseCase
 import ru.kyamshanov.comminusm.commune.service.CommuneChatService
-import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.MuteService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 import java.util.UUID
 import java.util.logging.Logger
 
@@ -27,9 +29,12 @@ import java.util.logging.Logger
  * 3. Player is not muted (CC-10)
  * 4. For single-message: text length ≤ 256 chars (CC-08)
  */
+@Suppress("LongParameterList")
 class CommuneCommand(
-    private val communeService: CommuneService,
-    private val orderMembershipService: OrderMembershipService,
+    private val getNativeOrdersOfPlayerUseCase: GetNativeOrdersOfPlayerUseCase,
+    private val getCommuneOfOrderUseCase: GetCommuneOfOrderUseCase,
+    private val getToggleModeUseCase: GetToggleModeUseCase,
+    private val broadcastToCommuneUseCase: BroadcastToCommuneUseCase,
     private val communeChatService: CommuneChatService,
     private val muteService: MuteService? = null, // Optional mute service
 ) : CommandExecutor {
@@ -85,10 +90,10 @@ class CommuneCommand(
      * Get the commune of player's native order, or null if not in a commune.
      */
     private fun getPlayerCommune(playerUuid: UUID): ru.kyamshanov.comminusm.commune.model.Commune? {
-        val nativeOrders = orderMembershipService.getNativeOrdersOfPlayer(playerUuid)
+        val nativeOrders = getNativeOrdersOfPlayerUseCase(playerUuid)
         return nativeOrders
             .asSequence()
-            .mapNotNull { communeService.getCommuneOfOrder(it) }
+            .mapNotNull { getCommuneOfOrderUseCase(it) }
             .firstOrNull()
     }
 
@@ -99,7 +104,7 @@ class CommuneCommand(
         player: Player,
         playerUuid: UUID,
     ): Boolean {
-        val currentMode = communeChatService.getToggleMode(playerUuid)
+        val currentMode = getToggleModeUseCase(playerUuid)
         communeChatService.setToggleMode(playerUuid, !currentMode)
         if (!currentMode) {
             player.sendMessage("§aВы в режиме чата коммуны. Введите /cc для выхода")
@@ -127,9 +132,9 @@ class CommuneCommand(
 
         // Broadcast to commune
         return try {
-            communeChatService.broadcastToCommune(
+            broadcastToCommuneUseCase(
                 playerCommune.id,
-                player,
+                player.uniqueId,
                 messageText,
             )
             true

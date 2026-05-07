@@ -4,28 +4,42 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.kyamshanov.comminusm.application.usecases.commune.BroadcastToCommuneUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetToggleModeUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetNativeOrdersOfPlayerUseCase
 import ru.kyamshanov.comminusm.command.CommuneCommand
 import ru.kyamshanov.comminusm.commune.service.CommuneChatService
-import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.MuteService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 import kotlin.test.assertTrue
 
 class CommuneCommandTest {
-    private lateinit var communeService: CommuneService
-    private lateinit var membershipService: OrderMembershipService
+    private lateinit var getNativeOrdersUseCase: GetNativeOrdersOfPlayerUseCase
+    private lateinit var getCommuneOfOrderUseCase: GetCommuneOfOrderUseCase
+    private lateinit var getToggleModeUseCase: GetToggleModeUseCase
+    private lateinit var broadcastToCommuneUseCase: BroadcastToCommuneUseCase
     private lateinit var chatService: CommuneChatService
     private lateinit var muteService: MuteService
     private lateinit var command: CommuneCommand
 
     @BeforeEach
     fun setUp() {
-        communeService = mockk()
-        membershipService = mockk()
+        getNativeOrdersUseCase = mockk()
+        getCommuneOfOrderUseCase = mockk()
+        getToggleModeUseCase = mockk()
+        broadcastToCommuneUseCase = mockk()
         chatService = mockk()
         muteService = mockk()
         every { muteService.isMuted(any()) } returns false
-        command = CommuneCommand(communeService, membershipService, chatService, muteService)
+        command =
+            CommuneCommand(
+                getNativeOrdersUseCase,
+                getCommuneOfOrderUseCase,
+                getToggleModeUseCase,
+                broadcastToCommuneUseCase,
+                chatService,
+                muteService,
+            )
     }
 
     @Test

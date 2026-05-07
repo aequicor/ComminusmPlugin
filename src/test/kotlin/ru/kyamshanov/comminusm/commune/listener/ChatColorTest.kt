@@ -6,8 +6,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
+import ru.kyamshanov.comminusm.application.usecases.commune.CheckCommuneFriendlyFireUseCase
 import java.util.UUID
 import kotlin.test.assertTrue
 
@@ -16,15 +15,13 @@ import kotlin.test.assertTrue
  * Tests that FriendlyFireListener doesn't use hardcoded § codes
  */
 class ChatColorTest {
-    private lateinit var communeService: CommuneService
-    private lateinit var membershipService: OrderMembershipService
+    private lateinit var checkCommuneFriendlyFireUseCase: CheckCommuneFriendlyFireUseCase
     private lateinit var listener: FriendlyFireListener
 
     @BeforeEach
     fun setUp() {
-        communeService = mockk<CommuneService>()
-        membershipService = mockk<OrderMembershipService>()
-        listener = FriendlyFireListener(communeService, membershipService)
+        checkCommuneFriendlyFireUseCase = mockk(relaxed = true)
+        listener = FriendlyFireListener(checkCommuneFriendlyFireUseCase)
     }
 
     /**
@@ -45,8 +42,8 @@ class ChatColorTest {
         every { event.entity } returns damagee
         every { event.damager } returns damager
 
-        // Damager has no native orders - should return early
-        every { membershipService.getNativeOrdersOfPlayer(damagerUuid) } returns emptySet()
+        // Use case returns false - no friendly fire
+        every { checkCommuneFriendlyFireUseCase.invoke(damageeUuid, damagerUuid) } returns false
 
         // Act - should not throw
         listener.onEntityDamageByEntity(event)

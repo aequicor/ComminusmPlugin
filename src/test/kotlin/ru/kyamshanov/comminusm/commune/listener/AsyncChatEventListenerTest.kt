@@ -8,10 +8,11 @@ import net.kyori.adventure.text.Component
 import org.bukkit.entity.Player
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.commune.service.CommuneChatService
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.model.Order
-import ru.kyamshanov.comminusm.service.OrderService
+import ru.kyamshanov.comminusm.application.usecases.commune.BroadcastToCommuneUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetCommuneOfOrderUseCase
+import ru.kyamshanov.comminusm.application.usecases.commune.GetToggleModeUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
+import ru.kyamshanov.comminusm.domain.entities.Order
 import java.util.UUID
 
 /**
@@ -20,17 +21,25 @@ import java.util.UUID
  * and blanks validation per spec §6.15 and test cases TC-78, TC-139
  */
 class AsyncChatEventListenerTest {
-    private lateinit var communeChatService: CommuneChatService
-    private lateinit var communeService: CommuneService
-    private lateinit var orderService: OrderService
+    private lateinit var getToggleModeUseCase: GetToggleModeUseCase
+    private lateinit var getOrderByOwnerUseCase: GetOrderByOwnerUseCase
+    private lateinit var getCommuneOfOrderUseCase: GetCommuneOfOrderUseCase
+    private lateinit var broadcastToCommuneUseCase: BroadcastToCommuneUseCase
     private lateinit var listener: AsyncChatEventListener
 
     @BeforeEach
     fun setUp() {
-        communeChatService = mockk(relaxed = true)
-        communeService = mockk(relaxed = true)
-        orderService = mockk(relaxed = true)
-        listener = AsyncChatEventListener(communeChatService, communeService, orderService)
+        getToggleModeUseCase = mockk(relaxed = true)
+        getOrderByOwnerUseCase = mockk(relaxed = true)
+        getCommuneOfOrderUseCase = mockk(relaxed = true)
+        broadcastToCommuneUseCase = mockk(relaxed = true)
+        listener =
+            AsyncChatEventListener(
+                getToggleModeUseCase,
+                getOrderByOwnerUseCase,
+                getCommuneOfOrderUseCase,
+                broadcastToCommuneUseCase,
+            )
     }
 
     /**
@@ -50,9 +59,9 @@ class AsyncChatEventListenerTest {
         every { event.player } returns player
         every { event.message() } returns Component.text(longMessage)
 
-        every { orderService.findByOwner(playerUuid) } returns order
-        every { communeService.getCommuneOfOrder(any()) } returns mockk(relaxed = true)
-        every { communeChatService.getToggleMode(playerUuid) } returns true
+        every { getToggleModeUseCase.invoke(playerUuid) } returns true
+        every { getOrderByOwnerUseCase.invoke(playerUuid) } returns order
+        every { getCommuneOfOrderUseCase.invoke(any()) } returns mockk(relaxed = true)
 
         // Act
         listener.onAsyncPlayerChat(event)
@@ -75,20 +84,21 @@ class AsyncChatEventListenerTest {
         every { player.name } returns "TestPlayer"
 
         val order = mockk<Order>(relaxed = true)
+        val commune = mockk<ru.kyamshanov.comminusm.commune.model.Commune>(relaxed = true)
 
         val event = mockk<AsyncChatEvent>(relaxed = true)
         every { event.player } returns player
         every { event.message() } returns Component.text(message256Chars)
 
-        every { orderService.findByOwner(playerUuid) } returns order
-        every { communeService.getCommuneOfOrder(any()) } returns mockk(relaxed = true)
-        every { communeChatService.getToggleMode(playerUuid) } returns true
+        every { getToggleModeUseCase.invoke(playerUuid) } returns true
+        every { getOrderByOwnerUseCase.invoke(playerUuid) } returns order
+        every { getCommuneOfOrderUseCase.invoke(any()) } returns commune
 
         // Act
         listener.onAsyncPlayerChat(event)
 
         // Assert: broadcast should be called for valid message
-        verify(atLeast = 1) { communeChatService.broadcastToCommune(any(), any(), any()) }
+        verify(atLeast = 1) { broadcastToCommuneUseCase.invoke(any(), any(), any()) }
     }
 
     /**
@@ -102,15 +112,11 @@ class AsyncChatEventListenerTest {
         val player = mockk<Player>(relaxed = true)
         every { player.uniqueId } returns playerUuid
 
-        val order = mockk<Order>(relaxed = true)
-
         val event = mockk<AsyncChatEvent>(relaxed = true)
         every { event.player } returns player
         every { event.message() } returns Component.text(blankMessage)
 
-        every { orderService.findByOwner(playerUuid) } returns order
-        every { communeService.getCommuneOfOrder(any()) } returns mockk(relaxed = true)
-        every { communeChatService.getToggleMode(playerUuid) } returns true
+        every { getToggleModeUseCase.invoke(playerUuid) } returns true
 
         // Act
         listener.onAsyncPlayerChat(event)
@@ -130,15 +136,11 @@ class AsyncChatEventListenerTest {
         val player = mockk<Player>(relaxed = true)
         every { player.uniqueId } returns playerUuid
 
-        val order = mockk<Order>(relaxed = true)
-
         val event = mockk<AsyncChatEvent>(relaxed = true)
         every { event.player } returns player
         every { event.message() } returns Component.text("")
 
-        every { orderService.findByOwner(playerUuid) } returns order
-        every { communeService.getCommuneOfOrder(any()) } returns mockk(relaxed = true)
-        every { communeChatService.getToggleMode(playerUuid) } returns true
+        every { getToggleModeUseCase.invoke(playerUuid) } returns true
 
         // Act
         listener.onAsyncPlayerChat(event)
@@ -162,13 +164,13 @@ class AsyncChatEventListenerTest {
         every { event.player } returns player
         every { event.message() } returns Component.text("test message")
 
-        every { communeChatService.getToggleMode(playerUuid) } returns false
+        every { getToggleModeUseCase.invoke(playerUuid) } returns false
 
         // Act
         listener.onAsyncPlayerChat(event)
 
         // Assert: should return early without modifying event
         verify(exactly = 0) { player.sendMessage(any<Component>()) }
-        verify(exactly = 0) { communeChatService.broadcastToCommune(any(), any(), any()) }
+        verify(exactly = 0) { broadcastToCommuneUseCase.invoke(any(), any(), any()) }
     }
 }
