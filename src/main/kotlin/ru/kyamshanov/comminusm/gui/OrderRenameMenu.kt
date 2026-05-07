@@ -68,16 +68,38 @@ class OrderRenameMenu(
     @Suppress("ReturnCount")
     @EventHandler
     fun onPrepareAnvil(event: PrepareAnvilEvent) {
-        val inputItem = event.inventory.getItem(0) ?: return
-        val meta = inputItem.itemMeta ?: return
-        val displayName = meta.displayName() ?: return
+        val text = event.inventory.renameText ?: return
         val result = ItemStack(Material.PAPER)
         val resultMeta = result.itemMeta
-        resultMeta?.displayName(displayName)
+        resultMeta?.displayName(Component.text(text))
         if (resultMeta != null) {
             result.itemMeta = resultMeta
         }
         event.result = result
+    }
+
+    private fun handleRenameResult(
+        player: Player,
+        playerUuid: UUID,
+        result: Result<Unit>,
+        currentOrder: Order,
+        typedName: String,
+    ) {
+        when (result) {
+            is Result.Success -> {
+                handleSuccessfulValidation(player, currentOrder, typedName)
+            }
+            is Result.Failure -> {
+                val errorMsg =
+                    when (result.error) {
+                        "unauthorized" -> Component.text("Вы больше не лидер этого ордера", NamedTextColor.RED)
+                        "not_found" -> Component.text("Этот ордер был расформирован", NamedTextColor.RED)
+                        else -> Component.text("Ошибка при переименовании. Попробуйте позже", NamedTextColor.RED)
+                    }
+                player.sendActionBar(errorMsg)
+                plugin.logger.warning("Rename rejected: player=$playerUuid, error=${result.error}")
+            }
+        }
     }
 
     private fun validateTypedName(typedName: String): Component? =
@@ -118,7 +140,7 @@ class OrderRenameMenu(
 
         val domainOrder = getOrderByOwnerUseCase(playerUuid)
         if (domainOrder == null || domainOrder.id != orderId) {
-            player.sendActionBar(Component.text("Ордер не найден", NamedTextColor.RED))
+            player.sendActionBar(Component.text("Этот ордер был расформирован", NamedTextColor.RED))
             inProgressRenames.remove(playerUuid)
             player.closeInventory()
             return
@@ -130,15 +152,7 @@ class OrderRenameMenu(
         inProgressRenames.remove(playerUuid)
         player.closeInventory()
 
-        when (result) {
-            is Result.Success -> {
-                handleSuccessfulValidation(player, currentOrder, typedName)
-            }
-            is Result.Failure -> {
-                player.sendActionBar(Component.text("Ошибка при переименовании. Попробуйте позже", NamedTextColor.RED))
-                plugin.logger.warning("Rename rejected: player=$playerUuid, error=${result.error}")
-            }
-        }
+        handleRenameResult(player, playerUuid, result, currentOrder, typedName)
     }
 
     private fun handleSuccessfulValidation(
@@ -176,7 +190,7 @@ class OrderRenameMenu(
                         }
                     Bukkit.getScheduler().runTask(plugin, mainTask)
                 } catch (e: SQLException) {
-                    plugin.logger.severe("rename DB failed for order $orderId")
+                    plugin.logger.severe("rename DB failed for order $orderId: ${e.message}")
                     val rollbackTask =
                         Runnable {
                             val actualPlayer = Bukkit.getPlayer(playerUuid) ?: return@Runnable

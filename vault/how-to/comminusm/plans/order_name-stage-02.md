@@ -3,7 +3,7 @@ genre: how-to
 module: comminusm
 title: Stage 02 — RenameOrderUseCase + OrderRenameMenu
 stage: 2
-status: TODO
+status: DONE
 ---
 
 # Stage 02 — RenameOrderUseCase + OrderRenameMenu
