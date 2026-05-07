@@ -94,8 +94,7 @@ class CommunePartyMenu(
         if (existingCommune != null) {
             // Close the party menu before opening commune menu
             player.closeInventory()
-            // Open existing commune menu
-            // TODO: Wire to CommuneMenu.open(player, existingCommune.id)
+            // Open existing commune menu: call CommuneMenu.open(player, existingCommune.id)
             return
         }
 
