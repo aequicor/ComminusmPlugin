@@ -57,13 +57,14 @@ class OrderMenu(
         player: Player,
         order: Order,
     ) {
-        val inv = Bukkit.createInventory(null, 45, Component.text("§8Ордер №${order.id}"))
+        val displayName = order.name.ifBlank { "Ордер №${order.id}" }
+        val inv = Bukkit.createInventory(null, 45, Component.text("§8$displayName"))
         GuiUtils.fillBorder(inv)
 
         inv.setItem(
             infoSlot,
             GuiUtils.namedItem(
-                "§eОрдер №${order.id}",
+                "§e$displayName",
                 Material.WHITE_BANNER,
                 "§7Уровень: §e${order.level}/${getMaxOrderLevelUseCase()}",
                 "§7Владелец: §e${player.name}",

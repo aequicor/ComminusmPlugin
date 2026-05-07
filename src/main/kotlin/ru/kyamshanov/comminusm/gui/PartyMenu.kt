@@ -136,7 +136,7 @@ class PartyMenu(
         if (FlagItemProtectionListener.hasOrderFlagInInventory(player)) {
             FlagItemProtectionListener.removeAllOrderFlags(player)
         }
-        val newOrder = orderService.create(player.uniqueId)
+        val newOrder = orderService.create(player.uniqueId, player.name)
         if (newOrder != null) {
             issueFlagToPlayer(
                 player,

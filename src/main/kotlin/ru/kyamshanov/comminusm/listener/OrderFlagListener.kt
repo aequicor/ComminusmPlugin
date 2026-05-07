@@ -79,12 +79,14 @@ class OrderFlagListener(
                 return
             }
             val ownerName = flagActivationHelper.resolveOwnerName(ownerUuid)
+            val displayName = order.name.ifBlank { "Ордер №${order.id}" }
             flagActivationHelper.activate(
                 bannerBlock = bannerBlock,
                 flagId = "order/$ownerUuid",
                 ownerUuid = ownerUuid,
                 ownerName = ownerName,
                 flagType = "Ордер",
+                orderName = displayName,
                 config = config,
                 manager = manager,
                 lock = acquiredLock,

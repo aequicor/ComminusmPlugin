@@ -35,4 +35,9 @@ interface OrderRepository {
     )
 
     fun deleteByOwner(uuid: UUID)
+
+    fun rename(
+        id: Long,
+        name: String,
+    )
 }

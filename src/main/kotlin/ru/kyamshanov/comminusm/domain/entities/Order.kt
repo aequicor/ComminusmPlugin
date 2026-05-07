@@ -19,6 +19,7 @@ import java.util.UUID
 data class Order(
     val id: Long = 0,
     val ownerUuid: UUID,
+    val name: String = "",
     val level: Int = 1,
     val radius: Int = 2,
     val centerWorld: String? = null,

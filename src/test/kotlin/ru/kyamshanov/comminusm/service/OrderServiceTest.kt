@@ -28,16 +28,17 @@ class OrderServiceTest {
 
     @Test
     fun `create returns Order when no existing order for player`() {
-        val order = service.create(uuid)
+        val order = service.create(uuid, "TestPlayer")
         assertNotNull(order, "should create a new order")
         assertEquals(1, order!!.level)
         assertEquals(2, order.radius)
+        assertEquals("TestPlayer", order.name)
     }
 
     @Test
     fun `create returns null when player already has an order`() {
-        service.create(uuid)
-        val second = service.create(uuid)
+        service.create(uuid, "TestPlayer")
+        val second = service.create(uuid, "TestPlayer")
         assertNull(second, "should not create second order")
     }
 

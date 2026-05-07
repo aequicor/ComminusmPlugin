@@ -138,6 +138,7 @@ class FlagActivationHelper(
      * @param ownerUuid    owner UUID — used for null-safe player lookup after async
      * @param ownerName    resolved display name (may be UUID string if lookup failed)
      * @param flagType     human-readable type label, e.g. "Ордер" or "Трудовой Фронт"
+     * @param orderName    order display name (used as ArmorStand custom name)
      * @param config       plugin configuration
      * @param manager      FlagStabilityManager instance
      * @param lock         already-acquired chunk lock; **this function releases it**
@@ -145,13 +146,14 @@ class FlagActivationHelper(
      * @param onSuccess    called on main thread after ArmorStand spawned; receives online Player or null
      * @param onDbFailure  called on main thread after rollback; receives online Player or null
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "UnusedParameter")
     fun activate(
         bannerBlock: Block,
         flagId: String,
         ownerUuid: UUID,
         ownerName: String,
         flagType: String,
+        orderName: String,
         config: PluginConfig,
         manager: FlagStabilityManager,
         lock: ReentrantLock,
@@ -244,11 +246,7 @@ class FlagActivationHelper(
                                     stand.setVisible(false)
                                     stand.setGravity(false)
                                     stand.setMarker(true)
-                                    val title =
-                                        config.flagTitleFormat
-                                            .replace("{type}", flagType)
-                                            .replace("{player}", ownerName)
-                                    stand.customName(Component.text(title))
+                                    stand.customName(Component.text(orderName))
                                     stand.isCustomNameVisible = true
                                 }
                             } catch (e: Exception) {

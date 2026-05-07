@@ -26,12 +26,6 @@ val Order.size: Int
     get() = radius * 2 + 1
 
 /**
- * Gets the name of this order (always empty for domain entity - provided for compatibility).
- */
-val Order.name: String
-    get() = ""
-
-/**
  * Gets the creation timestamp as a string (always empty for domain entity - provided for compatibility).
  */
 val Order.createdAt: String

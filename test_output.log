@@ -11,5 +11,5 @@
 > Task :test UP-TO-DATE
 > Task :jacocoTestReport UP-TO-DATE
 
-BUILD SUCCESSFUL in 1s
+BUILD SUCCESSFUL in 907ms
 6 actionable tasks: 6 up-to-date

@@ -33,17 +33,19 @@ class CreateOrderUseCaseTest {
     fun `should create order successfully for new player`() {
         // Arrange
         val uuid = UUID.randomUUID()
+        val playerName = "TestPlayer"
         val expectedId = 1L
         every { orderRepository.findByOwner(uuid) } returns null
         every { orderRepository.insert(any()) } returns expectedId
 
         // Act
-        val result = useCase(uuid)
+        val result = useCase(uuid, playerName)
 
         // Assert
         assertTrue(result is Result.Success)
         val order = (result as Result.Success).data
         assertEquals(uuid, order.ownerUuid)
+        assertEquals(playerName, order.name)
         assertEquals(1, order.level)
         assertEquals(5, order.radius)
         assertEquals(expectedId, order.id)
@@ -56,11 +58,12 @@ class CreateOrderUseCaseTest {
     fun `should fail when order already exists for player`() {
         // Arrange
         val uuid = UUID.randomUUID()
+        val playerName = "TestPlayer"
         val existingOrder = Order(id = 1, ownerUuid = uuid, level = 1, radius = 5)
         every { orderRepository.findByOwner(uuid) } returns existingOrder
 
         // Act
-        val result = useCase(uuid)
+        val result = useCase(uuid, playerName)
 
         // Assert
         assertTrue(result is Result.Failure)
@@ -75,11 +78,12 @@ class CreateOrderUseCaseTest {
     fun `should fail when no level configuration available`() {
         // Arrange
         val uuid = UUID.randomUUID()
+        val playerName = "TestPlayer"
         val useCaseWithoutLevels = CreateOrderUseCaseImpl(orderRepository, emptyList())
         every { orderRepository.findByOwner(uuid) } returns null
 
         // Act
-        val result = useCaseWithoutLevels(uuid)
+        val result = useCaseWithoutLevels(uuid, playerName)
 
         // Assert
         assertTrue(result is Result.Failure)
@@ -94,12 +98,13 @@ class CreateOrderUseCaseTest {
     fun `should use first level configuration`() {
         // Arrange
         val uuid = UUID.randomUUID()
+        val playerName = "TestPlayer"
         val expectedId = 42L
         every { orderRepository.findByOwner(uuid) } returns null
         every { orderRepository.insert(any()) } returns expectedId
 
         // Act
-        val result = useCase(uuid)
+        val result = useCase(uuid, playerName)
 
         // Assert
         assertTrue(result is Result.Success)
@@ -114,12 +119,13 @@ class CreateOrderUseCaseTest {
     fun `should return order with assigned ID`() {
         // Arrange
         val uuid = UUID.randomUUID()
+        val playerName = "TestPlayer"
         val assignedId = 999L
         every { orderRepository.findByOwner(uuid) } returns null
         every { orderRepository.insert(any()) } returns assignedId
 
         // Act
-        val result = useCase(uuid)
+        val result = useCase(uuid, playerName)
 
         // Assert
         assertTrue(result is Result.Success)
@@ -131,11 +137,12 @@ class CreateOrderUseCaseTest {
     fun `should preserve owner UUID in created order`() {
         // Arrange
         val uuid = UUID.randomUUID()
+        val playerName = "TestPlayer"
         every { orderRepository.findByOwner(uuid) } returns null
         every { orderRepository.insert(any()) } returns 1L
 
         // Act
-        val result = useCase(uuid)
+        val result = useCase(uuid, playerName)
 
         // Assert
         assertTrue(result is Result.Success)

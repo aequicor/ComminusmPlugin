@@ -19,7 +19,7 @@ object DomainToModelAdapter {
         ModelOrder(
             id = domainOrder.id,
             ownerUuid = domainOrder.ownerUuid,
-            name = "", // Presentation layer can override if needed
+            name = domainOrder.name,
             level = domainOrder.level,
             centerWorld = domainOrder.centerWorld,
             centerX = domainOrder.centerX,
@@ -51,6 +51,7 @@ object DomainToModelAdapter {
         DomainOrder(
             id = modelOrder.id,
             ownerUuid = modelOrder.ownerUuid,
+            name = modelOrder.name,
             level = modelOrder.level,
             radius = modelOrder.radius,
             centerWorld = modelOrder.centerWorld,

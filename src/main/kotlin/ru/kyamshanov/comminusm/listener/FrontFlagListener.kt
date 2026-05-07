@@ -125,12 +125,14 @@ class FrontFlagListener(
                 return
             }
             val ownerName = flagActivationHelper.resolveOwnerName(ownerUuid)
+            val frontName = "Трудовой Фронт"
             flagActivationHelper.activate(
                 bannerBlock = bannerBlock,
                 flagId = "front/$ownerUuid",
                 ownerUuid = ownerUuid,
                 ownerName = ownerName,
                 flagType = "Трудовой Фронт",
+                orderName = frontName,
                 config = config,
                 manager = manager,
                 lock = acquiredLock,

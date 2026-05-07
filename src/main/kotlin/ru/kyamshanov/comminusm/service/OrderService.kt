@@ -4,6 +4,7 @@ package ru.kyamshanov.comminusm.service
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import ru.kyamshanov.comminusm.application.usecases.order.CreateOrderUseCaseImpl
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.event.FlagDeactivatedEvent
 import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
@@ -27,12 +28,22 @@ class OrderService(
     private val flagStabilityManager: FlagStabilityManager? = null,
     private val plugin: org.bukkit.plugin.Plugin? = null,
 ) {
-    fun create(uuid: UUID): ModelOrder? {
+    fun create(
+        uuid: UUID,
+        playerName: String,
+    ): ModelOrder? {
         val existing = orderRepository.findByOwner(uuid)
         if (existing != null) return null
 
         val level1 = levels.firstOrNull() ?: return null
-        val domainOrder = DomainOrder(ownerUuid = uuid, level = level1.level, radius = level1.radius)
+        val sanitizedName = CreateOrderUseCaseImpl.sanitizeNickname(playerName)
+        val domainOrder =
+            DomainOrder(
+                ownerUuid = uuid,
+                name = sanitizedName,
+                level = level1.level,
+                radius = level1.radius,
+            )
         val id = orderRepository.insert(domainOrder)
         val createdOrder = domainOrder.copy(id = id)
         return DomainToModelAdapter.toPresentationModel(createdOrder)
