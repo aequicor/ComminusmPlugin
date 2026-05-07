@@ -5,7 +5,7 @@ title: Test Cases — Communes
 topic: communes
 status: Living
 generated: 2026-05-06
-last_updated: 2026-05-07 (ADDED: TC-124 — party menu commune button issue; TC-123 — order menu item enhancement; TC-155 — order menu interactive issue; FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict; TC-155 — menu non-interactive issue)
+last_updated: 2026-05-07 (ADDED: TC-124 — party menu commune button issue; TC-123 — order menu item enhancement; TC-155 — order menu interactive issue; FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict; TC-155 — menu non-interactive issue; TC-123 — participants button material and position)
 author: "@QA"
 related:
   - vault/concepts/comminusm/requirements/communes.md
@@ -170,7 +170,7 @@ AI agents do NOT touch the Notes column. AI agents do NOT generate per-TC detail
 | TC-120 | PASS   | —     | error       | [bug-fix] Лидер устанавливает ордер, нажимает кнопку «Коммуна» (создание коммуны); во второй раз нажимает ту же кнопку — оба раза выводится сообщение «коммуна (планируется)» | Коммуна должна создаваться успешно при первом нажатии; при повторном нажатии — ошибка «Ваш ордер уже состоит в коммуне» |
 | TC-121 | PASS   | —     | error       | [bug-fix] Лидер ордера создаёт ордер, открывает меню ордера, нажимает на кнопку для просмотра членов ордера — система выдаёт ошибку доступа «Вы не член этого ордера», несмотря на то, что пользователь владеет ордером | Лидер ордера может просмотреть список членов своего ордера без ошибки доступа; меню показывает участников ордера корректно |
 | TC-122 | PASS   | —     | error       | [bug-fix] В меню ордера пункт «Участники» дублирует функцию «восстановить флаг» или конфликтует с ней | Пункт «Участники» работает независимо от функции восстановления флага; в меню нет дублирования или конфликта действий |
-| TC-123 | FAIL   | —     | enhancement | [bug-fix] Требуется изменить предмет (item) для кнопки "Участники" в меню ордера и изменить его позицию в меню, чтобы выглядело красиво и органично | Кнопка "Участники" отображается с подходящим предметом; её позиция в меню выглядит естественно и органично; нет конфликтов с другими элементами меню |
+| TC-123 | PASS   | —     | enhancement | [bug-fix] Требуется изменить предмет (item) для кнопки "Участники" в меню ордера и изменить его позицию в меню, чтобы выглядело красиво и органично | Кнопка "Участники" отображается с подходящим предметом; её позиция в меню выглядит естественно и органично; нет конфликтов с другими элементами меню |
 | TC-124 | FAIL   | —     | error       | [bug-fix] Открыть меню партии, нажать на кнопку «Коммуна» 2 раза: первый раз выводит сообщение «коммуна создана», но меню остаётся открытым; второй раз выводит «открытие коммуны (планируется)» | Первый клик: коммуна создаётся успешно, меню закрывается (если нет входящих приглашений); второй клик: открывается меню управления коммуны |
 
 > The TC-00 block is a single static template. Manual tester copies it on demand
@@ -248,4 +248,5 @@ These test cases focus on unit-edge scenarios, integration workflows, error path
 | DEF-02 | TC-121 | FIXED | Order owner access denied: CommuneOrderMenu.onInventoryClick checked only if player is native member, rejecting order leader. Fixed permission check to include isLeader. |
 | DEF-03 | TC-120 | FIXED | Commune creation placeholder: CommunePartyMenu.openCommuneMenu only sent message, didn't create commune or check for existing commune. Implemented commune creation logic with persistence check. |
 | DEF-04 | TC-155 | FIXED | Menu non-interactive issue: CommuneOrderMenu, OrderMembersMenu, and CommunePartyMenu only cancelled clicks on button slots, allowing items to be dragged from inventory. Fixed by cancelling ALL clicks in the menu before processing button logic. |
-| DEF-04 | TC-124 | OPEN | Party menu "Commune" button: first click shows "commune created" but menu remains open (should close); second click shows placeholder instead of opening commune menu. |
+| DEF-05 | TC-123 | FIXED | Participants button visual appearance: Button used Material.PAPER (same as restore flag) and was positioned at slot 23. Changed to Material.PLAYER_HEAD for better semantics and moved to slot 21 for better menu layout harmony. |
+| DEF-06 | TC-124 | OPEN | Party menu "Commune" button: first click shows "commune created" but menu remains open (should close); second click shows placeholder instead of opening commune menu. |
