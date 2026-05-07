@@ -2,8 +2,7 @@ package ru.kyamshanov.comminusm.application.usecases.order
 
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.domain.entities.Order
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
@@ -11,66 +10,70 @@ import ru.kyamshanov.comminusm.domain.repositories.WorkdaysRepository
 import ru.kyamshanov.comminusm.domain.value_objects.Result
 import ru.kyamshanov.comminusm.infrastructure.config.OrderLevelConfig
 import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
-/**
- * Unit tests for UpgradeOrderUseCase.
- * Verifies error messages do not leak resource counts.
- */
 class UpgradeOrderUseCaseTest {
     private val orderRepository = mockk<OrderRepository>()
     private val workdaysRepository = mockk<WorkdaysRepository>()
     private val levels =
         listOf(
-            OrderLevelConfig(level = 1, cost = 10, radius = 100),
-            OrderLevelConfig(level = 2, cost = 20, radius = 200),
-            OrderLevelConfig(level = 3, cost = 30, radius = 300),
+            OrderLevelConfig(level = 1, cost = 0, radius = 5),
+            OrderLevelConfig(level = 2, cost = 100, radius = 10),
+            OrderLevelConfig(level = 3, cost = 200, radius = 15),
         )
     private val useCase = UpgradeOrderUseCaseImpl(orderRepository, workdaysRepository, levels)
 
-    @Test
-    fun `should not leak resource counts in insufficient workdays error`() {
-        val ownerUuid = UUID.randomUUID()
-        val order =
-            Order(
-                id = 1,
-                ownerUuid = ownerUuid,
-                level = 1,
-                radius = 100,
-            )
+    private lateinit var uuid: UUID
 
-        every { orderRepository.findByOwner(ownerUuid) } returns order
-        every { workdaysRepository.getBalance(ownerUuid) } returns 5 // Less than cost of 20
-
-        val result = useCase.invoke(ownerUuid)
-
-        assertTrue(result is Result.Failure)
-        val errorMessage = (result as? Result.Failure)?.error ?: ""
-        // Message should be generic, NOT contain specific numbers
-        assertFalse(
-            errorMessage.contains("need") || errorMessage.contains("have"),
-            "Error message should not leak resource counts, got: $errorMessage",
-        )
-        assertTrue(errorMessage.contains("Insufficient"))
+    @BeforeEach
+    fun setUp() {
+        uuid = UUID.randomUUID()
     }
 
     @Test
-    fun `should upgrade order successfully when enough workdays available`() {
-        val ownerUuid = UUID.randomUUID()
-        val order =
-            Order(
-                id = 1,
-                ownerUuid = ownerUuid,
-                level = 1,
-                radius = 100,
-            )
+    fun `should upgrade order when enough workdays available`() {
+        // Arrange
+        val currentOrder = Order(id = 1, ownerUuid = uuid, level = 1, radius = 5)
+        every { orderRepository.findByOwner(uuid) } returns currentOrder
+        every { workdaysRepository.getBalance(uuid) } returns 150
+        every { workdaysRepository.spend(uuid, 100) } returns true
+        every { orderRepository.updateLevel(uuid, 2, 10) } returns Unit
 
-        every { orderRepository.findByOwner(ownerUuid) } returns order
-        every { workdaysRepository.getBalance(ownerUuid) } returns 50 // More than cost of 20
-        every { workdaysRepository.spend(ownerUuid, 20) } returns true
-        every { orderRepository.updateLevel(ownerUuid, 2, 200) } returns Unit
+        // Act
+        val result = useCase(uuid)
 
-        val result = useCase.invoke(ownerUuid)
-
+        // Assert
         assertTrue(result is Result.Success)
+        assertEquals(2, (result as Result.Success).data.level)
+        assertEquals(10, result.data.radius)
+    }
+
+    @Test
+    fun `should fail when not enough workdays`() {
+        // Arrange
+        val currentOrder = Order(id = 1, ownerUuid = uuid, level = 1, radius = 5)
+        every { orderRepository.findByOwner(uuid) } returns currentOrder
+        every { workdaysRepository.getBalance(uuid) } returns 50
+
+        // Act
+        val result = useCase(uuid)
+
+        // Assert
+        assertTrue(result is Result.Failure)
+        assertEquals("Insufficient workdays", (result as Result.Failure).error)
+    }
+
+    @Test
+    fun `should fail when order not found`() {
+        // Arrange
+        every { orderRepository.findByOwner(uuid) } returns null
+
+        // Act
+        val result = useCase(uuid)
+
+        // Assert
+        assertTrue(result is Result.Failure)
+        assertEquals("Order not found", (result as Result.Failure).error)
     }
 }

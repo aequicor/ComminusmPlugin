@@ -1,7 +1,8 @@
 package ru.kyamshanov.comminusm.application.usecases.order
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.domain.entities.Order
@@ -9,103 +10,136 @@ import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.domain.value_objects.Result
 import ru.kyamshanov.comminusm.infrastructure.config.OrderLevelConfig
 import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CreateOrderUseCaseTest {
-    private lateinit var createOrderUseCase: CreateOrderUseCase
-    private lateinit var mockRepository: MockOrderRepository
+    private lateinit var orderRepository: OrderRepository
+    private lateinit var levels: List<OrderLevelConfig>
+    private lateinit var useCase: CreateOrderUseCase
 
     @BeforeEach
     fun setUp() {
-        mockRepository = MockOrderRepository()
-        val levels =
+        orderRepository = mockk()
+        levels =
             listOf(
-                OrderLevelConfig(level = 1, radius = 2, cost = 0),
+                OrderLevelConfig(level = 1, cost = 0, radius = 5),
+                OrderLevelConfig(level = 2, cost = 100, radius = 10),
             )
-        createOrderUseCase = CreateOrderUseCaseImpl(mockRepository, levels)
+        useCase = CreateOrderUseCaseImpl(orderRepository, levels)
     }
 
     @Test
-    fun `invoke creates order for new owner`() {
-        val ownerUuid = UUID.randomUUID()
+    fun `should create order successfully for new player`() {
+        // Arrange
+        val uuid = UUID.randomUUID()
+        val expectedId = 1L
+        every { orderRepository.findByOwner(uuid) } returns null
+        every { orderRepository.insert(any()) } returns expectedId
 
-        val result = createOrderUseCase(ownerUuid)
+        // Act
+        val result = useCase(uuid)
 
+        // Assert
         assertTrue(result is Result.Success)
-        assertEquals(ownerUuid, (result as? Result.Success)?.data?.ownerUuid)
-        assertEquals(1, (result as? Result.Success)?.data?.level)
-        assertEquals(2, (result as? Result.Success)?.data?.radius)
+        val order = (result as Result.Success).data
+        assertEquals(uuid, order.ownerUuid)
+        assertEquals(1, order.level)
+        assertEquals(5, order.radius)
+        assertEquals(expectedId, order.id)
+
+        verify { orderRepository.findByOwner(uuid) }
+        verify { orderRepository.insert(any()) }
     }
 
     @Test
-    fun `invoke returns failure when order already exists`() {
-        val ownerUuid = UUID.randomUUID()
-        mockRepository.insert(Order(ownerUuid = ownerUuid, level = 1, radius = 2))
+    fun `should fail when order already exists for player`() {
+        // Arrange
+        val uuid = UUID.randomUUID()
+        val existingOrder = Order(id = 1, ownerUuid = uuid, level = 1, radius = 5)
+        every { orderRepository.findByOwner(uuid) } returns existingOrder
 
-        val result = createOrderUseCase(ownerUuid)
+        // Act
+        val result = useCase(uuid)
 
+        // Assert
         assertTrue(result is Result.Failure)
+        val failure = (result as Result.Failure)
+        assertTrue(failure.error.contains("already exists"))
+
+        verify { orderRepository.findByOwner(uuid) }
+        verify(exactly = 0) { orderRepository.insert(any()) }
     }
 
     @Test
-    fun `invoke returns failure when no level config`() {
-        val ownerUuid = UUID.randomUUID()
-        val emptyLevels = emptyList<OrderLevelConfig>()
-        val useCase = CreateOrderUseCaseImpl(mockRepository, emptyLevels)
+    fun `should fail when no level configuration available`() {
+        // Arrange
+        val uuid = UUID.randomUUID()
+        val useCaseWithoutLevels = CreateOrderUseCaseImpl(orderRepository, emptyList())
+        every { orderRepository.findByOwner(uuid) } returns null
 
-        val result = useCase(ownerUuid)
+        // Act
+        val result = useCaseWithoutLevels(uuid)
 
+        // Assert
         assertTrue(result is Result.Failure)
+        val failure = (result as Result.Failure)
+        assertTrue(failure.error.contains("No level configuration"))
+
+        verify { orderRepository.findByOwner(uuid) }
+        verify(exactly = 0) { orderRepository.insert(any()) }
     }
 
-    private class MockOrderRepository : OrderRepository {
-        private val orders = mutableMapOf<UUID, Order>()
-        private var nextId = 1L
+    @Test
+    fun `should use first level configuration`() {
+        // Arrange
+        val uuid = UUID.randomUUID()
+        val expectedId = 42L
+        every { orderRepository.findByOwner(uuid) } returns null
+        every { orderRepository.insert(any()) } returns expectedId
 
-        override fun findByOwner(uuid: UUID): Order? = orders[uuid]
+        // Act
+        val result = useCase(uuid)
 
-        override fun findById(id: Long): Order? = orders.values.find { it.id == id }
+        // Assert
+        assertTrue(result is Result.Success)
+        val order = (result as Result.Success).data
+        assertEquals(1, order.level)
+        assertEquals(5, order.radius)
 
-        override fun findAllInWorld(world: String): List<Order> = orders.values.filter { it.centerWorld == world }
+        verify { orderRepository.insert(match { o -> o.level == 1 && o.radius == 5 }) }
+    }
 
-        override fun findAllActivated(): List<Order> = orders.values.filter { it.isActivated() }
+    @Test
+    fun `should return order with assigned ID`() {
+        // Arrange
+        val uuid = UUID.randomUUID()
+        val assignedId = 999L
+        every { orderRepository.findByOwner(uuid) } returns null
+        every { orderRepository.insert(any()) } returns assignedId
 
-        override fun insert(order: Order): Long {
-            val id = nextId++
-            val withId = order.copy(id = id)
-            orders[order.ownerUuid] = withId
-            return id
-        }
+        // Act
+        val result = useCase(uuid)
 
-        override fun update(order: Order) {
-            orders[order.ownerUuid] = order
-        }
+        // Assert
+        assertTrue(result is Result.Success)
+        val order = (result as Result.Success).data
+        assertEquals(assignedId, order.id)
+    }
 
-        override fun activate(
-            uuid: UUID,
-            world: String,
-            x: Int,
-            y: Int,
-            z: Int,
-        ) {
-            val order = orders[uuid]
-            if (order != null) {
-                orders[uuid] = order.copy(centerWorld = world, centerX = x, centerY = y, centerZ = z)
-            }
-        }
+    @Test
+    fun `should preserve owner UUID in created order`() {
+        // Arrange
+        val uuid = UUID.randomUUID()
+        every { orderRepository.findByOwner(uuid) } returns null
+        every { orderRepository.insert(any()) } returns 1L
 
-        override fun updateLevel(
-            uuid: UUID,
-            level: Int,
-            radius: Int,
-        ) {
-            val order = orders[uuid]
-            if (order != null) {
-                orders[uuid] = order.copy(level = level, radius = radius)
-            }
-        }
+        // Act
+        val result = useCase(uuid)
 
-        override fun deleteByOwner(uuid: UUID) {
-            orders.remove(uuid)
-        }
+        // Assert
+        assertTrue(result is Result.Success)
+        val order = (result as Result.Success).data
+        assertEquals(uuid, order.ownerUuid)
     }
 }

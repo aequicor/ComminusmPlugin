@@ -4,6 +4,7 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.3.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    jacoco
 }
 
 val isDetekt = gradle.startParameter.taskNames.any { it.contains("detekt", ignoreCase = true) }
@@ -40,6 +41,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
 
 tasks {
@@ -94,5 +96,17 @@ tasks.processResources {
     filteringCharset = "UTF-8"
     filesMatching("plugin.yml") {
         expand(props)
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
     }
 }
