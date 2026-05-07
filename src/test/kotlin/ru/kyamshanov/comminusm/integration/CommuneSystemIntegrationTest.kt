@@ -13,6 +13,7 @@ import ru.kyamshanov.comminusm.commune.model.OrderMember
 import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
 import ru.kyamshanov.comminusm.commune.service.CommuneChatServiceImpl
 import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
+import ru.kyamshanov.comminusm.commune.service.CommunePendingNotificationService
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
@@ -39,6 +40,7 @@ class CommuneSystemIntegrationTest {
     private lateinit var crossOrderMembershipService: CrossOrderMembershipService
     private lateinit var communeChatService: CommuneChatServiceImpl
     private lateinit var orderRepository: OrderMembersRepository
+    private lateinit var pendingNotifications: CommunePendingNotificationService
 
     private val communes = mutableMapOf<UUID, Commune>()
     private val orderToCommuneId = mutableMapOf<Long, UUID>()
@@ -70,7 +72,8 @@ class CommuneSystemIntegrationTest {
         communeInvitationService = CommuneInvitationService(invitations, invitationTimers, plugin = null)
         orderMembershipService = OrderMembershipService(orderRepository)
         crossOrderMembershipService = CrossOrderMembershipService(orderMembershipService)
-        communeChatService = CommuneChatServiceImpl(communeService, orderMembershipService)
+        pendingNotifications = CommunePendingNotificationService()
+        communeChatService = CommuneChatServiceImpl(communeService, orderMembershipService, pendingNotifications)
 
         // FriendlyFireListener initialization deferred - requires full OrderService mock
         // Will be tested in stage-specific tests

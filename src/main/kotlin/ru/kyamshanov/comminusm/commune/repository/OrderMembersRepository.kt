@@ -130,6 +130,23 @@ class OrderMembersRepository(
             .toSet()
 
     /**
+     * Get all order IDs where a player holds a membership of a specific type.
+     * Snapshot cache entries with .toSet() for thread safety.
+     */
+    fun getOrdersOfPlayerWithType(
+        playerUuid: UUID,
+        membershipType: String,
+    ): Set<Long> =
+        cache.entries
+            .toSet()
+            .filter { (_, members) ->
+                members.any {
+                    it.playerUuid == playerUuid && it.grantedVia == membershipType
+                }
+            }.map { it.key }
+            .toSet()
+
+    /**
      * Check if a player is a member of an order.
      */
     fun isMember(

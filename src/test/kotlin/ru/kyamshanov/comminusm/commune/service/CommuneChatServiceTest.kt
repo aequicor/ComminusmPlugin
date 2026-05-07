@@ -17,13 +17,15 @@ import kotlin.test.assertTrue
 class CommuneChatServiceTest {
     private lateinit var communeService: CommuneService
     private lateinit var membershipService: OrderMembershipService
+    private lateinit var pendingNotifications: CommunePendingNotificationService
     private lateinit var service: CommuneChatServiceImpl
 
     @BeforeEach
     fun setUp() {
         communeService = mockk()
         membershipService = mockk()
-        service = CommuneChatServiceImpl(communeService, membershipService)
+        pendingNotifications = CommunePendingNotificationService()
+        service = CommuneChatServiceImpl(communeService, membershipService, pendingNotifications)
     }
 
     @Test
@@ -177,11 +179,14 @@ class CommuneChatServiceTest {
         // Mock getOnlinePlayers through static import (less intrusive)
         io.mockk.mockkStatic(org.bukkit.Bukkit::class)
         every { org.bukkit.Bukkit.getOnlinePlayers() } returns playerList
+        every { org.bukkit.Bukkit.getPlayer(any<UUID>()) } returns null // For offline checks in pending notifications
 
         // Setup membership: players 1,2 in commune order; player 3 not
         every { membershipService.getNativeOrdersOfPlayer(player1Uuid) } returns setOf(orderId)
         every { membershipService.getNativeOrdersOfPlayer(player2Uuid) } returns setOf(orderId)
         every { membershipService.getNativeOrdersOfPlayer(player3Uuid) } returns emptySet()
+        // Mock getMembersOfOrder for offline notification queueing
+        every { membershipService.getMembersOfOrder(orderId) } returns emptySet()
 
         val sender =
             mockk<Player> {
@@ -226,8 +231,11 @@ class CommuneChatServiceTest {
         // Mock Bukkit.getOnlinePlayers() using static mock
         io.mockk.mockkStatic(org.bukkit.Bukkit::class)
         every { org.bukkit.Bukkit.getOnlinePlayers() } returns listOf(recipientPlayer)
+        every { org.bukkit.Bukkit.getPlayer(any<UUID>()) } returns null // For offline checks in pending notifications
 
         every { membershipService.getNativeOrdersOfPlayer(recipientUuid) } returns setOf(orderId)
+        // Mock getMembersOfOrder for offline notification queueing
+        every { membershipService.getMembersOfOrder(orderId) } returns emptySet()
 
         val sender =
             mockk<Player> {

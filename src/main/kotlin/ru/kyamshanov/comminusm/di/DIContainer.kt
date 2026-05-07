@@ -42,6 +42,7 @@ import ru.kyamshanov.comminusm.commune.listener.FriendlyFireListener
 import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
 import ru.kyamshanov.comminusm.commune.service.CommuneChatServiceImpl
 import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
+import ru.kyamshanov.comminusm.commune.service.CommunePendingNotificationService
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
@@ -300,8 +301,12 @@ class DIContainer(
         CrossOrderMembershipService(orderMembershipService)
     }
 
+    private val pendingNotificationService by lazy {
+        CommunePendingNotificationService()
+    }
+
     val communeChatService by lazy {
-        CommuneChatServiceImpl(communeService, orderMembershipService)
+        CommuneChatServiceImpl(communeService, orderMembershipService, pendingNotificationService)
     }
 
     val communeStartupTask by lazy {
@@ -385,7 +390,13 @@ class DIContainer(
             FlagEventListener(homeTimerManager),
             CommuneOrderDestroyListener(removeOrderFromCommuneWithCascadeUseCase),
             CommuneMembershipListener(getCommuneOfOrderUseCase, recalculateCrossOrderRightsUseCase),
-            CommunePlayerListener(getOrderByOwnerUseCase, getCommuneOfOrderUseCase),
+            CommunePlayerListener(
+                getOrderByOwnerUseCase,
+                getCommuneOfOrderUseCase,
+                orderMembersRepository,
+                pendingNotificationService,
+                plugin,
+            ),
             FriendlyFireListener(checkCommuneFriendlyFireUseCase),
             AsyncChatEventListener(
                 getToggleModeUseCase,

@@ -59,6 +59,7 @@ interface CommuneChatService {
 class CommuneChatServiceImpl(
     private val communeService: CommuneService,
     private val orderMembershipService: OrderMembershipService,
+    private val pendingNotifications: CommunePendingNotificationService,
 ) : CommuneChatService {
     // In-memory toggle state: Set<UUID> of playerUUIDs with toggle mode active
     // Addresses CC-12: reset on reload
@@ -127,5 +128,18 @@ class CommuneChatServiceImpl(
                 .build()
 
         communeMembers.forEach { it.sendMessage(component) }
+
+        // CC-14: Queue plain-text message for offline native commune members
+        val offlineText = "[Коммуна] ${sender.name}: $wrappedText"
+        val allNativeMemberUuids = mutableSetOf<UUID>()
+        for (orderId in communeOrderIds) {
+            val members = orderMembershipService.getMembersOfOrder(orderId)
+            allNativeMemberUuids.addAll(
+                members.filter { it.grantedVia == "native" }.map { it.playerUuid },
+            )
+        }
+        allNativeMemberUuids
+            .filter { uuid -> Bukkit.getPlayer(uuid) == null }
+            .forEach { uuid -> pendingNotifications.enqueue(uuid, offlineText) }
     }
 }
