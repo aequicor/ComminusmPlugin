@@ -19,9 +19,10 @@ status: in-progress
 **Module:** comminusm
 **Category:** todo
 **Severity:** medium
-**Status:** open
+**Status:** fixed
 **Discovered:** 2026-05-06
 **Discovered by:** @Main during feat-communes (Stage 02 retro)
+**Fixed:** 2026-05-07
 
 ---
 
@@ -69,7 +70,17 @@ PO deferral. Воздействие ограничено: накопление �
 
 ## Resolution (filled by `/kit-techdebt`)
 
-**Closed:**
-**Fix commit:**
+**Closed:** 2026-05-07
+**Fix commit:** af1b40f
 **Files changed:**
+- `src/main/kotlin/ru/kyamshanov/comminusm/commune/service/CommuneInvitationService.kt` — implemented scheduleExpiry(), calculateExpiryTicks(), cancelTimer(); updated class signature
+- `src/main/kotlin/ru/kyamshanov/comminusm/di/DIContainer.kt` — changed invitationTimers type to `ConcurrentHashMap<UUID, Int>`; passed plugin to CommuneInvitationService
+- `src/test/kotlin/ru/kyamshanov/comminusm/commune/CommuneInvitationServiceTest.kt` — 8 regression tests for timer storage, cancellation, expiry, replacement
+- `src/test/kotlin/ru/kyamshanov/comminusm/integration/CommuneSystemIntegrationTest.kt` — updated type and plugin parameter
+
 **Notes:**
+- Invitations now auto-expire via Bukkit scheduler after calculateExpiryTicks()
+- In test mode (plugin=null), taskId stored as -1 (no real scheduling)
+- Timer cancelled on manual decline via cancelInvitation() or on auto-expiry via expireInvitation()
+- All tests pass, lint/detekt checks green
+- Related TD: TD-comminusm-startup-db-load-and-consistency-scan (recovery of timers after server restart — future work)
