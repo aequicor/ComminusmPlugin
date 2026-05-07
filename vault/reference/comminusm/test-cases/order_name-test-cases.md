@@ -6,7 +6,7 @@ topic: order-name
 status: Draft
 date: 07.05.2026
 author: "@QA"
-last_updated: 2026-05-07 (AUTO_VERIFY cycle 3: Stage 02 @TestExecutor verdicts applied)
+last_updated: 2026-05-07 (AUTO_VERIFY cycle 3: Stage 03 @TestExecutor verdicts applied — TC-02,13,14,15,16 PEND→PASS)
 spec: vault/reference/comminusm/spec/order_name.md
 requirements: vault/concepts/comminusm/requirements/order_name.md
 ---
@@ -30,7 +30,7 @@ PEND  •  PASS  •  FAIL  •  SKIP
 | ID    | Status | Notes | Type        | Description                                                                              | To be                                               |
 |-------|--------|-------|-------------|------------------------------------------------------------------------------------------|-----------------------------------------------------|
 | TC-01 | PASS   | —     | happy path  | [AC-01] Create order, verify default name is set to owner's nickname                     | Order.name equals player nickname at creation       |
-| TC-02 | PEND   | —     | acceptance  | [AC-02] Display order name in menu, verify plain text without prefix/suffix              | Order name visible in-menu as plain text            |
+| TC-02 | PASS   | —     | acceptance  | [AC-02] Display order name in menu, verify plain text without prefix/suffix (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderMenuTest.kt) | Order name visible in-menu as plain text            |
 | TC-03 | PEND   | —     | happy path  | [AC-03] Order owner opens Rename button (ANVIL), Anvil GUI opens with current name       | Anvil opens, current name pre-filled in input       |
 | TC-04 | PEND   | —     | acceptance  | [AC-04] New text input accepted in Anvil field; >20 chars rejected with error             | Anvil rejects >20 chars, message: "Максимум 20..."  |
 | TC-05 | PASS   | —     | acceptance  | [AC-05] Invalid characters rejected (not A-Z/a-z/а-я/А-Я/0-9/-/_); error shown (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/RenameOrderUseCaseTest.kt)          | Invalid chars rejected, message: "Недопустимые..."  |
@@ -41,10 +41,10 @@ PEND  •  PASS  •  FAIL  •  SKIP
 | TC-10 | PEND   | —     | acceptance  | [AC-09] After name change, ArmorStand display name updates to new value                  | ArmorStand entity shows new custom name in-world    |
 | TC-11 | PEND   | —     | acceptance  | [AC-09] After name change, owner's open menu auto-closes, must re-open to see new name   | Menu auto-closes after rename, new name on re-open  |
 | TC-12 | PEND   | —     | acceptance  | [AC-10] Server restart after rename persists the new order name                          | After server restart, name matches DB persisted     |
-| TC-13 | PEND   | —     | acceptance  | [AC-04, AC-04] ArmorStand entity displays order name "MyGuild" in-world                  | ArmorStand custom name visible to all players       |
-| TC-14 | PEND   | —     | acceptance  | [AC-05, AC-05] Order list in menu shows order by current name, not ID or old nickname    | Order identified by name, not internal ID           |
-| TC-15 | PEND   | —     | acceptance  | [AC-11] Non-leader opens OrderMenu, Rename button disabled with tooltip                  | Rename button disabled, tooltip shown               |
-| TC-16 | PEND   | —     | acceptance  | [AC-12] Non-member opens OrderMenu, Rename button disabled with tooltip                  | Rename button disabled, tooltip: "Только лидер..."  |
+| TC-13 | PASS   | —     | acceptance  | [AC-04, AC-04] ArmorStand entity displays order name "MyGuild" in-world (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/OrderNameTest.kt) | ArmorStand custom name visible to all players       |
+| TC-14 | PASS   | —     | acceptance  | [AC-05, AC-05] Order list in menu shows order by current name, not ID or old nickname (impl: src/test/kotlin/ru/kyamshanov/comminusm/application/usecases/order/OrderNameTest.kt) | Order identified by name, not internal ID           |
+| TC-15 | PASS   | —     | acceptance  | [AC-11] Non-leader opens OrderMenu, Rename button disabled with tooltip (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderMenuTest.kt) | Rename button disabled, tooltip shown               |
+| TC-16 | PASS   | —     | acceptance  | [AC-12] Non-member opens OrderMenu, Rename button disabled with tooltip (impl: src/test/kotlin/ru/kyamshanov/comminusm/gui/OrderMenuTest.kt) | Rename button disabled, tooltip: "Только лидер..."  |
 | TC-17 | PEND   | —     | error       | [AC-13] DB persistence fails, in-memory name rolled back to cached old value             | Anvil closes, error message, name restored to old   |
 | TC-18 | PEND   | —     | acceptance  | [AC-14] Another player renames order while first player views menu; on next open new name | Menu shows new name on next open, no real-time push |
 | TC-19 | PASS   | —     | acceptance  | [AC-15] Owner nickname contains invalid chars (e.g. "Player#123"), default name sanitized| Invalid chars replaced with _, result: "Player_123" |

@@ -45,9 +45,11 @@ class OrderMenu(
     private val homeTimerManager: HomeTimerManager? = null,
     private val flagStabilityManager: FlagStabilityManager? = null,
     private val plugin: Plugin? = null,
+    private val orderRenameMenu: OrderRenameMenu? = null,
 ) : Listener {
     private val infoSlot = 20
     private val sizeSlot = 22
+    private val renameSlot = 13
     private val upgradeSlot = 24
     private val restoreSlot = 31
     private val backSlot = 36
@@ -81,6 +83,29 @@ class OrderMenu(
                 if (order.centerWorld != null) "§7Мир: §e${order.centerWorld}" else "§cНе активирован",
             ),
         )
+
+        // Rename button — enabled for owner, disabled for non-owner (AC-11, AC-12)
+        val isOwner = order.ownerUuid == player.uniqueId
+        if (isOwner) {
+            inv.setItem(
+                renameSlot,
+                GuiUtils.namedItem(
+                    "§eПереименовать ордер",
+                    Material.ANVIL,
+                    "§7Изменить название ордера",
+                    "§7Текущее: §f${order.name.ifBlank { "Ордер №${order.id}" }}",
+                ),
+            )
+        } else {
+            inv.setItem(
+                renameSlot,
+                GuiUtils.namedItem(
+                    "§7Переименовать ордер",
+                    Material.ANVIL,
+                    "§cТолько лидер может менять название ордера",
+                ),
+            )
+        }
 
         val nextLevel = order.level + 1
         if (nextLevel <= getMaxOrderLevelUseCase()) {
@@ -189,6 +214,18 @@ class OrderMenu(
         if (event.rawSlot != event.slot) return // skip player-inventory / hotbar clicks
 
         when (event.slot) {
+            renameSlot -> {
+                val orm = orderRenameMenu ?: return
+                val domainOrder = getOrderByOwnerUseCase(player.uniqueId) ?: return
+                // Permission re-check: only the owner can open rename (AC-11, AC-12)
+                if (domainOrder.ownerUuid != player.uniqueId) {
+                    player.sendActionBar(Component.text("§cТолько лидер может менять название ордера"))
+                    return
+                }
+                val presentationOrder = DomainToModelAdapter.toPresentationModel(domainOrder)
+                player.closeInventory()
+                orm.open(player, presentationOrder)
+            }
             upgradeSlot -> {
                 val result = upgradeOrderUseCase(player.uniqueId)
                 if (result is ru.kyamshanov.comminusm.domain.value_objects.Result.Success) {

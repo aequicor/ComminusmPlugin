@@ -22,6 +22,7 @@ import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByIdUseCaseImp
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderCostForLevelUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.GetRadiusForLevelUseCaseImpl
+import ru.kyamshanov.comminusm.application.usecases.order.RenameOrderUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.order.UpgradeOrderUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.workdays.GetWorkdaysBalanceUseCaseImpl
 import ru.kyamshanov.comminusm.application.usecases.workdays.IncrementWorkdaysUseCaseImpl
@@ -58,6 +59,7 @@ import ru.kyamshanov.comminusm.gui.CommunePartyMenu
 import ru.kyamshanov.comminusm.gui.FrontMenu
 import ru.kyamshanov.comminusm.gui.OrderMembersMenu
 import ru.kyamshanov.comminusm.gui.OrderMenu
+import ru.kyamshanov.comminusm.gui.OrderRenameMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
 import ru.kyamshanov.comminusm.gui.TreasuryMenu
 import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
@@ -197,6 +199,10 @@ class DIContainer(
         GetRadiusForLevelUseCaseImpl(pluginConfig.orderLevels)
     }
 
+    val renameOrderUseCase by lazy {
+        RenameOrderUseCaseImpl(orderRepository)
+    }
+
     // ========== Commune Use Cases ==========
     val getToggleModeUseCase by lazy {
         GetToggleModeUseCaseImpl(communeChatService)
@@ -314,6 +320,15 @@ class DIContainer(
     }
 
     // ========== Menu Creation (lazy properties for dependency injection) ==========
+    val orderRenameMenu by lazy {
+        OrderRenameMenu(
+            renameOrderUseCase = renameOrderUseCase,
+            getOrderByOwnerUseCase = getOrderByOwnerUseCase,
+            orderRepository = orderRepository,
+            plugin = plugin,
+        )
+    }
+
     val orderMenu by lazy {
         OrderMenu(
             getMaxOrderLevelUseCase,
@@ -329,6 +344,7 @@ class DIContainer(
             homeTimerManager,
             orderFlagStabilityManager,
             plugin,
+            orderRenameMenu,
         )
     }
 
@@ -432,6 +448,7 @@ class DIContainer(
                 treasuryMenu,
             ),
             orderMenu,
+            orderRenameMenu,
             frontMenu,
             treasuryMenu,
             adminMenu,

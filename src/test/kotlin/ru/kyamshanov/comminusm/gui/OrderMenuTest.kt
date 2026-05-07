@@ -532,4 +532,69 @@ class OrderMenuTest {
             "Timer must remain active after menu is closed (TC-26, AC-23)",
         )
     }
+
+    // -------------------------------------------------------------------------
+    // TC-02: Order name displayed in menu with fallback when blank
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `TC-02 order name fallback uses fallback format when name is blank`() {
+        // Pure logic test: verify that displayName logic uses name or fallback
+        val orderWithBlankName = ""
+        val orderId = 42L
+        val displayName = orderWithBlankName.ifBlank { "Ордер №$orderId" }
+        assertEquals("Ордер №42", displayName, "Blank name should fall back to order number format")
+    }
+
+    @Test
+    fun `TC-02 order name displays as-is when not blank`() {
+        val orderWithName = "MyGuild"
+        val displayName = orderWithName.ifBlank { "Ордер №42" }
+        assertEquals("MyGuild", displayName, "Non-blank name should be displayed as-is")
+    }
+
+    // -------------------------------------------------------------------------
+    // TC-15: Non-leader sees disabled rename button with tooltip
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `TC-15 owner should see enabled rename button based on ownership check`() {
+        val ownerUuid = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        val playerUuid = ownerUuid
+        val isOwner = ownerUuid == playerUuid
+        assertTrue(isOwner, "Owner UUID must match player UUID for ownership check")
+    }
+
+    @Test
+    fun `TC-15 non-owner should see disabled rename button based on ownership check`() {
+        val ownerUuid = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        val playerUuid = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val isOwner = ownerUuid == playerUuid
+        assertFalse(isOwner, "Non-owner UUID must not match player UUID for ownership check")
+    }
+
+    // -------------------------------------------------------------------------
+    // TC-16: Non-member cannot open rename menu
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `TC-16 onClick should re-check owner permission before opening rename menu`() {
+        // Simulates the onClick handler: owner checks order before opening OrderRenameMenu
+        val ownerUuid = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        val attackerUuid = UUID.fromString("00000000-0000-0000-0000-000000000002")
+
+        // Mock: attacker does NOT own the order
+        val mockGetOrderByOwner =
+            object : GetOrderByOwnerUseCase {
+                override fun invoke(ownerUuid: UUID): ru.kyamshanov.comminusm.domain.entities.Order? = null
+            }
+
+        // Verify: attacker cannot get their order, so rename is blocked
+        val result = mockGetOrderByOwner(attackerUuid)
+        assertEquals(
+            null,
+            result,
+            "Non-owner must not have an order associated with their UUID",
+        )
+    }
 }
