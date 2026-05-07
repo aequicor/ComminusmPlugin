@@ -43,7 +43,7 @@ class CommuneSystemIntegrationTest {
     private val communes = mutableMapOf<UUID, Commune>()
     private val orderToCommuneId = mutableMapOf<Long, UUID>()
     private val invitations = mutableMapOf<UUID, ru.kyamshanov.comminusm.commune.model.CommuneInvitation>()
-    private val invitationTimers = mutableMapOf<UUID, Any>()
+    private val invitationTimers = mutableMapOf<UUID, Int>()
     private val memberCache = ConcurrentHashMap<Long, MutableSet<OrderMember>>()
 
     companion object {
@@ -67,7 +67,7 @@ class CommuneSystemIntegrationTest {
         orderRepository = OrderMembersRepository(memberCache)
 
         communeService = CommuneService(communes, orderToCommuneId)
-        communeInvitationService = CommuneInvitationService(invitations, invitationTimers)
+        communeInvitationService = CommuneInvitationService(invitations, invitationTimers, plugin = null)
         orderMembershipService = OrderMembershipService(orderRepository)
         crossOrderMembershipService = CrossOrderMembershipService(orderMembershipService)
         communeChatService = CommuneChatServiceImpl(communeService, orderMembershipService)

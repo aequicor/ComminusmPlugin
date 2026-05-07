@@ -136,7 +136,7 @@ class DIContainer(
         ConcurrentHashMap<UUID, ru.kyamshanov.comminusm.commune.model.CommuneInvitation>()
     }
 
-    private val invitationTimers by lazy { ConcurrentHashMap<UUID, Any>() }
+    private val invitationTimers by lazy { ConcurrentHashMap<UUID, Int>() }
 
     @Suppress("MaxLineLength")
     private val communeEntities by lazy {
@@ -293,7 +293,7 @@ class DIContainer(
     }
 
     private val communeInvitationService by lazy {
-        CommuneInvitationService(invitations, invitationTimers)
+        CommuneInvitationService(invitations, invitationTimers, plugin)
     }
 
     private val crossOrderMembershipService by lazy {
