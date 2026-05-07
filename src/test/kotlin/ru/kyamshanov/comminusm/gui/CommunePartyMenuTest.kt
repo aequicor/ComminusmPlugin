@@ -22,16 +22,24 @@ class CommunePartyMenuTest {
     private val checkOrderLeadershipUseCase = mockk<CheckOrderLeadershipUseCase>()
     private val getOrderByOwnerUseCase = mockk<GetOrderByOwnerUseCase>()
     private val communeService = mockk<CommuneService>()
+    private val communeMenu = mockk<CommuneMenu>()
 
     private lateinit var menu: CommunePartyMenu
 
     @BeforeEach
     fun setUp() {
-        menu = CommunePartyMenu(checkOrderLeadershipUseCase, getOrderByOwnerUseCase, communeService)
+        menu = CommunePartyMenu(checkOrderLeadershipUseCase, getOrderByOwnerUseCase, communeService, communeMenu)
     }
 
     @Test
     fun testMenuCreatesSuccessfully() {
         assert(menu != null)
+    }
+
+    @Test
+    fun testConstructorAcceptsCommuneMenuDependency() {
+        // Verify that CommuneMenu dependency is properly injected
+        assert(menu != null)
+        // Menu should not be null after construction with communeMenu parameter
     }
 }

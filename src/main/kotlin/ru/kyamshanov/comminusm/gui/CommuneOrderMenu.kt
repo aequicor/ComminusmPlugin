@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
@@ -79,6 +80,15 @@ class CommuneOrderMenu(
         }
 
         openOrderMembersMenu(player, orderId)
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    fun onInventoryDrag(event: InventoryDragEvent) {
+        val title = event.view.title().toString()
+        if (!title.contains("Ордер №")) return
+
+        // TC-155: Cancel ALL drag operations in the menu to prevent item dragging
+        event.isCancelled = true
     }
 
     private fun openOrderMembersMenu(

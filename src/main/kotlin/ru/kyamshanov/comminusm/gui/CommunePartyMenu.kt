@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
@@ -22,6 +23,7 @@ class CommunePartyMenu(
     private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
     private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
     private val communeService: CommuneService,
+    private val communeMenu: CommuneMenu,
 ) : Listener {
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
@@ -80,6 +82,15 @@ class CommunePartyMenu(
         openCommuneMenu(player)
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    fun onInventoryDrag(event: InventoryDragEvent) {
+        val title = event.view.title().toString()
+        if (!title.contains("Партийные услуги")) return
+
+        // TC-155: Cancel ALL drag operations in the menu to prevent item dragging
+        event.isCancelled = true
+    }
+
     @Suppress("ReturnCount")
     private fun openCommuneMenu(player: Player) {
         // Get the player's order
@@ -94,7 +105,8 @@ class CommunePartyMenu(
         if (existingCommune != null) {
             // Close the party menu before opening commune menu
             player.closeInventory()
-            // Open existing commune menu: call CommuneMenu.open(player, existingCommune.id)
+            // Open existing commune menu
+            communeMenu.open(player, existingCommune.id)
             return
         }
 
@@ -105,6 +117,8 @@ class CommunePartyMenu(
                 player.sendMessage(Component.text("§aКоммуна создана!"))
                 // Close the party menu after successful creation
                 player.closeInventory()
+                // Open the newly created commune menu
+                communeMenu.open(player, result.data.id)
             }
             is ru.kyamshanov.comminusm.commune.model.Result.Failure -> {
                 player.sendMessage(Component.text("§cОшибка: ${result.error}"))

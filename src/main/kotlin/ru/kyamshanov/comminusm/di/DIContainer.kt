@@ -409,6 +409,12 @@ class DIContainer(
     // ========== Menu Creation ==========
     fun createMenus(): List<Listener> {
         val orderMembersMenu = OrderMembersMenu(checkOrderLeadershipUseCase, orderMembershipService)
+        val communeMenu = CommuneMenu(
+            communeService,
+            checkOrderLeadershipUseCase,
+            getOrderByIdUseCase,
+            communeInvitationService,
+        )
 
         return listOf(
             PartyMenu(
@@ -427,14 +433,9 @@ class DIContainer(
             frontMenu,
             treasuryMenu,
             adminMenu,
-            CommunePartyMenu(checkOrderLeadershipUseCase, getOrderByOwnerUseCase, communeService),
+            CommunePartyMenu(checkOrderLeadershipUseCase, getOrderByOwnerUseCase, communeService, communeMenu),
             CommuneOrderMenu(checkOrderLeadershipUseCase, orderMembershipService, orderMembersMenu),
-            CommuneMenu(
-                communeService,
-                checkOrderLeadershipUseCase,
-                getOrderByIdUseCase,
-                communeInvitationService,
-            ),
+            communeMenu,
             orderMembersMenu,
         )
     }

@@ -7,6 +7,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 
@@ -116,6 +117,15 @@ class OrderMembersMenu(
                 player.sendMessage(Component.text("§aУдалить участника (планируется)"))
             }
         }
+    }
+
+    @EventHandler
+    fun onInventoryDrag(event: InventoryDragEvent) {
+        val title = event.view.title().toString()
+        if (!title.startsWith("§8Участники ордера")) return
+
+        // TC-155: Cancel ALL drag operations in the menu to prevent item dragging
+        event.isCancelled = true
     }
 
     companion object {
