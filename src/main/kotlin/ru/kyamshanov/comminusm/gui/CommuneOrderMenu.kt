@@ -16,9 +16,11 @@ import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
  * Adds a "Участники" button at slot 22 to access order members management.
  * Visible only to order leaders and native members (AC-60).
  */
+@Suppress("UnusedPrivateProperty")
 class CommuneOrderMenu(
     private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
     private val orderMembershipService: OrderMembershipService,
+    private val orderMembersMenu: OrderMembersMenu,
 ) : Listener {
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
@@ -59,25 +61,33 @@ class CommuneOrderMenu(
         val player = event.whoClicked as Player
 
         val nativeOrders = orderMembershipService.getNativeOrdersOfPlayer(player.uniqueId)
-        if (nativeOrders.isEmpty()) {
+        val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
+
+        // TC-121: Allow access if player is a native member OR the order leader
+        if (nativeOrders.isEmpty() && !isLeader) {
             player.sendMessage(Component.text("§cВы не член этого ордера"))
             return
         }
 
-        // Open order members menu for the first (and typically only) native order
-        openOrderMembersMenu(player, nativeOrders.first())
+        // Extract order ID from title (e.g., "§8Ордер №123" -> 123)
+        val orderIdMatch = """Ордер №(\d+)""".toRegex().find(title)
+        val orderId = orderIdMatch?.groupValues?.getOrNull(1)?.toLongOrNull()
+        if (orderId == null) {
+            player.sendMessage(Component.text("§cОшибка при открытии меню участников"))
+            return
+        }
+
+        openOrderMembersMenu(player, orderId)
     }
 
-    @Suppress("UnusedParameter")
     private fun openOrderMembersMenu(
         player: Player,
         orderId: Long,
     ) {
-        // Placeholder: will be wired to OrderMembersMenu in full implementation
-        player.sendMessage(Component.text("§aУчастники ордера (планируется)"))
+        orderMembersMenu.open(player, orderId)
     }
 
     companion object {
-        const val PARTICIPANTS_BUTTON_SLOT = 22
+        const val PARTICIPANTS_BUTTON_SLOT = 23
     }
 }
