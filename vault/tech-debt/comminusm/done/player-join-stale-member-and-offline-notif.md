@@ -10,6 +10,7 @@ triggers:
 confidence: high
 source: human
 updated: 2026-05-06T00:00:00Z
+status: fixed
 ---
 
 # Tech Debt: Player join — AC-47 per-player check + CC-14 offline notifications
@@ -69,7 +70,12 @@ PO deferral. Влияние ограничено сценарием «измен
 
 ## Resolution (filled by `/kit-techdebt`)
 
-**Closed:**
-**Fix commit:**
+**Closed:** 2026-05-07
+**Fix commit:** 38029ed
 **Files changed:**
-**Notes:**
+- `src/main/kotlin/ru/kyamshanov/comminusm/commune/listener/CommunePlayerListener.kt`
+- `src/main/kotlin/ru/kyamshanov/comminusm/commune/repository/OrderMembersRepository.kt`
+- `src/main/kotlin/ru/kyamshanov/comminusm/commune/service/CommuneChatService.kt`
+- `src/main/kotlin/ru/kyamshanov/comminusm/commune/service/CommunePendingNotificationService.kt` (new)
+- `src/main/kotlin/ru/kyamshanov/comminusm/di/DIContainer.kt`
+**Notes:** AC-47 runs async via Bukkit scheduler to avoid blocking main thread. CC-14 queue drained synchronously (in-memory). @CodeReviewer MEDIUM: extra pre-existing sendMessage() uses raw String instead of Component API — out of scope for this TD, flagged for future cleanup.
