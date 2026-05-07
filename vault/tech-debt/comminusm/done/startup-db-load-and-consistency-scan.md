@@ -73,7 +73,7 @@ PO явно выбрал отложить (диалог `2026-05-06`: «Толь
 
 ## Resolution (filled by `/kit-techdebt`)
 
-**Closed:**
-**Fix commit:**
-**Files changed:**
-**Notes:**
+**Closed:** 2026-05-07
+**Fix commit:** 844d575
+**Files changed:** CommuneStartupTask.kt, CommuneService.kt, DIContainer.kt, CommuneStartupTaskTest.kt
+**Notes:** loadCommunes() загружает communes/commune_orders из SQLite и вызывает orderMembersRepository.loadAll(). performConsistencyCheck() реализует AC-47 orphan scan с O(N) алгоритмом. Добавлены null-checks для DB значений, split try-catch, sanitized logging.

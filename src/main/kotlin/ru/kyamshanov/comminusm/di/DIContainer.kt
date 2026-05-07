@@ -407,8 +407,10 @@ class DIContainer(
         )
 
     // ========== Menu Creation ==========
-    fun createMenus(): List<Listener> =
-        listOf(
+    fun createMenus(): List<Listener> {
+        val orderMembersMenu = OrderMembersMenu(checkOrderLeadershipUseCase, orderMembershipService)
+
+        return listOf(
             PartyMenu(
                 pluginConfig,
                 getWorkdaysBalanceUseCase,
@@ -425,16 +427,17 @@ class DIContainer(
             frontMenu,
             treasuryMenu,
             adminMenu,
-            CommunePartyMenu(checkOrderLeadershipUseCase),
-            CommuneOrderMenu(checkOrderLeadershipUseCase, orderMembershipService),
+            CommunePartyMenu(checkOrderLeadershipUseCase, getOrderByOwnerUseCase, communeService),
+            CommuneOrderMenu(checkOrderLeadershipUseCase, orderMembershipService, orderMembersMenu),
             CommuneMenu(
                 communeService,
                 checkOrderLeadershipUseCase,
                 getOrderByIdUseCase,
                 communeInvitationService,
             ),
-            OrderMembersMenu(checkOrderLeadershipUseCase, orderMembershipService),
+            orderMembersMenu,
         )
+    }
 
     // ========== Command Creation ==========
     fun createCommands(): List<Pair<String, org.bukkit.command.CommandExecutor>> =

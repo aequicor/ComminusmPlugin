@@ -8,8 +8,8 @@ triggers:
   - "persistence"
 confidence: high
 source: human
-updated: 2026-05-06T00:00:00Z
-status: in-progress
+updated: 2026-05-07T00:00:00Z
+status: fixed
 ---
 
 # Tech Debt: OrderMembersRepository — DB persistence not wired
@@ -69,7 +69,7 @@ PO deferral. В pre-release продакшен-данных нет.
 
 ## Resolution (filled by `/kit-techdebt`)
 
-**Closed:**
-**Fix commit:**
-**Files changed:**
-**Notes:**
+**Closed:** 2026-05-07
+**Fix commit:** 1e93230
+**Files changed:** OrderMembersRepository.kt, DIContainer.kt, OrderMembersRepositoryPersistenceTest.kt
+**Notes:** Добавлен `connection: Connection?` в конструктор; `addMember`/`removeMember` персистируют через параметризованные запросы INSERT OR REPLACE / DELETE; `loadAll()` загружает всё из БД в кэш при старте. 5 тестов с in-memory SQLite. Валидация `grantedVia` добавлена на уровне репозитория.

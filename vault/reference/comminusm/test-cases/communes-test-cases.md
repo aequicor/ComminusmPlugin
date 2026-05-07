@@ -5,7 +5,7 @@ title: Test Cases — Communes
 topic: communes
 status: Living
 generated: 2026-05-06
-last_updated: 2026-05-07 (FIXED: TC-122 — slot conflict; DEF-01)
+last_updated: 2026-05-07 (FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict)
 author: "@QA"
 related:
   - vault/concepts/comminusm/requirements/communes.md
@@ -167,8 +167,8 @@ AI agents do NOT touch the Notes column. AI agents do NOT generate per-TC detail
 | TC-114 | PEND   | —     | corner case | [CC-S06 High] Лидер исключает нативного member-а; этот игрок имел cross-order права в других ордерах коммуны через свой «родной» ордер — пересчёт  | После исключения: если исключённый игрок больше не является нативным member-ом ни одного ордера коммуны, все его cross-order права в коммуне отзываются |
 | TC-115 | PEND   | —     | corner case | [CC-S07 Med] Лидер держит открытым экран нативного приглашения в OrderMenu; приглашение истекает по таймауту — UI не позволяет принять устаревшее приглашение | При попытке принять: операция отклоняется с «Приглашение истекло»; меню обновляется или закрывается; дубликата записи нет                  |
 | TC-116 | PEND   | —     | corner case | [CC-S08 Med] Два лидера одновременно исключают одного и того же нативного member-а из разных ордеров коммуны — обе операции корректно обрабатываются | Обе операции завершаются без ошибок; member корректно исключён из обоих ордеров; cross-order права пересчитаны однократно без дублирования; нет исключений в логе |
-| TC-120 | FAIL   | —     | error       | [bug-fix] Лидер устанавливает ордер, нажимает кнопку «Коммуна» (создание коммуны); во второй раз нажимает ту же кнопку — оба раза выводится сообщение «коммуна (планируется)» | Коммуна должна создаваться успешно при первом нажатии; при повторном нажатии — ошибка «Ваш ордер уже состоит в коммуне» |
-| TC-121 | FAIL   | —     | error       | [bug-fix] Лидер ордера создаёт ордер, открывает меню ордера, нажимает на кнопку для просмотра членов ордера — система выдаёт ошибку доступа «Вы не член этого ордера», несмотря на то, что пользователь владеет ордером | Лидер ордера может просмотреть список членов своего ордера без ошибки доступа; меню показывает участников ордера корректно |
+| TC-120 | PASS   | —     | error       | [bug-fix] Лидер устанавливает ордер, нажимает кнопку «Коммуна» (создание коммуны); во второй раз нажимает ту же кнопку — оба раза выводится сообщение «коммуна (планируется)» | Коммуна должна создаваться успешно при первом нажатии; при повторном нажатии — ошибка «Ваш ордер уже состоит в коммуне» |
+| TC-121 | PASS   | —     | error       | [bug-fix] Лидер ордера создаёт ордер, открывает меню ордера, нажимает на кнопку для просмотра членов ордера — система выдаёт ошибку доступа «Вы не член этого ордера», несмотря на то, что пользователь владеет ордером | Лидер ордера может просмотреть список членов своего ордера без ошибки доступа; меню показывает участников ордера корректно |
 | TC-122 | PASS   | —     | error       | [bug-fix] В меню ордера пункт «Участники» дублирует функцию «восстановить флаг» или конфликтует с ней | Пункт «Участники» работает независимо от функции восстановления флага; в меню нет дублирования или конфликта действий |
 
 > The TC-00 block is a single static template. Manual tester copies it on demand
@@ -242,3 +242,5 @@ These test cases focus on unit-edge scenarios, integration workflows, error path
 | DEF-id | TC-id | Status | Description |
 |--------|-------|--------|-------------|
 | DEF-01 | TC-122 | FIXED | Slot conflict: CommuneOrderMenu PARTICIPANTS_BUTTON_SLOT used slot 22, same as OrderMenu.sizeSlot. Moved to slot 23. |
+| DEF-02 | TC-121 | FIXED | Order owner access denied: CommuneOrderMenu.onInventoryClick checked only if player is native member, rejecting order leader. Fixed permission check to include isLeader. |
+| DEF-03 | TC-120 | FIXED | Commune creation placeholder: CommunePartyMenu.openCommuneMenu only sent message, didn't create commune or check for existing commune. Implemented commune creation logic with persistence check. |

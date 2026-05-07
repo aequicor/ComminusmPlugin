@@ -9,15 +9,19 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
+import ru.kyamshanov.comminusm.commune.service.CommuneService
 
 /**
  * Decorator pattern wrapper around PartyMenu.
  * Adds a "Коммуна" button at slot 13 to access commune management.
- * For leaders: button opens CommuneMenu.
+ * For leaders: button opens CommuneMenu or creates a new commune.
  * For non-leaders: button is disabled with explanatory lore.
  */
 class CommunePartyMenu(
     private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
+    private val getOrderByOwnerUseCase: GetOrderByOwnerUseCase,
+    private val communeService: CommuneService,
 ) : Listener {
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
@@ -75,9 +79,34 @@ class CommunePartyMenu(
         openCommuneMenu(player)
     }
 
+    @Suppress("ReturnCount")
     private fun openCommuneMenu(player: Player) {
-        // Placeholder: will be wired to CommuneMenu in full implementation
-        player.sendMessage(Component.text("§aКоммуна (планируется)"))
+        // Get the player's order
+        val order = getOrderByOwnerUseCase(player.uniqueId)
+        if (order == null) {
+            player.sendMessage(Component.text("§cВы не владеете ордером"))
+            return
+        }
+
+        // Check if order already has a commune
+        val existingCommune = communeService.getCommuneOfOrder(order.id)
+        if (existingCommune != null) {
+            // Open existing commune menu
+            // This will be wired to CommuneMenu.open() in full implementation
+            player.sendMessage(Component.text("§aОтрытие коммуны (планируется)"))
+            return
+        }
+
+        // Create a new commune with this order
+        val result = communeService.createCommune(order.id, player.uniqueId)
+        when (result) {
+            is ru.kyamshanov.comminusm.commune.model.Result.Success -> {
+                player.sendMessage(Component.text("§aКоммуна создана!"))
+            }
+            is ru.kyamshanov.comminusm.commune.model.Result.Failure -> {
+                player.sendMessage(Component.text("§cОшибка: ${result.error}"))
+            }
+        }
     }
 
     companion object {
