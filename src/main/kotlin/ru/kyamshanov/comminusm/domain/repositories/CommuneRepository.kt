@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.domain.repositories
 
-import ru.kyamshanov.comminusm.commune.model.Commune
+import ru.kyamshanov.comminusm.domain.entities.Commune
 import java.util.UUID
 
 /**

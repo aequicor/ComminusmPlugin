@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
 import ru.kyamshanov.comminusm.model.Order
 import java.util.UUID
@@ -23,7 +24,8 @@ class OrderRepositoryTest {
     @Test
     fun `insert and find by uuid returns order`() {
         val order = Order(ownerUuid = uuid)
-        val id = repo.insert(order)
+        val domainOrder = DomainToModelAdapter.toDomain(order)
+        val id = repo.insert(domainOrder)
         assertTrue(id > 0, "insert should return positive id")
 
         val found = repo.findByOwner(uuid)
@@ -33,7 +35,8 @@ class OrderRepositoryTest {
 
     @Test
     fun `update level changes the order level and radius`() {
-        repo.insert(Order(ownerUuid = uuid))
+        val order = Order(ownerUuid = uuid)
+        repo.insert(DomainToModelAdapter.toDomain(order))
         repo.updateLevel(uuid, 3, 4)
 
         val found = repo.findByOwner(uuid)
@@ -44,7 +47,8 @@ class OrderRepositoryTest {
 
     @Test
     fun `activate sets center coordinates`() {
-        repo.insert(Order(ownerUuid = uuid))
+        val order = Order(ownerUuid = uuid)
+        repo.insert(DomainToModelAdapter.toDomain(order))
         repo.activate(uuid, "world", 100, 64, 200)
 
         val found = repo.findByOwner(uuid)

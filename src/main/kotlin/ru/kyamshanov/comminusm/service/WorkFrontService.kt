@@ -1,11 +1,13 @@
 package ru.kyamshanov.comminusm.service
 
 import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
-import ru.kyamshanov.comminusm.model.WorkFront
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
 import java.util.UUID
+import ru.kyamshanov.comminusm.domain.entities.WorkFront as DomainWorkFront
+import ru.kyamshanov.comminusm.model.WorkFront as ModelWorkFront
 
 class WorkFrontService(
     private val repository: WorkFrontRepository,
@@ -23,7 +25,15 @@ class WorkFrontService(
         z: Int,
     ): Boolean {
         repository.deleteByOwner(uuid)
-        val front = WorkFront(uuid, world, x, y, z, frontRadius)
+        val front =
+            DomainWorkFront(
+                ownerUuid = uuid,
+                centerWorld = world,
+                centerX = x,
+                centerY = y,
+                centerZ = z,
+                radius = frontRadius,
+            )
         repository.upsert(front)
 
         // PDC caching — only if available (not in tests)
@@ -37,7 +47,10 @@ class WorkFrontService(
         return true
     }
 
-    fun getByOwner(uuid: UUID): WorkFront? = repository.findByOwner(uuid)
+    fun getByOwner(uuid: UUID): ModelWorkFront? {
+        val domainFront = repository.findByOwner(uuid) ?: return null
+        return DomainToModelAdapter.toPresentationModel(domainFront)
+    }
 
     fun deactivate(uuid: UUID) {
         val front = repository.findByOwner(uuid) ?: return
@@ -45,7 +58,7 @@ class WorkFrontService(
         val manager = flagStabilityManager
         val world =
             if (helper != null || chunkCacheManager != null) {
-                org.bukkit.Bukkit.getWorld(front.centerWorld)
+                front.centerWorld?.let { org.bukkit.Bukkit.getWorld(it) }
             } else {
                 null
             }
@@ -79,7 +92,8 @@ class WorkFrontService(
         }
     }
 
-    fun getAllInWorld(world: String): List<WorkFront> = repository.findAllInWorld(world)
+    fun getAllInWorld(world: String): List<ModelWorkFront> =
+        DomainToModelAdapter.toPresentationModelWorkFronts(repository.findAllInWorld(world))
 
     private companion object {
         const val CHUNK_SHIFT = 4

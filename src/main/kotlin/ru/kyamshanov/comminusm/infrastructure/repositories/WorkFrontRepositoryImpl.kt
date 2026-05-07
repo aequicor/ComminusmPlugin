@@ -1,7 +1,7 @@
 package ru.kyamshanov.comminusm.infrastructure.repositories
 
+import ru.kyamshanov.comminusm.domain.entities.WorkFront
 import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
-import ru.kyamshanov.comminusm.model.WorkFront
 import java.sql.Connection
 import java.util.UUID
 
@@ -24,8 +24,7 @@ class WorkFrontRepositoryImpl(
                     center_x = excluded.center_x,
                     center_y = excluded.center_y,
                     center_z = excluded.center_z,
-                    radius = excluded.radius,
-                    created_at = datetime('now')
+                    radius = excluded.radius
                 """.trimIndent(),
             )
         stmt.setString(1, front.ownerUuid.toString())
@@ -41,7 +40,7 @@ class WorkFrontRepositoryImpl(
     override fun findByOwner(uuid: UUID): WorkFront? {
         val stmt =
             conn.prepareStatement(
-                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE owner_uuid = ?",
+                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius FROM work_fronts WHERE owner_uuid = ?",
             )
         stmt.setString(1, uuid.toString())
         val rs = stmt.executeQuery()
@@ -54,7 +53,6 @@ class WorkFrontRepositoryImpl(
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at"),
                 )
             } else {
                 null
@@ -74,7 +72,7 @@ class WorkFrontRepositoryImpl(
     override fun findAllActivated(): List<WorkFront> {
         val stmt =
             conn.prepareStatement(
-                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts",
+                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius FROM work_fronts WHERE center_world IS NOT NULL",
             )
         val rs = stmt.executeQuery()
         val result = mutableListOf<WorkFront>()
@@ -87,7 +85,6 @@ class WorkFrontRepositoryImpl(
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at"),
                 ),
             )
         }
@@ -99,7 +96,7 @@ class WorkFrontRepositoryImpl(
     override fun findAllInWorld(world: String): List<WorkFront> {
         val stmt =
             conn.prepareStatement(
-                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE center_world = ?",
+                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius FROM work_fronts WHERE center_world = ?",
             )
         stmt.setString(1, world)
         val rs = stmt.executeQuery()
@@ -113,7 +110,6 @@ class WorkFrontRepositoryImpl(
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at"),
                 ),
             )
         }

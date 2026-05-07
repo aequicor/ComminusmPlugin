@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
 import ru.kyamshanov.comminusm.infrastructure.repositories.WorkdaysRepositoryImpl
 import ru.kyamshanov.comminusm.model.WorkFront
@@ -26,12 +27,12 @@ class WorkFrontRepositoryTest {
     @Test
     fun `upsert creates and updates work front`() {
         val front = WorkFront(uuid, "world", 10, 64, 10)
-        repo.upsert(front)
+        repo.upsert(DomainToModelAdapter.toDomain(front))
         val found = repo.findByOwner(uuid)
         assertNotNull(found)
         assertEquals(10, found!!.centerX)
 
-        repo.upsert(WorkFront(uuid, "world_nether", 20, 100, 20))
+        repo.upsert(DomainToModelAdapter.toDomain(WorkFront(uuid, "world_nether", 20, 100, 20)))
         val updated = repo.findByOwner(uuid)
         assertEquals("world_nether", updated!!.centerWorld)
         assertEquals(100, updated.centerY)
@@ -39,7 +40,7 @@ class WorkFrontRepositoryTest {
 
     @Test
     fun `delete removes work front`() {
-        repo.upsert(WorkFront(uuid, "world", 0, 64, 0))
+        repo.upsert(DomainToModelAdapter.toDomain(WorkFront(uuid, "world", 0, 64, 0)))
         assertNotNull(repo.findByOwner(uuid))
         repo.deleteByOwner(uuid)
         assertNull(repo.findByOwner(uuid))

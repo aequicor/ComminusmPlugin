@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.domain.repositories
 
-import ru.kyamshanov.comminusm.model.WorkFront
+import ru.kyamshanov.comminusm.domain.entities.WorkFront
 import java.util.UUID
 
 /**

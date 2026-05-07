@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.storage.DatabaseManager
@@ -58,7 +59,16 @@ class OrderServiceTest {
 
     @Test
     fun `checkOverlap returns false for far-away orders`() {
-        repo.insert(Order(ownerUuid = uuid, centerWorld = "world", centerX = 0, centerY = 64, centerZ = 0, radius = 2))
+        val order =
+            Order(
+                ownerUuid = uuid,
+                centerWorld = "world",
+                centerX = 0,
+                centerY = 64,
+                centerZ = 0,
+                radius = 2,
+            )
+        repo.insert(DomainToModelAdapter.toDomain(order))
         repo.activate(uuid, "world", 0, 64, 0)
         val orders = repo.findAllInWorld("world")
         assertFalse(service.checkOverlap(orders, 100, 64, 100, 2))
@@ -67,7 +77,7 @@ class OrderServiceTest {
     @Test
     fun `checkOverlap returns true for nearby orders`() {
         val otherUuid = UUID.randomUUID()
-        repo.insert(Order(ownerUuid = otherUuid))
+        repo.insert(DomainToModelAdapter.toDomain(Order(ownerUuid = otherUuid)))
         repo.activate(otherUuid, "world", 0, 64, 0)
         val orders = repo.findAllInWorld("world")
         assertTrue(service.checkOverlap(orders, 5, 64, 0, 2))

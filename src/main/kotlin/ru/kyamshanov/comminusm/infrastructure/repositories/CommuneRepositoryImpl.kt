@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.infrastructure.repositories
 
-import ru.kyamshanov.comminusm.commune.model.Commune
+import ru.kyamshanov.comminusm.domain.entities.Commune
 import ru.kyamshanov.comminusm.domain.repositories.CommuneRepository
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -15,13 +15,10 @@ class CommuneRepositoryImpl(
 ) : CommuneRepository {
     override fun findById(id: UUID): Commune? = communes[id]
 
-    override fun findByName(name: String): Commune? {
-        // Name is not a property of Commune in the current model,
-        // so this is a no-op placeholder for future use
-        return null
-    }
+    override fun findByName(name: String): Commune? = communes.values.firstOrNull { it.name == name }
 
-    override fun findAllByMember(memberId: UUID): List<Commune> = communes.values.filter { it.createdBy == memberId }
+    override fun findAllByMember(memberId: UUID): List<Commune> =
+        communes.values.filter { it.memberIds.contains(memberId) || it.ownerId == memberId }
 
     override fun insert(commune: Commune): UUID {
         communes[commune.id] = commune

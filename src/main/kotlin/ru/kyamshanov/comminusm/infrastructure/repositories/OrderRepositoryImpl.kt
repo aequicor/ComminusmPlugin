@@ -1,7 +1,7 @@
 package ru.kyamshanov.comminusm.infrastructure.repositories
 
+import ru.kyamshanov.comminusm.domain.entities.Order
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
-import ru.kyamshanov.comminusm.model.Order
 import java.sql.Connection
 import java.util.UUID
 
@@ -16,12 +16,11 @@ class OrderRepositoryImpl(
     override fun insert(order: Order): Long {
         val stmt =
             conn.prepareStatement(
-                "INSERT INTO orders (owner_uuid, name, level, radius) VALUES (?, ?, ?, ?)",
+                "INSERT INTO orders (owner_uuid, level, radius) VALUES (?, ?, ?)",
             )
         stmt.setString(1, order.ownerUuid.toString())
-        stmt.setString(2, order.name)
-        stmt.setInt(3, order.level)
-        stmt.setInt(4, order.radius)
+        stmt.setInt(2, order.level)
+        stmt.setInt(3, order.radius)
         stmt.executeUpdate()
         val rs = stmt.generatedKeys
         val id = if (rs.next()) rs.getLong(1) else 0L
@@ -33,7 +32,7 @@ class OrderRepositoryImpl(
     override fun findByOwner(uuid: UUID): Order? {
         val stmt =
             conn.prepareStatement(
-                "SELECT id, owner_uuid, name, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE owner_uuid = ?",
+                "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius FROM orders WHERE owner_uuid = ?",
             )
         stmt.setString(1, uuid.toString())
         val rs = stmt.executeQuery()
@@ -42,14 +41,12 @@ class OrderRepositoryImpl(
                 Order(
                     id = rs.getLong("id"),
                     ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
-                    name = rs.getString("name") ?: "",
                     level = rs.getInt("level"),
                     centerWorld = rs.getString("center_world"),
                     centerX = rs.getInt("center_x"),
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at"),
                 )
             } else {
                 null
@@ -98,7 +95,7 @@ class OrderRepositoryImpl(
     override fun findAllInWorld(world: String): List<Order> {
         val stmt =
             conn.prepareStatement(
-                "SELECT id, owner_uuid, name, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE center_world = ?",
+                "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius FROM orders WHERE center_world = ?",
             )
         stmt.setString(1, world)
         val rs = stmt.executeQuery()
@@ -108,14 +105,12 @@ class OrderRepositoryImpl(
                 Order(
                     id = rs.getLong("id"),
                     ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
-                    name = rs.getString("name") ?: "",
                     level = rs.getInt("level"),
                     centerWorld = rs.getString("center_world"),
                     centerX = rs.getInt("center_x"),
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at"),
                 ),
             )
         }
@@ -127,7 +122,7 @@ class OrderRepositoryImpl(
     override fun findAllActivated(): List<Order> {
         val stmt =
             conn.prepareStatement(
-                "SELECT id, owner_uuid, name, level, center_world, center_x, center_y, center_z, radius, created_at FROM orders WHERE center_world IS NOT NULL",
+                "SELECT id, owner_uuid, level, center_world, center_x, center_y, center_z, radius FROM orders WHERE center_world IS NOT NULL",
             )
         val rs = stmt.executeQuery()
         val result = mutableListOf<Order>()
@@ -136,14 +131,12 @@ class OrderRepositoryImpl(
                 Order(
                     id = rs.getLong("id"),
                     ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
-                    name = rs.getString("name") ?: "",
                     level = rs.getInt("level"),
                     centerWorld = rs.getString("center_world"),
                     centerX = rs.getInt("center_x"),
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at"),
                 ),
             )
         }
@@ -155,8 +148,8 @@ class OrderRepositoryImpl(
     override fun findById(id: Long): Order? {
         val sql =
             """
-            SELECT id, owner_uuid, name, level, center_world, center_x,
-                   center_y, center_z, radius, created_at
+            SELECT id, owner_uuid, level, center_world, center_x,
+                   center_y, center_z, radius
             FROM orders WHERE id = ?
             """.trimIndent()
         conn.prepareStatement(sql).use { stmt ->
@@ -166,14 +159,12 @@ class OrderRepositoryImpl(
                 return Order(
                     id = rs.getLong("id"),
                     ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
-                    name = rs.getString("name") ?: "",
                     level = rs.getInt("level"),
                     centerWorld = rs.getString("center_world"),
                     centerX = rs.getInt("center_x"),
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at"),
                 )
             }
         }
@@ -191,16 +182,15 @@ class OrderRepositoryImpl(
         // Not currently used in the codebase, but provided for interface completeness
         val stmt =
             conn.prepareStatement(
-                "UPDATE orders SET name = ?, level = ?, radius = ?, center_world = ?, center_x = ?, center_y = ?, center_z = ? WHERE id = ?",
+                "UPDATE orders SET level = ?, radius = ?, center_world = ?, center_x = ?, center_y = ?, center_z = ? WHERE id = ?",
             )
-        stmt.setString(1, order.name)
-        stmt.setInt(2, order.level)
-        stmt.setInt(3, order.radius)
-        stmt.setString(4, order.centerWorld)
-        stmt.setInt(5, order.centerX)
-        stmt.setInt(6, order.centerY)
-        stmt.setInt(7, order.centerZ)
-        stmt.setLong(8, order.id)
+        stmt.setInt(1, order.level)
+        stmt.setInt(2, order.radius)
+        stmt.setString(3, order.centerWorld)
+        stmt.setInt(4, order.centerX)
+        stmt.setInt(5, order.centerY)
+        stmt.setInt(6, order.centerZ)
+        stmt.setLong(7, order.id)
         stmt.executeUpdate()
         stmt.close()
     }

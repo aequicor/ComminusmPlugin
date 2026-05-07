@@ -7,12 +7,14 @@ import org.bukkit.Location
 import ru.kyamshanov.comminusm.config.OrderLevelConfig
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.event.FlagDeactivatedEvent
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
-import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
 import java.util.UUID
 import kotlin.math.abs
+import ru.kyamshanov.comminusm.domain.entities.Order as DomainOrder
+import ru.kyamshanov.comminusm.model.Order as ModelOrder
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class OrderService(
@@ -25,14 +27,15 @@ class OrderService(
     private val flagStabilityManager: FlagStabilityManager? = null,
     private val plugin: org.bukkit.plugin.Plugin? = null,
 ) {
-    fun create(uuid: UUID): Order? {
+    fun create(uuid: UUID): ModelOrder? {
         val existing = orderRepository.findByOwner(uuid)
         if (existing != null) return null
 
         val level1 = levels.firstOrNull() ?: return null
-        val order = Order(ownerUuid = uuid, level = level1.level, radius = level1.radius)
-        val id = orderRepository.insert(order)
-        return order.copy(id = id)
+        val domainOrder = DomainOrder(ownerUuid = uuid, level = level1.level, radius = level1.radius)
+        val id = orderRepository.insert(domainOrder)
+        val createdOrder = domainOrder.copy(id = id)
+        return DomainToModelAdapter.toPresentationModel(createdOrder)
     }
 
     fun activate(
@@ -55,17 +58,24 @@ class OrderService(
         return true
     }
 
-    fun findByOwner(uuid: UUID): Order? = orderRepository.findByOwner(uuid)
+    fun findByOwner(uuid: UUID): ModelOrder? {
+        val domainOrder = orderRepository.findByOwner(uuid) ?: return null
+        return DomainToModelAdapter.toPresentationModel(domainOrder)
+    }
 
-    fun findAllInWorld(world: String): List<Order> = orderRepository.findAllInWorld(world)
+    fun findAllInWorld(world: String): List<ModelOrder> =
+        DomainToModelAdapter.toPresentationModelOrders(orderRepository.findAllInWorld(world))
 
-    fun getOrderById(id: Long): Order? = orderRepository.findById(id)
+    fun getOrderById(id: Long): ModelOrder? {
+        val domainOrder = orderRepository.findById(id) ?: return null
+        return DomainToModelAdapter.toPresentationModel(domainOrder)
+    }
 
     fun isLeader(uuid: UUID): Boolean = orderRepository.findByOwner(uuid) != null
 
     @Suppress("UNUSED_PARAMETER")
     fun checkOverlap(
-        orders: List<Order>,
+        orders: List<DomainOrder>,
         x: Int,
         y: Int,
         z: Int,

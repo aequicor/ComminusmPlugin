@@ -1,0 +1,32 @@
+> Task :loadKtlintReporters UP-TO-DATE
+> Task :runKtlintFormatOverKotlinScripts
+> Task :ktlintKotlinScriptFormat
+> Task :runKtlintFormatOverMainSourceSet
+
+> Task :ktlintMainSourceSetFormat FAILED
+C:\Users\kruz18\IdeaProjects\ComminusmPlugin\src\main\kotlin\ru\kyamshanov\comminusm\domain\value_objects\CommuneInvitation.kt:3:9 Package name must not contain underscore (cannot be auto-corrected)
+C:\Users\kruz18\IdeaProjects\ComminusmPlugin\src\main\kotlin\ru\kyamshanov\comminusm\domain\value_objects\OrderMember.kt:3:9 Package name must not contain underscore (cannot be auto-corrected)
+C:\Users\kruz18\IdeaProjects\ComminusmPlugin\src\main\kotlin\ru\kyamshanov\comminusm\domain\value_objects\WorkdaysBalance.kt:3:9 Package name must not contain underscore (cannot be auto-corrected)
+C:\Users\kruz18\IdeaProjects\ComminusmPlugin\src\main\kotlin\ru\kyamshanov\comminusm\domain\value_objects\WorldLocation.kt:3:9 Package name must not contain underscore (cannot be auto-corrected)
+C:\Users\kruz18\IdeaProjects\ComminusmPlugin\src\main\kotlin\ru\kyamshanov\comminusm\infrastructure\adapters\OrderExtensions.kt:12:1 a KDoc may not be preceded by a KDoc (cannot be auto-corrected)
+C:\Users\kruz18\IdeaProjects\ComminusmPlugin\src\main\kotlin\ru\kyamshanov\comminusm\infrastructure\adapters\WorkFrontExtensions.kt:12:1 a KDoc may not be preceded by a KDoc (cannot be auto-corrected)
+
+> Task :runKtlintFormatOverTestSourceSet
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':ktlintMainSourceSetFormat'.
+> A failure occurred while executing org.jlleitschuh.gradle.ktlint.worker.ConsoleReportWorkAction
+   > KtLint found code style violations. Please see the following reports:
+     - C:\Users\kruz18\IdeaProjects\ComminusmPlugin\build\reports\ktlint\ktlintMainSourceSetFormat\ktlintMainSourceSetFormat.txt
+     - C:\Users\kruz18\IdeaProjects\ComminusmPlugin\build\reports\ktlint\ktlintMainSourceSetFormat\ktlintMainSourceSetFormat.xml
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 7s
+6 actionable tasks: 5 executed, 1 up-to-date

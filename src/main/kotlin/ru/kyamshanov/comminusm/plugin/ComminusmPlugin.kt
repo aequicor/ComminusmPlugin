@@ -485,7 +485,17 @@ class ComminusmPlugin : JavaPlugin() {
                         @Suppress("TooGenericExceptionCaught")
                         try {
                             frontRepo.findAllActivated().forEach { f ->
-                                add(FlagEntry("front/${f.ownerUuid}", f.centerWorld, f.centerX, f.centerY, f.centerZ))
+                                if (f.centerWorld != null) {
+                                    add(
+                                        FlagEntry(
+                                            "front/${f.ownerUuid}",
+                                            f.centerWorld,
+                                            f.centerX,
+                                            f.centerY,
+                                            f.centerZ,
+                                        ),
+                                    )
+                                }
                             }
                         } catch (e: Exception) {
                             logger.warning("Startup repair: DB error reading fronts — ${e.message}")

@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.domain.repositories
 
-import ru.kyamshanov.comminusm.model.Order
+import ru.kyamshanov.comminusm.domain.entities.Order
 import java.util.UUID
 
 /**

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
 import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
 import ru.kyamshanov.comminusm.model.Order
 import java.util.UUID
@@ -23,8 +24,8 @@ class OrderRepositoryFlagTest {
         val uuid1 = UUID.randomUUID()
         val uuid2 = UUID.randomUUID()
 
-        repo.insert(Order(ownerUuid = uuid1, level = 1, radius = 2))
-        repo.insert(Order(ownerUuid = uuid2, level = 1, radius = 2))
+        repo.insert(DomainToModelAdapter.toDomain(Order(ownerUuid = uuid1, level = 1, radius = 2)))
+        repo.insert(DomainToModelAdapter.toDomain(Order(ownerUuid = uuid2, level = 1, radius = 2)))
 
         repo.activate(uuid1, "world", 100, 64, 100)
 
@@ -37,7 +38,7 @@ class OrderRepositoryFlagTest {
     @Test
     fun `findAllActivated returns empty list when no orders activated`() {
         val uuid = UUID.randomUUID()
-        repo.insert(Order(ownerUuid = uuid, level = 1, radius = 2))
+        repo.insert(DomainToModelAdapter.toDomain(Order(ownerUuid = uuid, level = 1, radius = 2)))
 
         val activated = repo.findAllActivated()
         assertTrue(activated.isEmpty())
@@ -51,7 +52,7 @@ class OrderRepositoryFlagTest {
     @Test
     fun `findAllActivated returns all activated orders`() {
         val uuids = (1..3).map { UUID.randomUUID() }
-        uuids.forEach { repo.insert(Order(ownerUuid = it, level = 1, radius = 2)) }
+        uuids.forEach { repo.insert(DomainToModelAdapter.toDomain(Order(ownerUuid = it, level = 1, radius = 2))) }
         uuids.forEach { repo.activate(it, "world", 0, 64, 0) }
 
         val activated = repo.findAllActivated()
@@ -63,8 +64,8 @@ class OrderRepositoryFlagTest {
         val activatedUuid = UUID.randomUUID()
         val pendingUuid = UUID.randomUUID()
 
-        repo.insert(Order(ownerUuid = activatedUuid, level = 1, radius = 2))
-        repo.insert(Order(ownerUuid = pendingUuid, level = 1, radius = 2))
+        repo.insert(DomainToModelAdapter.toDomain(Order(ownerUuid = activatedUuid, level = 1, radius = 2)))
+        repo.insert(DomainToModelAdapter.toDomain(Order(ownerUuid = pendingUuid, level = 1, radius = 2)))
         repo.activate(activatedUuid, "world", 0, 64, 0)
 
         val activated = repo.findAllActivated()

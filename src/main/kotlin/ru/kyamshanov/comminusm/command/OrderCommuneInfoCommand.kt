@@ -5,6 +5,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import ru.kyamshanov.comminusm.commune.service.CommuneService
+import ru.kyamshanov.comminusm.domain.entities.Order
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 
 /**
@@ -58,7 +59,7 @@ class OrderCommuneInfoCommand(
     private fun lookupOrder(
         sender: CommandSender,
         args: Array<String>,
-    ): ru.kyamshanov.comminusm.model.Order? {
+    ): Order? {
         val validationError = validateInput(sender, args)
         return if (validationError != null) {
             null
@@ -112,9 +113,10 @@ class OrderCommuneInfoCommand(
      */
     private fun displayNotInCommune(
         sender: CommandSender,
-        order: ru.kyamshanov.comminusm.model.Order,
+        order: Order,
     ): Boolean {
-        sender.sendMessage("§7Ордер «${order.name}» не состоит ни в одной коммуне")
+        val ownerName = Bukkit.getOfflinePlayer(order.ownerUuid).name ?: "Unknown"
+        sender.sendMessage("§7Ордер (ID: ${order.id}, владелец: $ownerName) не состоит ни в одной коммуне")
         return true
     }
 
@@ -123,14 +125,19 @@ class OrderCommuneInfoCommand(
      */
     private fun displayCommuneInfo(
         sender: CommandSender,
-        order: ru.kyamshanov.comminusm.model.Order,
+        order: Order,
         commune: ru.kyamshanov.comminusm.commune.model.Commune,
     ): Boolean {
         val communeOrderIds = communeService.getCommuneOrders(commune.id)
-        val orderNames =
+        val orderInfos =
             communeOrderIds.mapNotNull { orderId ->
                 val orderData = orderRepository.findById(orderId)
-                orderData?.name
+                if (orderData != null) {
+                    val ownerName = Bukkit.getOfflinePlayer(orderData.ownerUuid).name ?: "Unknown"
+                    "#$orderId (владелец: $ownerName)"
+                } else {
+                    null
+                }
             }
 
         sender.sendMessage("§8═════════════════════")
@@ -140,7 +147,7 @@ class OrderCommuneInfoCommand(
         sender.sendMessage("§eВладелец: §7$ownerName")
 
         sender.sendMessage("§eВ коммуне: §aДА")
-        sender.sendMessage("§eСоюзники: §7${orderNames.joinToString(", ")}")
+        sender.sendMessage("§eСоюзники: §7${orderInfos.joinToString(", ")}")
         sender.sendMessage("§8═════════════════════")
         return true
     }
