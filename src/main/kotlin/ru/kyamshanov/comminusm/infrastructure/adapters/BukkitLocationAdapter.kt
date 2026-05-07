@@ -15,13 +15,15 @@ object BukkitLocationAdapter {
      * @param location The Bukkit Location to convert
      * @return WorldLocation value object with world name and block coordinates
      */
-    fun toDomain(location: Location): WorldLocation =
-        WorldLocation(
-            world = location.world!!.name,
+    fun toDomain(location: Location): WorldLocation {
+        val world = requireNotNull(location.world) { "Location world cannot be null" }
+        return WorldLocation(
+            world = world.name,
             x = location.blockX,
             y = location.blockY,
             z = location.blockZ,
         )
+    }
 
     /**
      * Converts a domain WorldLocation to a Bukkit Location.
