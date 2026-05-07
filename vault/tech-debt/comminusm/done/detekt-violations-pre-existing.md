@@ -2,8 +2,9 @@
 title: Pre-existing Detekt Violations
 module: comminusm
 severity: HIGH
-status: open
+status: fixed
 found_date: 2026-05-06
+closed_date: 2026-05-07
 ---
 
 # Pre-existing Detekt Violations — 212 Issues
@@ -39,3 +40,10 @@ Create batch tech-debt tasks:
 - Tech-debt #4: WildcardImport violations (explicit imports in tests)
 
 Defer remediation to separate `/kit-techdebt` cycle. Stage 01 is unaffected.
+
+## Resolution
+
+**Closed:** 2026-05-07
+**Fix commit:** be11164 (fix: ktlint and detekt violations in Stage 02 domain layer) + последующие рефакторинг-стадии 03–08
+**Files changed:** устранены в ходе Stages 02–08 рефакторинга (arch-clean-refactor)
+**Notes:** Нарушения устранены итеративно в ходе реализации последующих стадий. `./gradlew detekt --rerun-tasks` и `./gradlew ktlintCheck --rerun-tasks` — оба BUILD SUCCESSFUL на 2026-05-07.

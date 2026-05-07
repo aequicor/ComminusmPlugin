@@ -280,7 +280,7 @@ class DIContainer(
 
     // ========== Commune Services ==========
     private val orderMembersRepository by lazy {
-        OrderMembersRepository(ConcurrentHashMap())
+        OrderMembersRepository(ConcurrentHashMap(), database.connection)
     }
 
     private val orderMembershipService by lazy {
