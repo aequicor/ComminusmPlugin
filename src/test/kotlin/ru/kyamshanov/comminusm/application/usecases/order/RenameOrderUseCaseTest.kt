@@ -172,4 +172,64 @@ class RenameOrderUseCaseTest {
         // Assert
         assertTrue(result is Result.Success)
     }
+
+    // TC-28 (CC-04): name with only hyphens and underscores is accepted as valid
+    @Test
+    fun `TC-28 should succeed when name consists only of hyphens and underscores`() {
+        // Arrange
+        val order = Order(id = 1, ownerUuid = uuid, name = "OldName")
+        val newName = "---"
+        every { orderRepository.findByOwner(uuid) } returns order
+
+        // Act
+        val result = useCase(uuid, newName)
+
+        // Assert
+        assertTrue(result is Result.Success)
+    }
+
+    // TC-29 (CC-05): single character name is accepted as valid
+    @Test
+    fun `TC-29 should succeed when name is a single character`() {
+        // Arrange
+        val order = Order(id = 1, ownerUuid = uuid, name = "OldName")
+        val newName = "A"
+        every { orderRepository.findByOwner(uuid) } returns order
+
+        // Act
+        val result = useCase(uuid, newName)
+
+        // Assert
+        assertTrue(result is Result.Success)
+    }
+
+    // TC-29 variant: single Cyrillic character
+    @Test
+    fun `TC-29 should succeed when name is a single Cyrillic character`() {
+        // Arrange
+        val order = Order(id = 1, ownerUuid = uuid, name = "OldName")
+        val newName = "Я"
+        every { orderRepository.findByOwner(uuid) } returns order
+
+        // Act
+        val result = useCase(uuid, newName)
+
+        // Assert
+        assertTrue(result is Result.Success)
+    }
+
+    // TC-29 variant: single digit
+    @Test
+    fun `TC-29 should succeed when name is a single digit`() {
+        // Arrange
+        val order = Order(id = 1, ownerUuid = uuid, name = "OldName")
+        val newName = "5"
+        every { orderRepository.findByOwner(uuid) } returns order
+
+        // Act
+        val result = useCase(uuid, newName)
+
+        // Assert
+        assertTrue(result is Result.Success)
+    }
 }

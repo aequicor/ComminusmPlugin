@@ -3,7 +3,7 @@ genre: how-to
 module: comminusm
 title: Stage 03 — OrderMenu button + DI wiring
 stage: 3
-status: TODO
+status: DONE
 ---
 
 # Stage 03 — OrderMenu button + DI wiring
