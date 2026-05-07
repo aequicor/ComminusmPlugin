@@ -1,11 +1,12 @@
-kit_version: "4.8.0"
+kit_version: "5.2.0"
 language_code: ru
 hosts: [opencode, claude-code]  # NEW in v4.0.0: replaces pre-v4 `editors:` field. Allowed values: opencode, claude-code.
+auto_approve: false  # NEW in v5.0.0: When true, @Main skips CONFIRM step in FEATURE/TECH pipeline
 claude_code:
   models:
-    default: haiku
-    coder: haiku
-    reviewer: haiku
+    default: sonnet
+    coder: sonnet
+    reviewer: sonnet
     designer: haiku
     small: haiku
 project:
@@ -14,7 +15,7 @@ project:
 vault_path: vault
 stack:
   language: kotlin
-  profiles: [kotlin-gradle, ollama-cloud, paper-plugin, security-baseline, opencode, claude-code, solid]
+  profiles: [kotlin-gradle, ollama-cloud, paper-plugin, security-baseline, opencode, claude-code, solid, clean-architecture]
   external_profiles: {}  # NEW in v3.1.0: map of <profile-name> -> <source URL> for /kit-extend external profiles.
   build_command: "./gradlew"
   compile_command: "./gradlew compileKotlin"
@@ -23,20 +24,20 @@ stack:
 modules:
   - name: comminusm
     gradle_module: null
-    source_root: src/main/kotlin/ru/kyamshanov/comminusm/
-    test_root: src/test/kotlin/ru/kyamshanov/comminusm/
+    source_root: src/main/kotlin
+    test_root: src/test/kotlin
     docs_path: vault/comminusm/
     responsibility: "Minecraft Paper plugin — communism-themed gameplay mechanics"
 provider:
   name: ollama-cloud
-  base_url: https://ollama.com
+  base_url: https://ollama.com/v1
   api_key_env: OLLAMA_API_KEY
 models:
-  default: kimi-k2.6:cloud
-  coder: deepseek-v4-flash:cloud
-  reviewer: deepseek-v4-pro:cloud
-  designer: glm-5.1:cloud
-  small: deepseek-v4-flash:cloud
+  default: deepseek-v4-pro
+  coder: deepseek-v4-pro
+  reviewer: deepseek-v4-pro
+  designer: deepseek-v4-flash
+  small: deepseek-v4-flash
 mcp:
   context7: { enabled: false }
   knowledge: { enabled: true, url: "http://localhost:8010/mcp" }
@@ -114,6 +115,6 @@ code_quality:
     - "Inheriting from a concrete class solely to reuse implementation (not to extend the contract)"
 formatter:
   enabled: true
-  name: "gradle-detekt-format"
-  command: ["./gradlew", "detekt", "--auto-correct"]
+  name: "ktlint"
+  command: ["./gradlew", "ktlintFormat"]
   extensions: [".kt", ".kts"]

@@ -32,7 +32,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "ollama-cloud",
       "options": {
-        "baseURL": "https://ollama.com",
+        "baseURL": "https://ollama.com/v1",
         "apiKey": "{env:OLLAMA_API_KEY}"
       },
       "models": {

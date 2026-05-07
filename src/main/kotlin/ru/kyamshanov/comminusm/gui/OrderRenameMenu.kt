@@ -56,10 +56,8 @@ class OrderRenameMenu(
         val title = Component.text("Название ордера")
         val anvilInv = Bukkit.createInventory(null, InventoryType.ANVIL, title)
         val inputItem = ItemStack(Material.PAPER)
-        val meta = inputItem.itemMeta
-        meta?.displayName(Component.text(order.name))
-        if (meta != null) {
-            inputItem.itemMeta = meta
+        inputItem.editMeta { meta ->
+            meta.displayName(Component.text(order.name))
         }
         anvilInv.setItem(0, inputItem)
         inProgressRenames[player.uniqueId] = order.id
@@ -71,10 +69,8 @@ class OrderRenameMenu(
     fun onPrepareAnvil(event: PrepareAnvilEvent) {
         val text = event.inventory.renameText ?: return
         val result = ItemStack(Material.PAPER)
-        val resultMeta = result.itemMeta
-        resultMeta?.displayName(Component.text(text))
-        if (resultMeta != null) {
-            result.itemMeta = resultMeta
+        result.editMeta { meta ->
+            meta.displayName(Component.text(text))
         }
         event.result = result
     }

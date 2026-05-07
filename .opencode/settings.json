@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/schemas/settings.json",
+  "provider": {
+    "type": "ollama-cloud",
+    "baseUrl": "https://ollama.com/v1",
+    "apiKeyEnv": "OLLAMA_API_KEY"
+  },
+  "models": {
+    "default": "deepseek-v4-pro",
+    "coder": "deepseek-v4-pro",
+    "reviewer": "deepseek-v4-pro",
+    "designer": "deepseek-v4-flash",
+    "small": "deepseek-v4-flash"
+  },
+  "language": "ru",
+  "features": {
+    "security": true,
+    "solidPrinciples": true,
+    "cleanArchitecture": true
+  }
+}
