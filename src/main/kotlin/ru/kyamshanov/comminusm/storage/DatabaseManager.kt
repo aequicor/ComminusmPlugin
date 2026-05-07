@@ -15,6 +15,7 @@ class DatabaseManager(
         conn.createStatement().use { it.execute("PRAGMA journal_mode=WAL") }
         conn.createStatement().use { it.execute("PRAGMA foreign_keys=ON") }
         createTables(conn)
+        migrateOrders(conn)
         conn
     }
 
@@ -147,6 +148,29 @@ class DatabaseManager(
             connection.close()
         } catch (_: Exception) {
             // already closed
+        }
+    }
+
+    companion object {
+        /**
+         * Migration: feat-order-name — add name column to orders table if it doesn't exist.
+         * Safe to re-run: catches SQLiteException for duplicate column and ignores it.
+         * This handles existing server databases created before the name column was added.
+         */
+        fun migrateOrders(conn: Connection) {
+            try {
+                conn.createStatement().use { stmt ->
+                    stmt.execute(
+                        "ALTER TABLE orders ADD COLUMN name TEXT NOT NULL DEFAULT ''",
+                    )
+                }
+            } catch (e: org.sqlite.SQLiteException) {
+                // Column already exists — expected on fresh installs or after first migration.
+                // Only re-throw if it's a different SQLite error.
+                if (!e.message.orEmpty().contains("duplicate column name")) {
+                    throw e
+                }
+            }
         }
     }
 }
