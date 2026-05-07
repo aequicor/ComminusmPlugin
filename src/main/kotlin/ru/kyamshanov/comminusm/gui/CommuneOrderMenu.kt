@@ -9,12 +9,14 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
+import org.bukkit.inventory.ItemStack
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByIdUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 
 /**
  * Decorator pattern wrapper around OrderMenu.
- * Adds a "Участники" button at slot 21 to access order members management.
+ * Adds a "Участники" button at slot 44 to access order members management.
  * Visible only to order leaders and native members (AC-60).
  */
 @Suppress("UnusedPrivateProperty")
@@ -22,6 +24,7 @@ class CommuneOrderMenu(
     private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
     private val orderMembershipService: OrderMembershipService,
     private val orderMembersMenu: OrderMembersMenu,
+    private val getOrderByIdUseCase: GetOrderByIdUseCase,
 ) : Listener {
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
@@ -37,16 +40,35 @@ class CommuneOrderMenu(
 
         // Only show button to leaders and native members
         if (nativeOrders.isNotEmpty() || isLeader) {
-            inv.setItem(
-                PARTICIPANTS_BUTTON_SLOT,
-                GuiUtils.namedItem(
-                    "§6Участники",
-                    Material.PLAYER_HEAD,
-                    "§7Управление участниками ордера",
-                    "§8Нажми чтобы открыть",
-                ),
-            )
+            val skull = buildParticipantsButton(title)
+            inv.setItem(PARTICIPANTS_BUTTON_SLOT, skull)
         }
+    }
+
+    private fun buildParticipantsButton(title: String): ItemStack {
+        val skull =
+            GuiUtils.namedItem(
+                "§6Участники",
+                Material.PLAYER_HEAD,
+                "§7Управление участниками ордера",
+                "§8Нажми чтобы открыть",
+            )
+
+        // Extract order ID from title and set skull owner
+        val orderIdMatch = """Ордер №(\d+)""".toRegex().find(title)
+        val orderId = orderIdMatch?.groupValues?.getOrNull(1)?.toLongOrNull()
+        if (orderId != null) {
+            val order = getOrderByIdUseCase(orderId)
+            if (order != null) {
+                val meta = skull.itemMeta as? org.bukkit.inventory.meta.SkullMeta
+                if (meta != null) {
+                    meta.owningPlayer = org.bukkit.Bukkit.getOfflinePlayer(order.ownerUuid)
+                    skull.itemMeta = meta
+                }
+            }
+        }
+
+        return skull
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -99,6 +121,6 @@ class CommuneOrderMenu(
     }
 
     companion object {
-        const val PARTICIPANTS_BUTTON_SLOT = 21
+        const val PARTICIPANTS_BUTTON_SLOT = 44
     }
 }

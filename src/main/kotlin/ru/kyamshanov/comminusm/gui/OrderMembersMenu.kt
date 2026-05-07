@@ -96,12 +96,13 @@ class OrderMembersMenu(
     @EventHandler
     fun onInventoryClick(event: InventoryClickEvent) {
         val title = event.view.title().toString()
-        if (!title.startsWith("§8Участники ордера")) return
+        if (!title.contains("Участники ордера")) return
 
         // TC-155: Cancel ALL clicks in the menu to prevent item dragging
         event.isCancelled = true
 
         val player = event.whoClicked as Player
+        if (event.rawSlot != event.slot) return // skip player-inventory / hotbar clicks
 
         when {
             event.slot == BACK_BUTTON_SLOT -> {
@@ -122,7 +123,7 @@ class OrderMembersMenu(
     @EventHandler
     fun onInventoryDrag(event: InventoryDragEvent) {
         val title = event.view.title().toString()
-        if (!title.startsWith("§8Участники ордера")) return
+        if (!title.contains("Участники ордера")) return
 
         // TC-155: Cancel ALL drag operations in the menu to prevent item dragging
         event.isCancelled = true

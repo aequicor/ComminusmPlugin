@@ -6,6 +6,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
+import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByIdUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 
 /**
@@ -14,18 +15,26 @@ import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
  * Test cases:
  * - AC-60: "Участники" button visible to order leaders and native members
  * - Button click opens OrderMembersMenu
- * - TC-122: Verify slot conflict fix
+ * - TC-156: Verify slot repositioning to bottom row
+ * - TC-157: Verify skull owner metadata
  */
 class CommuneOrderMenuTest {
     private val checkOrderLeadershipUseCase = mockk<CheckOrderLeadershipUseCase>()
     private val orderMembershipService = mockk<OrderMembershipService>()
     private val orderMembersMenu = mockk<OrderMembersMenu>()
+    private val getOrderByIdUseCase = mockk<GetOrderByIdUseCase>()
 
     private lateinit var menu: CommuneOrderMenu
 
     @BeforeEach
     fun setUp() {
-        menu = CommuneOrderMenu(checkOrderLeadershipUseCase, orderMembershipService, orderMembersMenu)
+        menu =
+            CommuneOrderMenu(
+                checkOrderLeadershipUseCase,
+                orderMembershipService,
+                orderMembersMenu,
+                getOrderByIdUseCase,
+            )
     }
 
     @Test
@@ -35,11 +44,11 @@ class CommuneOrderMenuTest {
     }
 
     @Test
-    fun `TC-123 participants button uses player head material for visual appeal`() {
-        // TC-123: Verify that "Участники" button uses PLAYER_HEAD material
-        // for better visual appearance and harmony in the order menu
-        assert(CommuneOrderMenu.PARTICIPANTS_BUTTON_SLOT == 21) {
-            "Participants button should be at slot 21 for optimal menu positioning"
+    fun `TC-156 participants button repositioned to bottom row slot 44`() {
+        // TC-156: Verify that "Участники" button is now at slot 44 (bottom row)
+        // instead of slot 21 (middle row)
+        assert(CommuneOrderMenu.PARTICIPANTS_BUTTON_SLOT == 44) {
+            "Participants button should be at slot 44 (bottom row) for visual harmony"
         }
     }
 
@@ -49,11 +58,13 @@ class CommuneOrderMenuTest {
         // does not use the same slot as other buttons in OrderMenu.
         // This test verifies the fix for the slot conflict bug.
 
-        // OrderMenu uses these slots:
+        // OrderMenu uses these slots (updated for TC-156):
         val orderMenuSizeSlot = 22 // "Территория" (Territory) button
         val orderMenuInfoSlot = 20
         val orderMenuUpgradeSlot = 24
         val orderMenuRestoreSlot = 31
+        val orderMenuBackSlot = 36
+        val orderMenuHomeSlot = 40
 
         // CommuneOrderMenu participants button should not conflict with any of them
         val participantsSlot = CommuneOrderMenu.PARTICIPANTS_BUTTON_SLOT
@@ -69,6 +80,12 @@ class CommuneOrderMenuTest {
         }
         assert(participantsSlot != orderMenuRestoreSlot) {
             "Participants slot $participantsSlot conflicts with restore button slot $orderMenuRestoreSlot"
+        }
+        assert(participantsSlot != orderMenuBackSlot) {
+            "Participants slot $participantsSlot conflicts with back button slot $orderMenuBackSlot"
+        }
+        assert(participantsSlot != orderMenuHomeSlot) {
+            "Participants slot $participantsSlot conflicts with home button slot $orderMenuHomeSlot"
         }
     }
 }

@@ -5,7 +5,7 @@ title: Test Cases — Communes
 topic: communes
 status: Living
 generated: 2026-05-06
-last_updated: 2026-05-07 (ADDED: TC-124 — party menu commune button issue; TC-123 — order menu item enhancement; TC-155 — order menu interactive issue; FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict; TC-155 — menu drag interaction issue (InventoryDragEvent handlers); TC-123 — participants button material and position; TC-124 — menu not closing after commune creation)
+last_updated: 2026-05-07 (ADDED: TC-156, TC-157, TC-158 — order menu UI fixes; FIXED: TC-120, TC-121, TC-122, TC-123, TC-124, TC-155, TC-156, TC-157, TC-158)
 author: "@QA"
 related:
   - vault/concepts/comminusm/requirements/communes.md
@@ -235,6 +235,9 @@ These test cases focus on unit-edge scenarios, integration workflows, error path
 | TC-153 | PEND   | —     | corner case | [spec §8.1 + §3] SQL schema applied via `DatabaseManager` migration mechanism on `onEnable` — schema idempotent                                  | `onEnable` applies migrations; second `onEnable` (plugin reload) applies idempotent DDL; no duplicate table/index errors                 |
 | TC-154 | PEND   | —     | corner case | [spec §7 Q2] Lock acquisition order rule: `CrossOrderMembershipService` write lock → `OrderMembershipService` write lock                          | Code review checklist: verified in all cascade/grant paths; no reverse-order locks; documented in code                                    |
 | TC-155 | PASS   | —     | error       | [bug-fix] Открыть меню ордера, нажать на «Участники» — меню открывается, но кнопки в меню не реагируют на клики; игрок может перекладывать предметы в инвентарь | Меню ордера должно открыться в режиме non-interactive; кнопки должны реагировать на клики; инвентарь не должен быть доступен для взаимодействия |
+| TC-156 | PASS   | —     | error       | [bug-fix] Кнопки «Вернуться домой» (слот 4) и «Участники» (слот 21) в меню ордера расположены вне нижней панели | Все три кнопки нижней панели (выйти слот 36, домой слот 40, участники слот 44) расположены в нижнем ряду |
+| TC-157 | PASS   | —     | error       | [bug-fix] Кнопка «Участники» показывает стандартную голову игрока без привязки к владельцу ордера | Кнопка «Участники» отображает голову (SkullMeta) владельца ордера |
+| TC-158 | PASS   | —     | error       | [bug-fix] OrderMembersMenu: кнопки не реагируют на клики, предметы можно перетаскивать | Клики по кнопкам обрабатываются; перетаскивание блокировано |
 
 ---
 
@@ -250,3 +253,6 @@ These test cases focus on unit-edge scenarios, integration workflows, error path
 | DEF-04 | TC-155 | FIXED | Menu non-interactive issue: Bukkit fires separate InventoryClickEvent and InventoryDragEvent. Previous fix (commit 4f328f7) only cancelled clicks, not drag operations. Fixed by adding onInventoryDrag handlers to OrderMembersMenu, CommuneOrderMenu, CommunePartyMenu, and CommuneMenu to cancel all drag operations. |
 | DEF-05 | TC-123 | FIXED | Participants button visual appearance: Button used Material.PAPER (same as restore flag) and was positioned at slot 23. Changed to Material.PLAYER_HEAD for better semantics and moved to slot 21 for better menu layout harmony. |
 | DEF-06 | TC-124 | FIXED | Party menu "Commune" button: first click shows "commune created" but menu remains open (should close); second click shows placeholder instead of opening commune menu. Fixed by calling player.closeInventory() after commune creation and when opening existing commune. |
+| DEF-07 | TC-156 | FIXED  | Кнопки homeSlot(4) и PARTICIPANTS_BUTTON_SLOT(21) расположены вне нижнего ряда. Нужно: backSlot=36, homeSlot=40, PARTICIPANTS_BUTTON_SLOT=44. |
+| DEF-08 | TC-157 | FIXED  | CommuneOrderMenu создаёт PLAYER_HEAD без SkullMeta → стандартная голова вместо головы владельца. Нужно инжектировать GetOrderByIdUseCase и задать owningPlayer. |
+| DEF-09 | TC-158 | FIXED  | OrderMembersMenu.onInventoryClick/onInventoryDrag используют startsWith("§8Участники ордера") — падает для Adventure-заголовков. Нужно заменить на contains("Участники ордера"). |

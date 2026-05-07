@@ -46,16 +46,16 @@ class OrderMembersMenuTest {
         // Both event types are now cancelled, making the menu truly read-only.
 
         // Verify the method exists
-        val hasOnInventoryDragMethod = menu::class.java.methods
-            .any { method ->
+        val hasOnInventoryDragMethod =
+            menu::class.java.methods.any { method ->
                 method.name == "onInventoryDrag" &&
-                method.parameterCount == 1
+                    method.parameterCount == 1
             }
 
         // This assertion now PASSES, confirming the fix
         assert(hasOnInventoryDragMethod) {
             "TC-155 FIX: OrderMembersMenu should have onInventoryDrag() method to handle " +
-            "InventoryDragEvent and prevent item dragging in the read-only menu."
+                "InventoryDragEvent and prevent item dragging in the read-only menu."
         }
     }
 }

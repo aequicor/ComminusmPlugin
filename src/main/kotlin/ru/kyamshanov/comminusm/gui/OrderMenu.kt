@@ -50,8 +50,8 @@ class OrderMenu(
     private val sizeSlot = 22
     private val upgradeSlot = 24
     private val restoreSlot = 31
-    private val backSlot = 39
-    private val homeSlot = 4
+    private val backSlot = 36
+    private val homeSlot = 40
 
     fun open(
         player: Player,
