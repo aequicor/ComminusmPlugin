@@ -5,7 +5,7 @@ title: Test Cases — Communes
 topic: communes
 status: Living
 generated: 2026-05-06
-last_updated: 2026-05-07 (FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict)
+last_updated: 2026-05-07 (ADDED: TC-124 — party menu commune button issue; TC-123 — order menu item enhancement; TC-155 — order menu interactive issue; FIXED: TC-120 — commune creation placeholder; TC-121 — order owner access denied; TC-122 — slot conflict; TC-155 — menu non-interactive issue)
 author: "@QA"
 related:
   - vault/concepts/comminusm/requirements/communes.md
@@ -170,6 +170,8 @@ AI agents do NOT touch the Notes column. AI agents do NOT generate per-TC detail
 | TC-120 | PASS   | —     | error       | [bug-fix] Лидер устанавливает ордер, нажимает кнопку «Коммуна» (создание коммуны); во второй раз нажимает ту же кнопку — оба раза выводится сообщение «коммуна (планируется)» | Коммуна должна создаваться успешно при первом нажатии; при повторном нажатии — ошибка «Ваш ордер уже состоит в коммуне» |
 | TC-121 | PASS   | —     | error       | [bug-fix] Лидер ордера создаёт ордер, открывает меню ордера, нажимает на кнопку для просмотра членов ордера — система выдаёт ошибку доступа «Вы не член этого ордера», несмотря на то, что пользователь владеет ордером | Лидер ордера может просмотреть список членов своего ордера без ошибки доступа; меню показывает участников ордера корректно |
 | TC-122 | PASS   | —     | error       | [bug-fix] В меню ордера пункт «Участники» дублирует функцию «восстановить флаг» или конфликтует с ней | Пункт «Участники» работает независимо от функции восстановления флага; в меню нет дублирования или конфликта действий |
+| TC-123 | FAIL   | —     | enhancement | [bug-fix] Требуется изменить предмет (item) для кнопки "Участники" в меню ордера и изменить его позицию в меню, чтобы выглядело красиво и органично | Кнопка "Участники" отображается с подходящим предметом; её позиция в меню выглядит естественно и органично; нет конфликтов с другими элементами меню |
+| TC-124 | FAIL   | —     | error       | [bug-fix] Открыть меню партии, нажать на кнопку «Коммуна» 2 раза: первый раз выводит сообщение «коммуна создана», но меню остаётся открытым; второй раз выводит «открытие коммуны (планируется)» | Первый клик: коммуна создаётся успешно, меню закрывается (если нет входящих приглашений); второй клик: открывается меню управления коммуны |
 
 > The TC-00 block is a single static template. Manual tester copies it on demand
 > when they want to elaborate on one specific TC (typically a failing one).
@@ -232,6 +234,7 @@ These test cases focus on unit-edge scenarios, integration workflows, error path
 | TC-152 | PEND   | —     | corner case | [spec §8.2 step 4] Recovery from `storageLoadFailed = true` requires server restart (no admin reload command)                                    | After underlying storage resolved: server restart → full startup sequence re-runs → load succeeds → AC-47 consistency check completes     |
 | TC-153 | PEND   | —     | corner case | [spec §8.1 + §3] SQL schema applied via `DatabaseManager` migration mechanism on `onEnable` — schema idempotent                                  | `onEnable` applies migrations; second `onEnable` (plugin reload) applies idempotent DDL; no duplicate table/index errors                 |
 | TC-154 | PEND   | —     | corner case | [spec §7 Q2] Lock acquisition order rule: `CrossOrderMembershipService` write lock → `OrderMembershipService` write lock                          | Code review checklist: verified in all cascade/grant paths; no reverse-order locks; documented in code                                    |
+| TC-155 | PASS   | —     | error       | [bug-fix] Открыть меню ордера, нажать на «Участники» — меню открывается, но кнопки в меню не реагируют на клики; игрок может перекладывать предметы в инвентарь | Меню ордера должно открыться в режиме non-interactive; кнопки должны реагировать на клики; инвентарь не должен быть доступен для взаимодействия |
 
 ---
 
@@ -244,3 +247,5 @@ These test cases focus on unit-edge scenarios, integration workflows, error path
 | DEF-01 | TC-122 | FIXED | Slot conflict: CommuneOrderMenu PARTICIPANTS_BUTTON_SLOT used slot 22, same as OrderMenu.sizeSlot. Moved to slot 23. |
 | DEF-02 | TC-121 | FIXED | Order owner access denied: CommuneOrderMenu.onInventoryClick checked only if player is native member, rejecting order leader. Fixed permission check to include isLeader. |
 | DEF-03 | TC-120 | FIXED | Commune creation placeholder: CommunePartyMenu.openCommuneMenu only sent message, didn't create commune or check for existing commune. Implemented commune creation logic with persistence check. |
+| DEF-04 | TC-155 | FIXED | Menu non-interactive issue: CommuneOrderMenu, OrderMembersMenu, and CommunePartyMenu only cancelled clicks on button slots, allowing items to be dragged from inventory. Fixed by cancelling ALL clicks in the menu before processing button logic. |
+| DEF-04 | TC-124 | OPEN | Party menu "Commune" button: first click shows "commune created" but menu remains open (should close); second click shows placeholder instead of opening commune menu. |

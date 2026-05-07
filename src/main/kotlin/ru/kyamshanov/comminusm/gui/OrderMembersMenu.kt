@@ -97,21 +97,21 @@ class OrderMembersMenu(
         val title = event.view.title().toString()
         if (!title.startsWith("§8Участники ордера")) return
 
+        // TC-155: Cancel ALL clicks in the menu to prevent item dragging
+        event.isCancelled = true
+
         val player = event.whoClicked as Player
 
         when {
             event.slot == BACK_BUTTON_SLOT -> {
-                event.isCancelled = true
                 // Back to previous menu
                 player.sendMessage(Component.text("§aВозврат в меню (планируется)"))
             }
             event.slot == INVITE_BUTTON_SLOT -> {
-                event.isCancelled = true
                 // Show invite player menu
                 player.sendMessage(Component.text("§aПригласить участника (планируется)"))
             }
             event.slot in occupiedMemberSlots -> {
-                event.isCancelled = true
                 // If leader: remove member
                 player.sendMessage(Component.text("§aУдалить участника (планируется)"))
             }

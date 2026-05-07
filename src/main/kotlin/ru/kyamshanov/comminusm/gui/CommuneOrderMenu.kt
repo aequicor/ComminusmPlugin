@@ -13,7 +13,7 @@ import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 
 /**
  * Decorator pattern wrapper around OrderMenu.
- * Adds a "Участники" button at slot 22 to access order members management.
+ * Adds a "Участники" button at slot 21 to access order members management.
  * Visible only to order leaders and native members (AC-60).
  */
 @Suppress("UnusedPrivateProperty")
@@ -40,7 +40,7 @@ class CommuneOrderMenu(
                 PARTICIPANTS_BUTTON_SLOT,
                 GuiUtils.namedItem(
                     "§6Участники",
-                    Material.PAPER,
+                    Material.PLAYER_HEAD,
                     "§7Управление участниками ордера",
                     "§8Нажми чтобы открыть",
                 ),
@@ -54,10 +54,11 @@ class CommuneOrderMenu(
         val title = event.view.title().toString()
         if (!title.contains("Ордер №")) return
 
+        // TC-155: Cancel ALL clicks in the menu to prevent item dragging
+        event.isCancelled = true
+
         val slot = event.slot
         if (slot != PARTICIPANTS_BUTTON_SLOT) return
-
-        event.isCancelled = true
         val player = event.whoClicked as Player
 
         val nativeOrders = orderMembershipService.getNativeOrdersOfPlayer(player.uniqueId)
@@ -88,6 +89,6 @@ class CommuneOrderMenu(
     }
 
     companion object {
-        const val PARTICIPANTS_BUTTON_SLOT = 23
+        const val PARTICIPANTS_BUTTON_SLOT = 21
     }
 }

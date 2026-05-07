@@ -63,10 +63,11 @@ class CommunePartyMenu(
         val title = event.view.title().toString()
         if (!title.contains("Партийные услуги")) return
 
+        // TC-155: Cancel ALL clicks in the menu to prevent item dragging
+        event.isCancelled = true
+
         val slot = event.slot
         if (slot != COMMUNE_BUTTON_SLOT) return
-
-        event.isCancelled = true
         val player = event.whoClicked as Player
 
         val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
@@ -91,9 +92,10 @@ class CommunePartyMenu(
         // Check if order already has a commune
         val existingCommune = communeService.getCommuneOfOrder(order.id)
         if (existingCommune != null) {
+            // Close the party menu before opening commune menu
+            player.closeInventory()
             // Open existing commune menu
-            // This will be wired to CommuneMenu.open() in full implementation
-            player.sendMessage(Component.text("§aОтрытие коммуны (планируется)"))
+            // TODO: Wire to CommuneMenu.open(player, existingCommune.id)
             return
         }
 
@@ -102,6 +104,8 @@ class CommunePartyMenu(
         when (result) {
             is ru.kyamshanov.comminusm.commune.model.Result.Success -> {
                 player.sendMessage(Component.text("§aКоммуна создана!"))
+                // Close the party menu after successful creation
+                player.closeInventory()
             }
             is ru.kyamshanov.comminusm.commune.model.Result.Failure -> {
                 player.sendMessage(Component.text("§cОшибка: ${result.error}"))
