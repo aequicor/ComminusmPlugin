@@ -46,6 +46,7 @@ class OrderRenameMenu(
     }
 
     private val inProgressRenames = ConcurrentHashMap<UUID, Long>()
+    private val renameTexts = ConcurrentHashMap<UUID, String>()
 
     fun open(
         player: Player,
@@ -68,6 +69,8 @@ class OrderRenameMenu(
     @EventHandler
     fun onPrepareAnvil(event: PrepareAnvilEvent) {
         val text = event.inventory.renameText ?: return
+        val player = event.view.player as? Player ?: return
+        renameTexts[player.uniqueId] = text
         val result = ItemStack(Material.PAPER)
         result.editMeta { meta ->
             meta.displayName(Component.text(text))
@@ -116,16 +119,21 @@ class OrderRenameMenu(
     @Suppress("ReturnCount")
     @EventHandler
     fun onInventoryClick(event: InventoryClickEvent) {
-        if (event.inventory.type != InventoryType.ANVIL) return
-        if (event.rawSlot != ANVIL_OUTPUT_SLOT) return
+        if (event.inventory.type != InventoryType.ANVIL) {
+            return
+        }
+
+        if (event.rawSlot != ANVIL_OUTPUT_SLOT) {
+            return
+        }
 
         val playerUuid = (event.whoClicked as? Player)?.uniqueId ?: return
         val orderId = inProgressRenames[playerUuid] ?: return
         event.isCancelled = true
 
         val player = event.whoClicked as Player
-        val anvilInv = event.inventory as? org.bukkit.inventory.AnvilInventory ?: return
-        val typedName = anvilInv.renameText ?: ""
+        val typedName = renameTexts[playerUuid] ?: ""
+        plugin.logger.info("Rename attempt: player=$playerUuid, orderId=$orderId, typedName='$typedName'")
 
         val validationError = validateTypedName(typedName)
         if (validationError != null) {
@@ -240,10 +248,12 @@ class OrderRenameMenu(
         if (event.inventory.type != InventoryType.ANVIL) return
         val playerUuid = (event.player as? Player)?.uniqueId ?: return
         inProgressRenames.remove(playerUuid)
+        renameTexts.remove(playerUuid)
     }
 
     @EventHandler
     fun onPlayerQuit(event: PlayerQuitEvent) {
         inProgressRenames.remove(event.player.uniqueId)
+        renameTexts.remove(event.player.uniqueId)
     }
 }
