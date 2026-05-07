@@ -1,0 +1,250 @@
+Initialized native services in: C:\Users\kruz18\.gradle\native
+Initialized jansi services in: C:\Users\kruz18\.gradle\native
+Received JVM installation metadata from 'C:\Users\kruz18\Programs\Jdks\temurin-21.0.8': {JAVA_HOME=C:\Users\kruz18\Programs\Jdks\temurin-21.0.8, JAVA_VERSION=21.0.8, JAVA_VENDOR=Eclipse Adoptium, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.8+9-LTS, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.8+9-LTS, VM_VENDOR=Eclipse Adoptium, OS_ARCH=amd64}
+Found daemon DaemonInfo{pid=8156, address=[6c083645-c56a-4e4f-9d6d-42ebe53b336f port:63776, addresses:[/127.0.0.1]], state=Idle, lastBusy=1778128850548, context=DefaultDaemonContext[uid=d9a0745d-dd09-4cf9-a3c2-b094912014a6,javaHome=C:\Users\kruz18\.jdks\jbr-21.0.10,javaVersion=21,daemonRegistryDir=C:\Users\kruz18\.gradle\daemon,pid=8156,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=--add-opens=java.base/java.util=ALL-UNNAMED,--add-opens=java.base/java.lang=ALL-UNNAMED,--add-opens=java.base/java.lang.invoke=ALL-UNNAMED,--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED,--add-opens=java.base/java.nio.charset=ALL-UNNAMED,--add-opens=java.base/java.net=ALL-UNNAMED,--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED,-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=RU,-Duser.language=ru,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{requestedJvm=21.0.8 (Eclipse Adoptium 21.0.8+9-LTS), jvmCriteria=null, daemonOpts=[--add-opens=java.base/java.util=ALL-UNNAMED, --add-opens=java.base/java.lang=ALL-UNNAMED, --add-opens=java.base/java.lang.invoke=ALL-UNNAMED, --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED, --add-opens=java.base/java.nio.charset=ALL-UNNAMED, --add-opens=java.base/java.net=ALL-UNNAMED, --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED, -XX:MaxMetaspaceSize=384m, -XX:+HeapDumpOnOutOfMemoryError, -Xms256m, -Xmx512m, -Dfile.encoding=UTF-8, -Duser.country=RU, -Duser.language=ru, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=d9a0745d-dd09-4cf9-a3c2-b094912014a6,javaHome=C:\Users\kruz18\.jdks\jbr-21.0.10,javaVersion=21,daemonRegistryDir=C:\Users\kruz18\.gradle\daemon,pid=8156,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=--add-opens=java.base/java.util=ALL-UNNAMED,--add-opens=java.base/java.lang=ALL-UNNAMED,--add-opens=java.base/java.lang.invoke=ALL-UNNAMED,--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED,--add-opens=java.base/java.nio.charset=ALL-UNNAMED,--add-opens=java.base/java.net=ALL-UNNAMED,--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED,-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=RU,-Duser.language=ru,-Duser.variant]
+
+  Looking for a different daemon...
+Found daemon DaemonInfo{pid=17584, address=[5659fc09-b058-4b65-a77d-51047494ce4a port:60222, addresses:[/127.0.0.1]], state=Idle, lastBusy=1778132106329, context=DefaultDaemonContext[uid=c060bc47-d45a-4ebb-b209-fbc6b9a0925c,javaHome=C:\Users\kruz18\Programs\Jdks\temurin-21.0.8,javaVersion=21,daemonRegistryDir=C:\Users\kruz18\.gradle\daemon,pid=17584,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=--add-opens=java.base/java.util=ALL-UNNAMED,--add-opens=java.base/java.lang=ALL-UNNAMED,--add-opens=java.base/java.lang.invoke=ALL-UNNAMED,--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED,--add-opens=java.base/java.nio.charset=ALL-UNNAMED,--add-opens=java.base/java.net=ALL-UNNAMED,--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED,-Dfile.encoding=UTF-8,-Duser.country=RU,-Duser.language=ru,-Duser.variant]} however its context does not match the desired criteria.
+At least one daemon option is different.
+Wanted: DaemonRequestContext{requestedJvm=21.0.8 (Eclipse Adoptium 21.0.8+9-LTS), jvmCriteria=null, daemonOpts=[--add-opens=java.base/java.util=ALL-UNNAMED, --add-opens=java.base/java.lang=ALL-UNNAMED, --add-opens=java.base/java.lang.invoke=ALL-UNNAMED, --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED, --add-opens=java.base/java.nio.charset=ALL-UNNAMED, --add-opens=java.base/java.net=ALL-UNNAMED, --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED, -XX:MaxMetaspaceSize=384m, -XX:+HeapDumpOnOutOfMemoryError, -Xms256m, -Xmx512m, -Dfile.encoding=UTF-8, -Duser.country=RU, -Duser.language=ru, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=c060bc47-d45a-4ebb-b209-fbc6b9a0925c,javaHome=C:\Users\kruz18\Programs\Jdks\temurin-21.0.8,javaVersion=21,daemonRegistryDir=C:\Users\kruz18\.gradle\daemon,pid=17584,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=--add-opens=java.base/java.util=ALL-UNNAMED,--add-opens=java.base/java.lang=ALL-UNNAMED,--add-opens=java.base/java.lang.invoke=ALL-UNNAMED,--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED,--add-opens=java.base/java.nio.charset=ALL-UNNAMED,--add-opens=java.base/java.net=ALL-UNNAMED,--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED,-Dfile.encoding=UTF-8,-Duser.country=RU,-Duser.language=ru,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 26232). The daemon log file: C:\Users\kruz18\.gradle\daemon\8.8\daemon-26232.out.log
+Starting 168th build in daemon [uptime: 57 mins 59.288 secs, performance: 100%, GC rate: 0.00/s, heap usage: 4% of 512 MiB, non-heap usage: 71% of 384 MiB]
+Using 16 worker leases.
+Now considering [C:\Users\kruz18\IdeaProjects\ComminusmPlugin] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Transforming foojay-resolver-0.8.0.jar (org.gradle.toolchains:foojay-resolver:0.8.0) with InstrumentationAnalysisTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with InstrumentationAnalysisTransform
+Transforming foojay-resolver-0.8.0.jar (org.gradle.toolchains:foojay-resolver:0.8.0) with InstrumentationAnalysisTransform
+Transforming foojay-resolver-0.8.0.jar (org.gradle.toolchains:foojay-resolver:0.8.0) with MergeInstrumentationAnalysisTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with InstrumentationAnalysisTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with MergeInstrumentationAnalysisTransform
+Transforming foojay-resolver-0.8.0.jar (org.gradle.toolchains:foojay-resolver:0.8.0) with ExternalDependencyInstrumentingArtifactTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with ExternalDependencyInstrumentingArtifactTransform
+Settings evaluated using settings file 'C:\Users\kruz18\IdeaProjects\ComminusmPlugin\settings.gradle.kts'.
+Projects loaded. Root project using build file 'C:\Users\kruz18\IdeaProjects\ComminusmPlugin\build.gradle.kts'.
+Included projects: [root project 'ComminusmPlugin']
+
+> Configure project :
+Evaluating root project 'ComminusmPlugin' using build file 'C:\Users\kruz18\IdeaProjects\ComminusmPlugin\build.gradle.kts'.
+Transforming shadow-gradle-plugin-8.3.0.jar (com.gradleup.shadow:shadow-gradle-plugin:8.3.0) with InstrumentationAnalysisTransform
+Transforming log4j-core-2.23.1.jar (org.apache.logging.log4j:log4j-core:2.23.1) with InstrumentationAnalysisTransform
+Transforming run-task-2.3.1.jar (xyz.jpenilla:run-task:2.3.1) with InstrumentationAnalysisTransform
+Transforming jackson-databind-2.17.2.jar (com.fasterxml.jackson.core:jackson-databind:2.17.2) with InstrumentationAnalysisTransform
+Transforming jackson-annotations-2.17.2.jar (com.fasterxml.jackson.core:jackson-annotations:2.17.2) with InstrumentationAnalysisTransform
+Transforming jackson-core-2.17.2.jar (com.fasterxml.jackson.core:jackson-core:2.17.2) with InstrumentationAnalysisTransform
+Transforming jackson-module-kotlin-2.17.2.jar (com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2) with InstrumentationAnalysisTransform
+Transforming kotlin-reflect-1.9.22.jar (org.jetbrains.kotlin:kotlin-reflect:1.9.22) with InstrumentationAnalysisTransform
+Transforming kotlin-stdlib-1.9.22.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.22) with InstrumentationAnalysisTransform
+Transforming annotations-13.0.jar (org.jetbrains:annotations:13.0) with InstrumentationAnalysisTransform
+Transforming fus-statistics-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-api-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming detekt-gradle-plugin-1.23.7.jar (io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.7) with InstrumentationAnalysisTransform
+Transforming ktlint-gradle-12.1.0.jar (org.jlleitschuh.gradle:ktlint-gradle:12.1.0) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-idea-proto-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-idea-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-klib-commonizer-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-build-statistics-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-statistics:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-util-klib-metadata-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib-metadata:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming abi-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:abi-tools-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-compiler-runner-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-compiler-runner:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming jdom2-2.0.6.1.jar (org.jdom:jdom2:2.0.6.1) with InstrumentationAnalysisTransform
+Transforming asm-commons-9.7.jar (org.ow2.asm:asm-commons:9.7) with InstrumentationAnalysisTransform
+Transforming asm-tree-9.7.jar (org.ow2.asm:asm-tree:9.7) with InstrumentationAnalysisTransform
+Transforming asm-9.7.jar (org.ow2.asm:asm:9.7) with InstrumentationAnalysisTransform
+Transforming commons-io-2.16.1.jar (commons-io:commons-io:2.16.1) with InstrumentationAnalysisTransform
+Transforming ant-1.10.14.jar (org.apache.ant:ant:1.10.14) with InstrumentationAnalysisTransform
+Transforming plexus-utils-4.0.1.jar (org.codehaus.plexus:plexus-utils:4.0.1) with InstrumentationAnalysisTransform
+Transforming plexus-xml-4.0.4.jar (org.codehaus.plexus:plexus-xml:4.0.4) with InstrumentationAnalysisTransform
+Transforming jdependency-2.10.jar (org.vafer:jdependency:2.10) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-annotations-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-native-utils-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-native-utils:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-tooling-core-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-tooling-core:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-build-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-tools-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming gson-2.11.0.jar (com.google.code.gson:gson:2.11.0) with InstrumentationAnalysisTransform
+Transforming kotlin-util-klib-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-util-io-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-io:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-daemon-client-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-daemon-client:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlinx-coroutines-core-jvm-1.8.0.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0) with InstrumentationAnalysisTransform
+Transforming ant-launcher-1.10.14.jar (org.apache.ant:ant-launcher:1.10.14) with InstrumentationAnalysisTransform
+Transforming maven-xml-impl-4.0.0-alpha-9.jar (org.apache.maven:maven-xml-impl:4.0.0-alpha-9) with InstrumentationAnalysisTransform
+Transforming log4j-api-2.23.1.jar (org.apache.logging.log4j:log4j-api:2.23.1) with InstrumentationAnalysisTransform
+Transforming error_prone_annotations-2.27.0.jar (com.google.errorprone:error_prone_annotations:2.27.0) with InstrumentationAnalysisTransform
+Transforming maven-api-xml-4.0.0-alpha-9.jar (org.apache.maven:maven-api-xml:4.0.0-alpha-9) with InstrumentationAnalysisTransform
+Transforming woodstox-core-6.5.1.jar (com.fasterxml.woodstox:woodstox-core:6.5.1) with InstrumentationAnalysisTransform
+Transforming maven-api-meta-4.0.0-alpha-9.jar (org.apache.maven:maven-api-meta:4.0.0-alpha-9) with InstrumentationAnalysisTransform
+Transforming stax2-api-4.2.1.jar (org.codehaus.woodstox:stax2-api:4.2.1) with InstrumentationAnalysisTransform
+Transforming shadow-gradle-plugin-8.3.0.jar (com.gradleup.shadow:shadow-gradle-plugin:8.3.0) with InstrumentationAnalysisTransform
+Transforming shadow-gradle-plugin-8.3.0.jar (com.gradleup.shadow:shadow-gradle-plugin:8.3.0) with MergeInstrumentationAnalysisTransform
+Transforming log4j-core-2.23.1.jar (org.apache.logging.log4j:log4j-core:2.23.1) with InstrumentationAnalysisTransform
+Transforming log4j-core-2.23.1.jar (org.apache.logging.log4j:log4j-core:2.23.1) with MergeInstrumentationAnalysisTransform
+Transforming run-task-2.3.1.jar (xyz.jpenilla:run-task:2.3.1) with InstrumentationAnalysisTransform
+Transforming run-task-2.3.1.jar (xyz.jpenilla:run-task:2.3.1) with MergeInstrumentationAnalysisTransform
+Transforming shadow-gradle-plugin-8.3.0.jar (com.gradleup.shadow:shadow-gradle-plugin:8.3.0) with ExternalDependencyInstrumentingArtifactTransform
+Transforming jackson-databind-2.17.2.jar (com.fasterxml.jackson.core:jackson-databind:2.17.2) with InstrumentationAnalysisTransform
+Transforming jackson-databind-2.17.2.jar (com.fasterxml.jackson.core:jackson-databind:2.17.2) with MergeInstrumentationAnalysisTransform
+Transforming log4j-core-2.23.1.jar (org.apache.logging.log4j:log4j-core:2.23.1) with ExternalDependencyInstrumentingArtifactTransform
+Transforming run-task-2.3.1.jar (xyz.jpenilla:run-task:2.3.1) with ExternalDependencyInstrumentingArtifactTransform
+Transforming jackson-annotations-2.17.2.jar (com.fasterxml.jackson.core:jackson-annotations:2.17.2) with InstrumentationAnalysisTransform
+Transforming jackson-annotations-2.17.2.jar (com.fasterxml.jackson.core:jackson-annotations:2.17.2) with MergeInstrumentationAnalysisTransform
+Transforming jackson-databind-2.17.2.jar (com.fasterxml.jackson.core:jackson-databind:2.17.2) with ExternalDependencyInstrumentingArtifactTransform
+Transforming jackson-core-2.17.2.jar (com.fasterxml.jackson.core:jackson-core:2.17.2) with InstrumentationAnalysisTransform
+Transforming jackson-annotations-2.17.2.jar (com.fasterxml.jackson.core:jackson-annotations:2.17.2) with ExternalDependencyInstrumentingArtifactTransform
+Transforming jackson-core-2.17.2.jar (com.fasterxml.jackson.core:jackson-core:2.17.2) with MergeInstrumentationAnalysisTransform
+Transforming jackson-module-kotlin-2.17.2.jar (com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2) with InstrumentationAnalysisTransform
+Transforming jackson-core-2.17.2.jar (com.fasterxml.jackson.core:jackson-core:2.17.2) with ExternalDependencyInstrumentingArtifactTransform
+Transforming jackson-module-kotlin-2.17.2.jar (com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-reflect-1.9.22.jar (org.jetbrains.kotlin:kotlin-reflect:1.9.22) with InstrumentationAnalysisTransform
+Transforming kotlin-reflect-1.9.22.jar (org.jetbrains.kotlin:kotlin-reflect:1.9.22) with MergeInstrumentationAnalysisTransform
+Transforming jackson-module-kotlin-2.17.2.jar (com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-stdlib-1.9.22.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.22) with InstrumentationAnalysisTransform
+Transforming kotlin-stdlib-1.9.22.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.22) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-reflect-1.9.22.jar (org.jetbrains.kotlin:kotlin-reflect:1.9.22) with ExternalDependencyInstrumentingArtifactTransform
+Transforming annotations-13.0.jar (org.jetbrains:annotations:13.0) with InstrumentationAnalysisTransform
+Transforming annotations-13.0.jar (org.jetbrains:annotations:13.0) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-stdlib-1.9.22.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.22) with ExternalDependencyInstrumentingArtifactTransform
+Transforming fus-statistics-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming fus-statistics-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming annotations-13.0.jar (org.jetbrains:annotations:13.0) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-gradle-plugin-api-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-api-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming fus-statistics-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-api-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming detekt-gradle-plugin-1.23.7.jar (io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.7) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-2.3.20-RC3-gradle88.jar (org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming detekt-gradle-plugin-1.23.7.jar (io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.7) with MergeInstrumentationAnalysisTransform
+Transforming ktlint-gradle-12.1.0.jar (org.jlleitschuh.gradle:ktlint-gradle:12.1.0) with InstrumentationAnalysisTransform
+Transforming detekt-gradle-plugin-1.23.7.jar (io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.7) with ExternalDependencyInstrumentingArtifactTransform
+Transforming ktlint-gradle-12.1.0.jar (org.jlleitschuh.gradle:ktlint-gradle:12.1.0) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-idea-proto-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-idea-proto-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming ktlint-gradle-12.1.0.jar (org.jlleitschuh.gradle:ktlint-gradle:12.1.0) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-gradle-plugin-idea-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-idea-proto-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-gradle-plugin-idea-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-klib-commonizer-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-klib-commonizer-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-build-statistics-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-statistics:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-idea-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-klib-commonizer-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-build-statistics-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-statistics:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-util-klib-metadata-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib-metadata:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-build-statistics-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-statistics:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-util-klib-metadata-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib-metadata:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming abi-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:abi-tools-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming abi-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:abi-tools-api:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-compiler-runner-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-compiler-runner:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-util-klib-metadata-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib-metadata:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming abi-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:abi-tools-api:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-compiler-runner-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-compiler-runner:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming jdom2-2.0.6.1.jar (org.jdom:jdom2:2.0.6.1) with InstrumentationAnalysisTransform
+Transforming jdom2-2.0.6.1.jar (org.jdom:jdom2:2.0.6.1) with MergeInstrumentationAnalysisTransform
+Transforming asm-commons-9.7.jar (org.ow2.asm:asm-commons:9.7) with InstrumentationAnalysisTransform
+Transforming kotlin-compiler-runner-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-compiler-runner:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming jdom2-2.0.6.1.jar (org.jdom:jdom2:2.0.6.1) with ExternalDependencyInstrumentingArtifactTransform
+Transforming asm-commons-9.7.jar (org.ow2.asm:asm-commons:9.7) with MergeInstrumentationAnalysisTransform
+Transforming asm-tree-9.7.jar (org.ow2.asm:asm-tree:9.7) with InstrumentationAnalysisTransform
+Transforming asm-tree-9.7.jar (org.ow2.asm:asm-tree:9.7) with MergeInstrumentationAnalysisTransform
+Transforming asm-9.7.jar (org.ow2.asm:asm:9.7) with InstrumentationAnalysisTransform
+Transforming asm-commons-9.7.jar (org.ow2.asm:asm-commons:9.7) with ExternalDependencyInstrumentingArtifactTransform
+Transforming asm-tree-9.7.jar (org.ow2.asm:asm-tree:9.7) with ExternalDependencyInstrumentingArtifactTransform
+Transforming asm-9.7.jar (org.ow2.asm:asm:9.7) with MergeInstrumentationAnalysisTransform
+Transforming commons-io-2.16.1.jar (commons-io:commons-io:2.16.1) with InstrumentationAnalysisTransform
+Transforming commons-io-2.16.1.jar (commons-io:commons-io:2.16.1) with MergeInstrumentationAnalysisTransform
+Transforming ant-1.10.14.jar (org.apache.ant:ant:1.10.14) with InstrumentationAnalysisTransform
+Transforming asm-9.7.jar (org.ow2.asm:asm:9.7) with ExternalDependencyInstrumentingArtifactTransform
+Transforming commons-io-2.16.1.jar (commons-io:commons-io:2.16.1) with ExternalDependencyInstrumentingArtifactTransform
+Transforming ant-1.10.14.jar (org.apache.ant:ant:1.10.14) with MergeInstrumentationAnalysisTransform
+Transforming plexus-utils-4.0.1.jar (org.codehaus.plexus:plexus-utils:4.0.1) with InstrumentationAnalysisTransform
+Transforming plexus-utils-4.0.1.jar (org.codehaus.plexus:plexus-utils:4.0.1) with MergeInstrumentationAnalysisTransform
+Transforming ant-1.10.14.jar (org.apache.ant:ant:1.10.14) with ExternalDependencyInstrumentingArtifactTransform
+Transforming plexus-xml-4.0.4.jar (org.codehaus.plexus:plexus-xml:4.0.4) with InstrumentationAnalysisTransform
+Transforming plexus-utils-4.0.1.jar (org.codehaus.plexus:plexus-utils:4.0.1) with ExternalDependencyInstrumentingArtifactTransform
+Transforming plexus-xml-4.0.4.jar (org.codehaus.plexus:plexus-xml:4.0.4) with MergeInstrumentationAnalysisTransform
+Transforming jdependency-2.10.jar (org.vafer:jdependency:2.10) with InstrumentationAnalysisTransform
+Transforming plexus-xml-4.0.4.jar (org.codehaus.plexus:plexus-xml:4.0.4) with ExternalDependencyInstrumentingArtifactTransform
+Transforming jdependency-2.10.jar (org.vafer:jdependency:2.10) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-annotations-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-gradle-plugin-annotations-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-native-utils-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-native-utils:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming jdependency-2.10.jar (org.vafer:jdependency:2.10) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-gradle-plugin-annotations-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-native-utils-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-native-utils:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-tooling-core-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-tooling-core:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-tooling-core-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-tooling-core:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-build-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-tools-api:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-native-utils-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-native-utils:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-build-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-tools-api:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming gson-2.11.0.jar (com.google.code.gson:gson:2.11.0) with InstrumentationAnalysisTransform
+Transforming kotlin-tooling-core-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-tooling-core:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-build-tools-api-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-build-tools-api:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming gson-2.11.0.jar (com.google.code.gson:gson:2.11.0) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-util-klib-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-util-klib-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming gson-2.11.0.jar (com.google.code.gson:gson:2.11.0) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-util-io-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-io:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-util-klib-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-klib:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-util-io-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-io:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlin-daemon-client-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-daemon-client:2.3.20-RC3) with InstrumentationAnalysisTransform
+Transforming kotlin-util-io-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-util-io:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlin-daemon-client-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-daemon-client:2.3.20-RC3) with MergeInstrumentationAnalysisTransform
+Transforming kotlinx-coroutines-core-jvm-1.8.0.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0) with InstrumentationAnalysisTransform
+Transforming kotlin-daemon-client-2.3.20-RC3.jar (org.jetbrains.kotlin:kotlin-daemon-client:2.3.20-RC3) with ExternalDependencyInstrumentingArtifactTransform
+Transforming kotlinx-coroutines-core-jvm-1.8.0.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0) with MergeInstrumentationAnalysisTransform
+Transforming ant-launcher-1.10.14.jar (org.apache.ant:ant-launcher:1.10.14) with InstrumentationAnalysisTransform
+Transforming ant-launcher-1.10.14.jar (org.apache.ant:ant-launcher:1.10.14) with MergeInstrumentationAnalysisTransform
+Transforming maven-xml-impl-4.0.0-alpha-9.jar (org.apache.maven:maven-xml-impl:4.0.0-alpha-9) with InstrumentationAnalysisTransform
+Transforming kotlinx-coroutines-core-jvm-1.8.0.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0) with ExternalDependencyInstrumentingArtifactTransform
+Transforming ant-launcher-1.10.14.jar (org.apache.ant:ant-launcher:1.10.14) with ExternalDependencyInstrumentingArtifactTransform
+Transforming maven-xml-impl-4.0.0-alpha-9.jar (org.apache.maven:maven-xml-impl:4.0.0-alpha-9) with MergeInstrumentationAnalysisTransform
+Transforming log4j-api-2.23.1.jar (org.apache.logging.log4j:log4j-api:2.23.1) with InstrumentationAnalysisTransform
+Transforming log4j-api-2.23.1.jar (org.apache.logging.log4j:log4j-api:2.23.1) with MergeInstrumentationAnalysisTransform
+Transforming error_prone_annotations-2.27.0.jar (com.google.errorprone:error_prone_annotations:2.27.0) with InstrumentationAnalysisTransform
+Transforming maven-xml-impl-4.0.0-alpha-9.jar (org.apache.maven:maven-xml-impl:4.0.0-alpha-9) with ExternalDependencyInstrumentingArtifactTransform
+Transforming log4j-api-2.23.1.jar (org.apache.logging.log4j:log4j-api:2.23.1) with ExternalDependencyInstrumentingArtifactTransform
+Transforming error_prone_annotations-2.27.0.jar (com.google.errorprone:error_prone_annotations:2.27.0) with MergeInstrumentationAnalysisTransform
+Transforming maven-api-xml-4.0.0-alpha-9.jar (org.apache.maven:maven-api-xml:4.0.0-alpha-9) with InstrumentationAnalysisTransform
+Transforming maven-api-xml-4.0.0-alpha-9.jar (org.apache.maven:maven-api-xml:4.0.0-alpha-9) with MergeInstrumentationAnalysisTransform
+Transforming error_prone_annotations-2.27.0.jar (com.google.errorprone:error_prone_annotations:2.27.0) with ExternalDependencyInstrumentingArtifactTransform
+Transforming woodstox-core-6.5.1.jar (com.fasterxml.woodstox:woodstox-core:6.5.1) with InstrumentationAnalysisTransform
+Transforming maven-api-xml-4.0.0-alpha-9.jar (org.apache.maven:maven-api-xml:4.0.0-alpha-9) with ExternalDependencyInstrumentingArtifactTransform
+Transforming woodstox-core-6.5.1.jar (com.fasterxml.woodstox:woodstox-core:6.5.1) with MergeInstrumentationAnalysisTransform
+Transforming maven-api-meta-4.0.0-alpha-9.jar (org.apache.maven:maven-api-meta:4.0.0-alpha-9) with InstrumentationAnalysisTransform
+Transforming maven-api-meta-4.0.0-alpha-9.jar (org.apache.maven:maven-api-meta:4.0.0-alpha-9) with MergeInstrumentationAnalysisTransform
+Transforming stax2-api-4.2.1.jar (org.codehaus.woodstox:stax2-api:4.2.1) with InstrumentationAnalysisTransform
+Transforming woodstox-core-6.5.1.jar (com.fasterxml.woodstox:woodstox-core:6.5.1) with ExternalDependencyInstrumentingArtifactTransform
+Transforming maven-api-meta-4.0.0-alpha-9.jar (org.apache.maven:maven-api-meta:4.0.0-alpha-9) with ExternalDependencyInstrumentingArtifactTransform
+Transforming stax2-api-4.2.1.jar (org.codehaus.woodstox:stax2-api:4.2.1) with MergeInstrumentationAnalysisTransform
+Transforming stax2-api-4.2.1.jar (org.codehaus.woodstox:stax2-api:4.2.1) with ExternalDependencyInstrumentingArtifactTransform
+Using Kotlin Gradle Plugin gradle88 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+All projects evaluated.
+Build 929e98c6-4c57-4132-8bb6-24c4365b525b is started
+Build 929e98c6-4c57-4132-8bb6-24c4365b525b is closed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Cannot locate tasks that match ':comminusm:test' as project 'comminusm' not found in root project 'ComminusmPlugin'.
+
+* Try:
+> Run gradlew projects to get a list of available projects.
+> For more on name expansion, please refer to https://docs.gradle.org/8.8/userguide/command_line_interface.html#sec:name_abbreviation in the Gradle documentation.
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 946ms
+Watched directory hierarchies: [C:\Users\kruz18\IdeaProjects\ComminusmPlugin]

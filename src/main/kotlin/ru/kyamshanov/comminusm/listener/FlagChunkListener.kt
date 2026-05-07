@@ -12,9 +12,9 @@ import org.bukkit.event.world.ChunkUnloadEvent
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
-import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
+import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import java.util.UUID
 
 /**
@@ -27,7 +27,6 @@ class FlagChunkListener(
     private val orderRepository: OrderRepository,
     private val workFrontRepository: WorkFrontRepository,
 ) : Listener {
-
     @EventHandler
     fun onChunkLoad(event: ChunkLoadEvent) {
         val chunk = event.chunk
@@ -70,7 +69,10 @@ class FlagChunkListener(
         DB_UNAVAILABLE,
     }
 
-    private data class FlagRepairAction(val flagId: String, val decision: RepairDecision)
+    private data class FlagRepairAction(
+        val flagId: String,
+        val decision: RepairDecision,
+    )
 
     @Suppress("CyclomaticComplexMethod")
     private fun processChunk(
@@ -80,13 +82,17 @@ class FlagChunkListener(
         pdc: PersistentDataContainer,
     ) {
         // Step B: collect dirty_armorstand cleanup actions
-        data class DirtyAsAction(val uuid: UUID?, val dirtyKey: NamespacedKey)
+        data class DirtyAsAction(
+            val uuid: UUID?,
+            val dirtyKey: NamespacedKey,
+        )
 
-        val dirtyActions = dirtyAsKeys.mapNotNull { key ->
-            val uuidStr = pdc.get(key, PersistentDataType.STRING) ?: return@mapNotNull null
-            val uuid = runCatching { UUID.fromString(uuidStr) }.getOrNull()
-            DirtyAsAction(uuid, key)
-        }
+        val dirtyActions =
+            dirtyAsKeys.mapNotNull { key ->
+                val uuidStr = pdc.get(key, PersistentDataType.STRING) ?: return@mapNotNull null
+                val uuid = runCatching { UUID.fromString(uuidStr) }.getOrNull()
+                DirtyAsAction(uuid, key)
+            }
 
         // Step C/D: classify each flag
         val repairActions = mutableListOf<FlagRepairAction>()
@@ -96,20 +102,22 @@ class FlagChunkListener(
             val hasAsKey = pdc.has(asKey, PersistentDataType.STRING)
 
             @Suppress("TooGenericExceptionCaught")
-            val dbRecord = try {
-                lookupFlagInDb(flagId)
-            } catch (e: Exception) {
-                plugin.logger.warning("DB unavailable during ChunkLoadEvent for flag $flagId: ${e.message}")
-                repairActions += FlagRepairAction(flagId, RepairDecision.DB_UNAVAILABLE)
-                continue
-            }
+            val dbRecord =
+                try {
+                    lookupFlagInDb(flagId)
+                } catch (e: Exception) {
+                    plugin.logger.warning("DB unavailable during ChunkLoadEvent for flag $flagId: ${e.message}")
+                    repairActions += FlagRepairAction(flagId, RepairDecision.DB_UNAVAILABLE)
+                    continue
+                }
 
-            val decision = when {
-                !hasAsKey && dbRecord -> RepairDecision.REPAIR_AS
-                !hasAsKey && !dbRecord -> RepairDecision.COMPLETE_DELETION
-                hasAsKey && dbRecord -> RepairDecision.RESTORE_SUPPORT
-                else -> RepairDecision.COMPLETE_DELETION
-            }
+            val decision =
+                when {
+                    !hasAsKey && dbRecord -> RepairDecision.REPAIR_AS
+                    !hasAsKey && !dbRecord -> RepairDecision.COMPLETE_DELETION
+                    hasAsKey && dbRecord -> RepairDecision.RESTORE_SUPPORT
+                    else -> RepairDecision.COMPLETE_DELETION
+                }
             repairActions += FlagRepairAction(flagId, decision)
         }
 
@@ -132,8 +140,8 @@ class FlagChunkListener(
         )
     }
 
-    private fun lookupFlagInDb(flagId: String): Boolean {
-        return try {
+    private fun lookupFlagInDb(flagId: String): Boolean =
+        try {
             when {
                 flagId.startsWith("order/") -> {
                     val uuid = UUID.fromString(flagId.removePrefix("order/"))
@@ -149,7 +157,6 @@ class FlagChunkListener(
             plugin.logger.warning("Invalid flag ID format '$flagId' in PDC — treating as orphan: ${e.message}")
             false
         }
-    }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod", "ReturnCount")
     private fun applyRepairAction(
@@ -182,7 +189,8 @@ class FlagChunkListener(
                 // Finish partial deletion
                 val asUuidStr = pdc.get(asKey, PersistentDataType.STRING)
                 if (asUuidStr != null) {
-                    runCatching { UUID.fromString(asUuidStr) }.getOrNull()
+                    runCatching { UUID.fromString(asUuidStr) }
+                        .getOrNull()
                         ?.let { chunk.world.getEntity(it)?.remove() }
                 }
                 supportBlock.type = Material.AIR
@@ -234,21 +242,23 @@ class FlagChunkListener(
         asKey: NamespacedKey,
     ) {
         val ownerUuid = extractOwnerUuid(flagId)
-        val ownerName = ownerUuid?.let {
-            runCatching { Bukkit.getOfflinePlayer(it).name }.getOrNull() ?: it.toString()
-        } ?: "Unknown"
+        val ownerName =
+            ownerUuid?.let {
+                runCatching { Bukkit.getOfflinePlayer(it).name }.getOrNull() ?: it.toString()
+            } ?: "Unknown"
         val flagType = if (flagId.startsWith("order/")) "Ордер" else "Трудовой Фронт"
         val asLocation = bannerBlock.location.clone().add(AS_OFFSET_XZ, AS_OFFSET_Y, AS_OFFSET_XZ)
 
         @Suppress("TooGenericExceptionCaught")
         try {
-            val armorStand = bannerBlock.world.spawn(asLocation, ArmorStand::class.java) { stand ->
-                stand.setVisible(false)
-                stand.setGravity(false)
-                stand.setMarker(true)
-                stand.customName(Component.text("§6$flagType — §f$ownerName"))
-                stand.isCustomNameVisible = true
-            }
+            val armorStand =
+                bannerBlock.world.spawn(asLocation, ArmorStand::class.java) { stand ->
+                    stand.setVisible(false)
+                    stand.setGravity(false)
+                    stand.setMarker(true)
+                    stand.customName(Component.text("§6$flagType — §f$ownerName"))
+                    stand.isCustomNameVisible = true
+                }
             pdc.set(asKey, PersistentDataType.STRING, armorStand.uniqueId.toString())
         } catch (e: Exception) {
             plugin.logger.severe("Repair spawn failed for flag $flagId: ${e.message}")
@@ -256,11 +266,12 @@ class FlagChunkListener(
     }
 
     private fun extractOwnerUuid(flagId: String): UUID? {
-        val uuidStr = when {
-            flagId.startsWith("order/") -> flagId.removePrefix("order/")
-            flagId.startsWith("front/") -> flagId.removePrefix("front/")
-            else -> return null
-        }
+        val uuidStr =
+            when {
+                flagId.startsWith("order/") -> flagId.removePrefix("order/")
+                flagId.startsWith("front/") -> flagId.removePrefix("front/")
+                else -> return null
+            }
         return runCatching { UUID.fromString(uuidStr) }.getOrNull()
     }
 

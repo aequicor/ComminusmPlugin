@@ -3,15 +3,11 @@ package ru.kyamshanov.comminusm.commune.listener
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.event.OrderMemberRemovedEvent
-import ru.kyamshanov.comminusm.commune.model.Commune
 import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.assertTrue
 
@@ -20,8 +16,6 @@ import kotlin.test.assertTrue
  * Addresses CRITICAL issue #4: implement recalculateCrossOrderRights (§6.12)
  */
 class CommuneMembershipListenerTest {
-
-    private lateinit var crossOrderService: CrossOrderMembershipService
     private lateinit var communeService: CommuneService
     private lateinit var membershipService: OrderMembershipService
     private lateinit var listener: CommuneMembershipListener

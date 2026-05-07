@@ -22,9 +22,12 @@ import org.junit.jupiter.api.Test
  * These tests are pure coordinate math — no Bukkit server required.
  */
 class FlowerBreakDoesNotDeleteFrontTest {
-
     /** Block position as a simple coordinate triple for test helpers. */
-    private data class Pos(val x: Int, val y: Int, val z: Int)
+    private data class Pos(
+        val x: Int,
+        val y: Int,
+        val z: Int,
+    )
 
     // Simulated banner position
     private val banner = Pos(100, 64, 200)
@@ -38,8 +41,10 @@ class FlowerBreakDoesNotDeleteFrontTest {
      * This is the CORRECT guard that the fix introduces:
      * only the block at (bannerX, bannerY-1, bannerZ) is the support block.
      */
-    private fun isActualSupportBlock(brokenPos: Pos, bannerPos: Pos): Boolean =
-        brokenPos.x == bannerPos.x && brokenPos.y == bannerPos.y - 1 && brokenPos.z == bannerPos.z
+    private fun isActualSupportBlock(
+        brokenPos: Pos,
+        bannerPos: Pos,
+    ): Boolean = brokenPos.x == bannerPos.x && brokenPos.y == bannerPos.y - 1 && brokenPos.z == bannerPos.z
 
     /**
      * Simulates the buggy 6-direction neighbor scan from getFlagSupportInfo.
@@ -51,13 +56,20 @@ class FlowerBreakDoesNotDeleteFrontTest {
      * Returns true if the banner is found as a face-neighbor of the broken block —
      * which is exactly what triggers the false-positive flag cleanup on master.
      */
-    private fun buggyNeighborScanFindsBanner(brokenPos: Pos, bannerPos: Pos): Boolean {
+    private fun buggyNeighborScanFindsBanner(
+        brokenPos: Pos,
+        bannerPos: Pos,
+    ): Boolean {
         val (bx, by, bz) = brokenPos
-        val candidates = listOf(
-            Pos(bx + 1, by, bz), Pos(bx - 1, by, bz),
-            Pos(bx, by, bz + 1), Pos(bx, by, bz - 1),
-            Pos(bx, by + 1, bz), Pos(bx, by - 1, bz),
-        )
+        val candidates =
+            listOf(
+                Pos(bx + 1, by, bz),
+                Pos(bx - 1, by, bz),
+                Pos(bx, by, bz + 1),
+                Pos(bx, by, bz - 1),
+                Pos(bx, by + 1, bz),
+                Pos(bx, by - 1, bz),
+            )
         return candidates.any { it == bannerPos }
     }
 
@@ -76,7 +88,7 @@ class FlowerBreakDoesNotDeleteFrontTest {
             false,
             isActualSupportBlock(flower, banner),
             "A flower at (bannerX+1, bannerY, bannerZ) must NOT be treated as the flag support block. " +
-                "The support is only at (bannerX, bannerY-1, bannerZ)."
+                "The support is only at (bannerX, bannerY-1, bannerZ).",
         )
     }
 
@@ -108,7 +120,7 @@ class FlowerBreakDoesNotDeleteFrontTest {
     fun `TC-108 block directly below banner IS the support block`() {
         assertTrue(
             isActualSupportBlock(support, banner),
-            "The block at (bannerX, bannerY-1, bannerZ) must be the support block."
+            "The block at (bannerX, bannerY-1, bannerZ) must be the support block.",
         )
     }
 
@@ -131,13 +143,13 @@ class FlowerBreakDoesNotDeleteFrontTest {
         // The buggy scan DOES find the banner (confirms root cause)
         assertTrue(
             buggyNeighborScanFindsBanner(flower, banner),
-            "Root cause confirmed: 6-direction scan from flower finds banner as neighbor"
+            "Root cause confirmed: 6-direction scan from flower finds banner as neighbor",
         )
 
         // But the correct check says this flower is NOT the support block
         assertFalse(
             isActualSupportBlock(flower, banner),
-            "The flower is found by the buggy scan but is NOT the actual support block"
+            "The flower is found by the buggy scan but is NOT the actual support block",
         )
     }
 
@@ -154,7 +166,7 @@ class FlowerBreakDoesNotDeleteFrontTest {
         assertEquals(
             banner,
             bannerAboveSupport,
-            "The banner position must be exactly (supportX, supportY+1, supportZ)"
+            "The banner position must be exactly (supportX, supportY+1, supportZ)",
         )
 
         // For a flower east: the banner is NOT directly above (dx = -1, not dy = +1)
@@ -162,7 +174,7 @@ class FlowerBreakDoesNotDeleteFrontTest {
         val bannerIsAboveFlower = blockAboveFlower == banner
         assertFalse(
             bannerIsAboveFlower,
-            "The banner must NOT be directly above the flower — flower is not the support block"
+            "The banner must NOT be directly above the flower — flower is not the support block",
         )
     }
 
@@ -183,7 +195,7 @@ class FlowerBreakDoesNotDeleteFrontTest {
         val poppy = Pos(orderBanner.x + 1, orderBanner.y, orderBanner.z)
         assertFalse(
             isActualSupportBlock(poppy, orderBanner),
-            "Poppy at (orderX+1, orderY, orderZ) must NOT be treated as the order flag support block"
+            "Poppy at (orderX+1, orderY, orderZ) must NOT be treated as the order flag support block",
         )
     }
 
@@ -191,7 +203,7 @@ class FlowerBreakDoesNotDeleteFrontTest {
     fun `TC-108 ORDER flag - poppy north of order banner is NOT its support block`() {
         val orderBanner = Pos(50, 70, 150)
         assertFalse(
-            isActualSupportBlock(Pos(orderBanner.x, orderBanner.y, orderBanner.z - 1), orderBanner)
+            isActualSupportBlock(Pos(orderBanner.x, orderBanner.y, orderBanner.z - 1), orderBanner),
         )
     }
 
@@ -200,7 +212,7 @@ class FlowerBreakDoesNotDeleteFrontTest {
         val orderBanner = Pos(50, 70, 150)
         assertTrue(
             isActualSupportBlock(Pos(orderBanner.x, orderBanner.y - 1, orderBanner.z), orderBanner),
-            "The block at (orderX, orderY-1, orderZ) must be the order flag support block"
+            "The block at (orderX, orderY-1, orderZ) must be the order flag support block",
         )
     }
 }

@@ -1,7 +1,7 @@
 package ru.kyamshanov.comminusm.infrastructure.repositories
 
-import ru.kyamshanov.comminusm.domain.repositories.CommuneRepository
 import ru.kyamshanov.comminusm.commune.model.Commune
+import ru.kyamshanov.comminusm.domain.repositories.CommuneRepository
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -11,12 +11,9 @@ import java.util.concurrent.ConcurrentHashMap
  * Currently uses in-memory storage; may be migrated to SQL in a future stage.
  */
 class CommuneRepositoryImpl(
-    private val communes: MutableMap<UUID, Commune> = ConcurrentHashMap()
+    private val communes: MutableMap<UUID, Commune> = ConcurrentHashMap(),
 ) : CommuneRepository {
-
-    override fun findById(id: UUID): Commune? {
-        return communes[id]
-    }
+    override fun findById(id: UUID): Commune? = communes[id]
 
     override fun findByName(name: String): Commune? {
         // Name is not a property of Commune in the current model,
@@ -24,9 +21,7 @@ class CommuneRepositoryImpl(
         return null
     }
 
-    override fun findAllByMember(memberId: UUID): List<Commune> {
-        return communes.values.filter { it.createdBy == memberId }
-    }
+    override fun findAllByMember(memberId: UUID): List<Commune> = communes.values.filter { it.createdBy == memberId }
 
     override fun insert(commune: Commune): UUID {
         communes[commune.id] = commune

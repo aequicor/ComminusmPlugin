@@ -1,11 +1,11 @@
 package ru.kyamshanov.comminusm.commune
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.model.CommuneInvitation
 import ru.kyamshanov.comminusm.commune.model.Result
 import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
@@ -33,13 +33,14 @@ class CommuneInvitationServiceTest {
         val communeId = UUID.randomUUID()
         val now = LocalDateTime.now()
 
-        val result = invitationService.createInvitation(
-            fromOrderId = fromOrderId,
-            targetOrderId = targetOrderId,
-            communeId = communeId,
-            targetLeaderUUID = targetLeaderUUID,
-            expiresAt = now.plusSeconds(500)
-        )
+        val result =
+            invitationService.createInvitation(
+                fromOrderId = fromOrderId,
+                targetOrderId = targetOrderId,
+                communeId = communeId,
+                targetLeaderUUID = targetLeaderUUID,
+                expiresAt = now.plusSeconds(500),
+            )
 
         assertTrue(result is Result.Success)
         val invitation = (result as Result.Success).data
@@ -57,13 +58,14 @@ class CommuneInvitationServiceTest {
         val communeId = UUID.randomUUID()
         val now = LocalDateTime.now()
 
-        val result = invitationService.createInvitation(
-            fromOrderId = fromOrderId,
-            targetOrderId = targetOrderId,
-            communeId = communeId,
-            targetLeaderUUID = targetLeaderUUID,
-            expiresAt = now.plusSeconds(500)
-        )
+        val result =
+            invitationService.createInvitation(
+                fromOrderId = fromOrderId,
+                targetOrderId = targetOrderId,
+                communeId = communeId,
+                targetLeaderUUID = targetLeaderUUID,
+                expiresAt = now.plusSeconds(500),
+            )
 
         val invitation = (result as Result.Success).data
         val invitationId = invitation.id
@@ -81,13 +83,14 @@ class CommuneInvitationServiceTest {
         val communeId = UUID.randomUUID()
         val now = LocalDateTime.now()
 
-        val result = invitationService.createInvitation(
-            fromOrderId = fromOrderId,
-            targetOrderId = targetOrderId,
-            communeId = communeId,
-            targetLeaderUUID = targetLeaderUUID,
-            expiresAt = now.plusSeconds(500)
-        )
+        val result =
+            invitationService.createInvitation(
+                fromOrderId = fromOrderId,
+                targetOrderId = targetOrderId,
+                communeId = communeId,
+                targetLeaderUUID = targetLeaderUUID,
+                expiresAt = now.plusSeconds(500),
+            )
 
         val invitation = (result as Result.Success).data
         invitationService.cancelInvitation(invitation.id)
@@ -110,7 +113,7 @@ class CommuneInvitationServiceTest {
             targetOrderId = targetOrder,
             communeId = communeId,
             targetLeaderUUID = targetLeaderUUID,
-            expiresAt = now.plusSeconds(500)
+            expiresAt = now.plusSeconds(500),
         )
 
         invitationService.createInvitation(
@@ -118,7 +121,7 @@ class CommuneInvitationServiceTest {
             targetOrderId = targetOrder,
             communeId = communeId,
             targetLeaderUUID = targetLeaderUUID,
-            expiresAt = now.plusSeconds(500)
+            expiresAt = now.plusSeconds(500),
         )
 
         val invs = invitationService.getInvitationsForOrder(targetOrder)
@@ -133,13 +136,14 @@ class CommuneInvitationServiceTest {
         val communeId = UUID.randomUUID()
         val now = LocalDateTime.now()
 
-        val result = invitationService.createInvitation(
-            fromOrderId = fromOrderId,
-            targetOrderId = targetOrderId,
-            communeId = communeId,
-            targetLeaderUUID = targetLeaderUUID,
-            expiresAt = now.plusSeconds(500)
-        )
+        val result =
+            invitationService.createInvitation(
+                fromOrderId = fromOrderId,
+                targetOrderId = targetOrderId,
+                communeId = communeId,
+                targetLeaderUUID = targetLeaderUUID,
+                expiresAt = now.plusSeconds(500),
+            )
 
         val invitation = (result as Result.Success).data
 
@@ -157,13 +161,14 @@ class CommuneInvitationServiceTest {
         val communeId = UUID.randomUUID()
         val now = LocalDateTime.now()
 
-        val result = invitationService.createInvitation(
-            fromOrderId = fromOrderId,
-            targetOrderId = targetOrderId,
-            communeId = communeId,
-            targetLeaderUUID = targetLeaderUUID,
-            expiresAt = now.plusSeconds(500)
-        )
+        val result =
+            invitationService.createInvitation(
+                fromOrderId = fromOrderId,
+                targetOrderId = targetOrderId,
+                communeId = communeId,
+                targetLeaderUUID = targetLeaderUUID,
+                expiresAt = now.plusSeconds(500),
+            )
 
         val invitation = (result as Result.Success).data
 

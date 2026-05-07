@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.model.WorkFront
 import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
 import ru.kyamshanov.comminusm.infrastructure.repositories.WorkdaysRepositoryImpl
+import ru.kyamshanov.comminusm.model.WorkFront
 import java.util.UUID
 
 class WorkFrontRepositoryTest {

@@ -1,25 +1,24 @@
 package ru.kyamshanov.comminusm.integration
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.model.Commune
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
-import ru.kyamshanov.comminusm.commune.service.CommuneChatServiceImpl
-import ru.kyamshanov.comminusm.commune.listener.FriendlyFireListener
+import ru.kyamshanov.comminusm.commune.model.OrderMember
 import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
+import ru.kyamshanov.comminusm.commune.service.CommuneChatServiceImpl
+import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
+import ru.kyamshanov.comminusm.commune.service.CommuneService
+import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
+import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
+import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.time.LocalDateTime
-import ru.kyamshanov.comminusm.commune.model.OrderMember
 
 /**
  * Integration tests for the commune system.
@@ -34,7 +33,6 @@ import ru.kyamshanov.comminusm.commune.model.OrderMember
  * - Leave cascade: cross-order rights revoked
  */
 class CommuneSystemIntegrationTest {
-
     private lateinit var communeService: CommuneService
     private lateinit var communeInvitationService: CommuneInvitationService
     private lateinit var orderMembershipService: OrderMembershipService
@@ -93,13 +91,14 @@ class CommuneSystemIntegrationTest {
 
         // 2. Player A invites Order 2
         val expiresAt = LocalDateTime.now().plusSeconds(500)
-        val invitation = communeInvitationService.createInvitation(
-            fromOrderId = ORDER_1,
-            targetOrderId = ORDER_2,
-            communeId = communeData.id,
-            targetLeaderUUID = PLAYER_B_UUID,
-            expiresAt = expiresAt
-        )
+        val invitation =
+            communeInvitationService.createInvitation(
+                fromOrderId = ORDER_1,
+                targetOrderId = ORDER_2,
+                communeId = communeData.id,
+                targetLeaderUUID = PLAYER_B_UUID,
+                expiresAt = expiresAt,
+            )
         assertTrue(invitation is ru.kyamshanov.comminusm.commune.model.Result.Success)
         val invitationData = (invitation as ru.kyamshanov.comminusm.commune.model.Result.Success).data
         assertNotNull(invitationData.expiresAt)

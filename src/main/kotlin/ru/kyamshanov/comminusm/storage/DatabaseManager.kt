@@ -1,3 +1,5 @@
+@file:Suppress("LongMethod")
+
 package ru.kyamshanov.comminusm.storage
 
 import org.bukkit.plugin.Plugin
@@ -5,8 +7,9 @@ import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
 
-class DatabaseManager(jdbcUrl: String) {
-
+class DatabaseManager(
+    jdbcUrl: String,
+) {
     val connection: Connection by lazy {
         val conn = DriverManager.getConnection(jdbcUrl)
         conn.createStatement().use { it.execute("PRAGMA journal_mode=WAL") }
@@ -16,7 +19,7 @@ class DatabaseManager(jdbcUrl: String) {
     }
 
     constructor(plugin: Plugin) : this(
-        "jdbc:sqlite:${plugin.dataFolder.absolutePath}${File.separator}data.db"
+        "jdbc:sqlite:${plugin.dataFolder.absolutePath}${File.separator}data.db",
     )
 
     private fun createTables(conn: Connection) {
@@ -35,7 +38,7 @@ class DatabaseManager(jdbcUrl: String) {
                     radius INTEGER NOT NULL DEFAULT 2,
                     created_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
 
@@ -51,7 +54,7 @@ class DatabaseManager(jdbcUrl: String) {
                     radius INTEGER NOT NULL DEFAULT 25,
                     created_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
 
@@ -62,7 +65,7 @@ class DatabaseManager(jdbcUrl: String) {
                     player_uuid TEXT PRIMARY KEY,
                     balance INTEGER NOT NULL DEFAULT 0
                 )
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
 
@@ -81,7 +84,7 @@ class DatabaseManager(jdbcUrl: String) {
                     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
                     CHECK (granted_via IN ('native', 'commune'))
                 )
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
 
@@ -93,7 +96,7 @@ class DatabaseManager(jdbcUrl: String) {
                     created_at TEXT NOT NULL,
                     version INTEGER NOT NULL DEFAULT 0
                 )
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
 
@@ -108,7 +111,7 @@ class DatabaseManager(jdbcUrl: String) {
                     FOREIGN KEY (commune_id) REFERENCES communes(id) ON DELETE CASCADE,
                     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
                 )
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
 
@@ -127,18 +130,17 @@ class DatabaseManager(jdbcUrl: String) {
                     FOREIGN KEY (from_order_id) REFERENCES orders(id) ON DELETE CASCADE,
                     FOREIGN KEY (target_order_id) REFERENCES orders(id) ON DELETE CASCADE
                 )
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
     }
 
-    fun integrityCheck(): Boolean {
-        return connection.createStatement().use { stmt ->
+    fun integrityCheck(): Boolean =
+        connection.createStatement().use { stmt ->
             stmt.executeQuery("PRAGMA integrity_check").use { rs ->
                 rs.getString(1) == "ok"
             }
         }
-    }
 
     fun close() {
         try {

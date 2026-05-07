@@ -42,32 +42,39 @@ import java.util.logging.Logger
  * Covered: TC-05, TC-06, TC-07, TC-14, TC-15, TC-16, TC-17, TC-18, TC-22, TC-27.
  */
 class HomeTimerCancelListenerTest {
-
     // -------------------------------------------------------------------------
     // Recording manager — captures every cancelTimer call
     // -------------------------------------------------------------------------
 
-    private data class CancelCall(val playerUuid: UUID, val reason: CancelReason, val silent: Boolean)
+    private data class CancelCall(
+        val playerUuid: UUID,
+        val reason: CancelReason,
+        val silent: Boolean,
+    )
 
     /** Wraps a real [HomeTimerManager] and records every call to [cancelTimer]. */
     private class RecordingHomeTimerManager(
         private val taskIdSeq: AtomicInteger = AtomicInteger(1),
     ) : HomeTimerManager(
-        plugin = FakePlugin(),
-        flagStabilityManager = NoOpFlagStabilityManager(),
-        taskScheduler = { taskIdSeq.getAndIncrement() },
-        taskCanceller = { /* no-op */ },
-        isPlayerOnline = { true },
-        sendActionBarToPlayer = { _, _ -> },
-        sendMessageToPlayer = { _, _ -> },
-        getPlayerWorldName = { "world" },
-        getFlagWorldName = { _, _ -> "world" },
-        teleportPlayerToFlag = { _, _ -> ru.kyamshanov.comminusm.service.TeleportResult.SUCCESS },
-        mainThreadRunner = { r -> r.run() },
-    ) {
+            plugin = FakePlugin(),
+            flagStabilityManager = NoOpFlagStabilityManager(),
+            taskScheduler = { taskIdSeq.getAndIncrement() },
+            taskCanceller = { /* no-op */ },
+            isPlayerOnline = { true },
+            sendActionBarToPlayer = { _, _ -> },
+            sendMessageToPlayer = { _, _ -> },
+            getPlayerWorldName = { "world" },
+            getFlagWorldName = { _, _ -> "world" },
+            teleportPlayerToFlag = { _, _ -> ru.kyamshanov.comminusm.service.TeleportResult.SUCCESS },
+            mainThreadRunner = { r -> r.run() },
+        ) {
         val cancelCalls = mutableListOf<CancelCall>()
 
-        override fun cancelTimer(playerUuid: UUID, reason: CancelReason, silent: Boolean) {
+        override fun cancelTimer(
+            playerUuid: UUID,
+            reason: CancelReason,
+            silent: Boolean,
+        ) {
             cancelCalls += CancelCall(playerUuid, reason, silent)
             super.cancelTimer(playerUuid, reason, silent)
         }
@@ -76,6 +83,7 @@ class HomeTimerCancelListenerTest {
     /** Stub [FlagStabilityManager] — not invoked during cancel tests. */
     private class NoOpFlagStabilityManager : FlagStabilityManager {
         override fun getFlagLocation(orderId: Long): org.bukkit.Location? = null
+
         override fun isFlagActive(orderId: Long): Boolean = false
     }
 
@@ -106,15 +114,24 @@ class HomeTimerCancelListenerTest {
      * [UnsupportedOperationException] to surface accidental dependencies.
      */
     @Suppress("UNCHECKED_CAST")
-    private fun <T> fakeEntity(iface: Class<T>, uuid: UUID): T =
+    private fun <T> fakeEntity(
+        iface: Class<T>,
+        uuid: UUID,
+    ): T =
         Proxy.newProxyInstance(
             iface.classLoader,
             arrayOf(iface),
             UuidOnlyHandler(uuid),
         ) as T
 
-    private class UuidOnlyHandler(private val uuid: UUID) : InvocationHandler {
-        override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? =
+    private class UuidOnlyHandler(
+        private val uuid: UUID,
+    ) : InvocationHandler {
+        override fun invoke(
+            proxy: Any,
+            method: Method,
+            args: Array<out Any>?,
+        ): Any? =
             when (method.name) {
                 "getUniqueId" -> uuid
                 "getEntityId" -> 0
@@ -126,7 +143,11 @@ class HomeTimerCancelListenerTest {
     }
 
     /** Constructs a [Location] with null world (fine for XYZ delta tests). */
-    private fun loc(x: Double, y: Double, z: Double) = Location(null, x, y, z)
+    private fun loc(
+        x: Double,
+        y: Double,
+        z: Double,
+    ) = Location(null, x, y, z)
 
     /**
      * Adds an active timer for [playerUuid] so cancel handlers have something to cancel.

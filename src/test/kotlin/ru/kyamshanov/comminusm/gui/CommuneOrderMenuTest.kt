@@ -1,3 +1,5 @@
+@file:Suppress("SENSELESS_COMPARISON")
+
 package ru.kyamshanov.comminusm.gui
 
 import io.mockk.mockk
@@ -14,7 +16,6 @@ import ru.kyamshanov.comminusm.service.OrderService
  * - Button click opens OrderMembersMenu
  */
 class CommuneOrderMenuTest {
-
     private val orderService = mockk<OrderService>()
     private val orderMembershipService = mockk<OrderMembershipService>()
 

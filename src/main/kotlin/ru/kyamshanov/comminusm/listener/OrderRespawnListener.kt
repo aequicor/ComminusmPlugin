@@ -28,7 +28,6 @@ class OrderRespawnListener(
     private val logger: Logger,
     private val findOrderByOwner: (UUID) -> Order?,
 ) : Listener {
-
     /**
      * Convenience constructor for production use — delegates [findOrderByOwner]
      * to [OrderService.findByOwner].
@@ -61,7 +60,7 @@ class OrderRespawnListener(
             }
         } catch (e: Exception) {
             // Never re-throw — Bukkit will apply the standard respawn fallback (CC-01 safety net)
-            logger.severe("OrderRespawnListener error for player ${event.player.uniqueId}: ${e}")
+            logger.severe("OrderRespawnListener error for player ${event.player.uniqueId}: $e")
         }
     }
 

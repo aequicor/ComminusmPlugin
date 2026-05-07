@@ -16,8 +16,9 @@ import ru.kyamshanov.comminusm.service.HomeTimerManager
  * AC-18 / AC-18a: flag relocated to a different world → cancel timers;
  *                  same-world relocation → timers are NOT cancelled.
  */
-class FlagEventListener(private val homeTimerManager: HomeTimerManager) : Listener {
-
+class FlagEventListener(
+    private val homeTimerManager: HomeTimerManager,
+) : Listener {
     /**
      * AC-13: flag was deactivated or destroyed — cancel all active timers for
      * this order with [CancelReason.FLAG_DEACTIVATED].

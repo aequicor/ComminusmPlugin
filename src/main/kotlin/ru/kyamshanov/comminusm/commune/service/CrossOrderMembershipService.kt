@@ -18,7 +18,7 @@ import java.util.UUID
  * - Revoke-during-cascade is idempotent (no errors if already revoked)
  */
 class CrossOrderMembershipService(
-    private val membershipService: OrderMembershipService
+    private val membershipService: OrderMembershipService,
 ) {
     private val inCascadeMode = ThreadLocal.withInitial { false }
 
@@ -31,29 +31,34 @@ class CrossOrderMembershipService(
      * If commune version changed between pre-lock check and lock acquisition, aborts with error.
      * HIGH issue #5: add version validation guard.
      */
-    fun grantCommuneMember(orderIdTuple: Pair<Long, Long>, playerUuid: UUID): Result<Unit> {
+    fun grantCommuneMember(
+        orderIdTuple: Pair<Long, Long>,
+        playerUuid: UUID,
+    ): Result<Unit> {
         val (orderA, orderB) = orderIdTuple
 
         // Add to order A with grantedVia="commune"
-        val resultA = membershipService.addMember(
-            orderA,
-            playerUuid,
-            "commune",
-            LocalDateTime.now(),
-            UUID.randomUUID()
-        )
+        val resultA =
+            membershipService.addMember(
+                orderA,
+                playerUuid,
+                "commune",
+                LocalDateTime.now(),
+                UUID.randomUUID(),
+            )
 
         return if (resultA is Result.Failure<*>) {
             Result.Failure("Failed to grant membership in order A: ${resultA.error}")
         } else {
             // Add to order B with grantedVia="commune"
-            val resultB = membershipService.addMember(
-                orderB,
-                playerUuid,
-                "commune",
-                LocalDateTime.now(),
-                UUID.randomUUID()
-            )
+            val resultB =
+                membershipService.addMember(
+                    orderB,
+                    playerUuid,
+                    "commune",
+                    LocalDateTime.now(),
+                    UUID.randomUUID(),
+                )
 
             if (resultB is Result.Failure<*>) {
                 // Rollback: remove from order A
@@ -69,7 +74,10 @@ class CrossOrderMembershipService(
      * Revoke cross-order membership: remove player as "commune"-granted member from both orders.
      * Idempotent: no error if already revoked (useful in cascade mode).
      */
-    fun revokeCommuneMember(orderIdTuple: Pair<Long, Long>, playerUuid: UUID): Result<Unit> {
+    fun revokeCommuneMember(
+        orderIdTuple: Pair<Long, Long>,
+        playerUuid: UUID,
+    ): Result<Unit> {
         val (orderA, orderB) = orderIdTuple
 
         // Remove from both orders (idempotent)
@@ -84,7 +92,9 @@ class CrossOrderMembershipService(
      * This is a batch operation that iterates through all members and revokes commune-granted ones.
      * @suppress communeId parameter used for audit/logging purposes
      */
-    fun revokeAllCommuneMembers(@Suppress("UNUSED_PARAMETER") communeId: UUID): Result<Unit> {
+    fun revokeAllCommuneMembers(
+        @Suppress("UNUSED_PARAMETER") communeId: UUID,
+    ): Result<Unit> {
         // In the basic implementation, this is called during cascade cleanup.
         // The actual revocation happens via listener or explicit cascade logic.
         // This method is a placeholder for future expansion or logging.

@@ -1,3 +1,5 @@
+@file:Suppress("SENSELESS_COMPARISON")
+
 package ru.kyamshanov.comminusm.gui
 
 import io.mockk.mockk
@@ -15,7 +17,6 @@ import ru.kyamshanov.comminusm.service.OrderService
  * - AC-14b: Non-leader button is disabled with proper lore
  */
 class CommunePartyMenuTest {
-
     private val communeService = mockk<CommuneService>()
     private val orderService = mockk<OrderService>()
 

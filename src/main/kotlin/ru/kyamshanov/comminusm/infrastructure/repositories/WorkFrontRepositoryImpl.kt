@@ -10,22 +10,24 @@ import java.util.UUID
  * Handles persistence of WorkFront entities using SQLite database.
  */
 @Suppress("MagicNumber", "MaxLineLength")
-class WorkFrontRepositoryImpl(private val conn: Connection) : WorkFrontRepository {
-
+class WorkFrontRepositoryImpl(
+    private val conn: Connection,
+) : WorkFrontRepository {
     override fun upsert(front: WorkFront) {
-        val stmt = conn.prepareStatement(
-            """
-            INSERT INTO work_fronts (owner_uuid, center_world, center_x, center_y, center_z, radius)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(owner_uuid) DO UPDATE SET
-                center_world = excluded.center_world,
-                center_x = excluded.center_x,
-                center_y = excluded.center_y,
-                center_z = excluded.center_z,
-                radius = excluded.radius,
-                created_at = datetime('now')
-            """.trimIndent()
-        )
+        val stmt =
+            conn.prepareStatement(
+                """
+                INSERT INTO work_fronts (owner_uuid, center_world, center_x, center_y, center_z, radius)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(owner_uuid) DO UPDATE SET
+                    center_world = excluded.center_world,
+                    center_x = excluded.center_x,
+                    center_y = excluded.center_y,
+                    center_z = excluded.center_z,
+                    radius = excluded.radius,
+                    created_at = datetime('now')
+                """.trimIndent(),
+            )
         stmt.setString(1, front.ownerUuid.toString())
         stmt.setString(2, front.centerWorld)
         stmt.setInt(3, front.centerX)
@@ -37,22 +39,26 @@ class WorkFrontRepositoryImpl(private val conn: Connection) : WorkFrontRepositor
     }
 
     override fun findByOwner(uuid: UUID): WorkFront? {
-        val stmt = conn.prepareStatement(
-            "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE owner_uuid = ?"
-        )
+        val stmt =
+            conn.prepareStatement(
+                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE owner_uuid = ?",
+            )
         stmt.setString(1, uuid.toString())
         val rs = stmt.executeQuery()
-        val result = if (rs.next()) {
-            WorkFront(
-                ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
-                centerWorld = rs.getString("center_world"),
-                centerX = rs.getInt("center_x"),
-                centerY = rs.getInt("center_y"),
-                centerZ = rs.getInt("center_z"),
-                radius = rs.getInt("radius"),
-                createdAt = rs.getString("created_at")
-            )
-        } else null
+        val result =
+            if (rs.next()) {
+                WorkFront(
+                    ownerUuid = UUID.fromString(rs.getString("owner_uuid")),
+                    centerWorld = rs.getString("center_world"),
+                    centerX = rs.getInt("center_x"),
+                    centerY = rs.getInt("center_y"),
+                    centerZ = rs.getInt("center_z"),
+                    radius = rs.getInt("radius"),
+                    createdAt = rs.getString("created_at"),
+                )
+            } else {
+                null
+            }
         rs.close()
         stmt.close()
         return result
@@ -66,9 +72,10 @@ class WorkFrontRepositoryImpl(private val conn: Connection) : WorkFrontRepositor
     }
 
     override fun findAllActivated(): List<WorkFront> {
-        val stmt = conn.prepareStatement(
-            "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts"
-        )
+        val stmt =
+            conn.prepareStatement(
+                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts",
+            )
         val rs = stmt.executeQuery()
         val result = mutableListOf<WorkFront>()
         while (rs.next()) {
@@ -80,8 +87,8 @@ class WorkFrontRepositoryImpl(private val conn: Connection) : WorkFrontRepositor
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at")
-                )
+                    createdAt = rs.getString("created_at"),
+                ),
             )
         }
         rs.close()
@@ -90,9 +97,10 @@ class WorkFrontRepositoryImpl(private val conn: Connection) : WorkFrontRepositor
     }
 
     override fun findAllInWorld(world: String): List<WorkFront> {
-        val stmt = conn.prepareStatement(
-            "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE center_world = ?"
-        )
+        val stmt =
+            conn.prepareStatement(
+                "SELECT owner_uuid, center_world, center_x, center_y, center_z, radius, created_at FROM work_fronts WHERE center_world = ?",
+            )
         stmt.setString(1, world)
         val rs = stmt.executeQuery()
         val result = mutableListOf<WorkFront>()
@@ -105,8 +113,8 @@ class WorkFrontRepositoryImpl(private val conn: Connection) : WorkFrontRepositor
                     centerY = rs.getInt("center_y"),
                     centerZ = rs.getInt("center_z"),
                     radius = rs.getInt("radius"),
-                    createdAt = rs.getString("created_at")
-                )
+                    createdAt = rs.getString("created_at"),
+                ),
             )
         }
         rs.close()

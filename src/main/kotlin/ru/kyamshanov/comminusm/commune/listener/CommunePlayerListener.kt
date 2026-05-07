@@ -20,9 +20,8 @@ import ru.kyamshanov.comminusm.service.OrderService
  */
 class CommunePlayerListener(
     private val communeService: CommuneService,
-    private val orderService: OrderService
+    private val orderService: OrderService,
 ) : Listener {
-
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         val player = event.player

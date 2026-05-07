@@ -22,7 +22,6 @@ class CommuneOrderMenu(
     private val orderService: OrderService,
     private val orderMembershipService: OrderMembershipService,
 ) : Listener {
-
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
     fun onInventoryOpen(event: InventoryOpenEvent) {
@@ -44,7 +43,7 @@ class CommuneOrderMenu(
                     Material.PAPER,
                     "§7Управление участниками ордера",
                     "§8Нажми чтобы открыть",
-                )
+                ),
             )
         }
     }
@@ -72,7 +71,10 @@ class CommuneOrderMenu(
     }
 
     @Suppress("UnusedParameter")
-    private fun openOrderMembersMenu(player: Player, orderId: Long) {
+    private fun openOrderMembersMenu(
+        player: Player,
+        orderId: Long,
+    ) {
         // Placeholder: will be wired to OrderMembersMenu in full implementation
         player.sendMessage(Component.text("§aУчастники ордера (планируется)"))
     }

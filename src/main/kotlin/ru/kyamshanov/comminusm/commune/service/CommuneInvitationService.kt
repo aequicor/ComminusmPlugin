@@ -4,7 +4,6 @@ import ru.kyamshanov.comminusm.commune.model.CommuneInvitation
 import ru.kyamshanov.comminusm.commune.model.Result
 import java.time.LocalDateTime
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Service for managing commune invitations.
@@ -15,9 +14,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class CommuneInvitationService(
     private val invitations: MutableMap<UUID, CommuneInvitation>,
-    private val invitationTimers: MutableMap<UUID, Any>
+    private val invitationTimers: MutableMap<UUID, Any>,
 ) {
-
     /**
      * Create a new invitation.
      * If an invitation for the target order already exists, it is replaced.
@@ -27,7 +25,7 @@ class CommuneInvitationService(
         targetOrderId: Long,
         communeId: UUID,
         targetLeaderUUID: UUID,
-        expiresAt: LocalDateTime
+        expiresAt: LocalDateTime,
     ): Result<CommuneInvitation> {
         // Check if an invitation already exists for this target
         val existingInvitation = invitations.values.find { it.targetOrderId == targetOrderId }
@@ -38,14 +36,15 @@ class CommuneInvitationService(
         }
 
         val invitationId = UUID.randomUUID()
-        val invitation = CommuneInvitation(
-            id = invitationId,
-            fromOrderId = fromOrderId,
-            targetOrderId = targetOrderId,
-            targetLeaderUUID = targetLeaderUUID,
-            communeId = communeId,
-            expiresAt = expiresAt
-        )
+        val invitation =
+            CommuneInvitation(
+                id = invitationId,
+                fromOrderId = fromOrderId,
+                targetOrderId = targetOrderId,
+                targetLeaderUUID = targetLeaderUUID,
+                communeId = communeId,
+                expiresAt = expiresAt,
+            )
 
         invitations[invitationId] = invitation
 
@@ -68,18 +67,15 @@ class CommuneInvitationService(
     /**
      * Get all invitations targeting a specific order.
      */
-    fun getInvitationsForOrder(targetOrderId: Long): Set<CommuneInvitation> {
-        return invitations.values
+    fun getInvitationsForOrder(targetOrderId: Long): Set<CommuneInvitation> =
+        invitations.values
             .filter { it.targetOrderId == targetOrderId }
             .toSet()
-    }
 
     /**
      * Get an invitation by ID.
      */
-    fun getInvitation(invitationId: UUID): CommuneInvitation? {
-        return invitations[invitationId]
-    }
+    fun getInvitation(invitationId: UUID): CommuneInvitation? = invitations[invitationId]
 
     /**
      * Mark an invitation as expired and remove it.

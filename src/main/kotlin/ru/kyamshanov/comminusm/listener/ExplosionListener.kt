@@ -1,3 +1,5 @@
+@file:Suppress("ReturnCount")
+
 package ru.kyamshanov.comminusm.listener
 
 import org.bukkit.Material
@@ -12,9 +14,8 @@ import ru.kyamshanov.comminusm.service.WorkFrontService
 class ExplosionListener(
     private val orderService: OrderService,
     private val workFrontService: WorkFrontService?,
-    private val manager: FlagStabilityManager? = null
+    private val manager: FlagStabilityManager? = null,
 ) : Listener {
-
     @EventHandler
     fun onEntityExplode(event: EntityExplodeEvent) {
         event.blockList().removeIf { block ->
@@ -49,6 +50,5 @@ class ExplosionListener(
         }
     }
 
-    private fun isFlagSupportBlock(block: org.bukkit.block.Block): Boolean =
-        manager?.isFlagPosition(block) == true
+    private fun isFlagSupportBlock(block: org.bukkit.block.Block): Boolean = manager?.isFlagPosition(block) == true
 }

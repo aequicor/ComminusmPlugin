@@ -11,7 +11,6 @@ import org.bukkit.Location
  * Thread context: safe to call on main thread only.
  */
 interface FlagStabilityManager {
-
     /**
      * Returns the [Location] of the active flag banner for the given order,
      * or null if no PDC entry exists, the stored position string cannot be

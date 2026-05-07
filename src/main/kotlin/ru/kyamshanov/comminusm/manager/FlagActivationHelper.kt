@@ -1,3 +1,5 @@
+@file:Suppress("ReturnCount", "MaxLineLength", "LongMethod")
+
 package ru.kyamshanov.comminusm.manager
 
 import net.kyori.adventure.text.Component
@@ -17,10 +19,14 @@ import java.util.concurrent.locks.ReentrantLock
 /** Result of flag placement pre-condition checks. */
 sealed class ActivationCheckResult {
     /** The check failed; [reason] is a player-facing message. */
-    data class Denied(val reason: String) : ActivationCheckResult()
+    data class Denied(
+        val reason: String,
+    ) : ActivationCheckResult()
 
     /** The check passed; [chunkKey] is the canonical chunk lock key. */
-    data class Ok(val chunkKey: String) : ActivationCheckResult()
+    data class Ok(
+        val chunkKey: String,
+    ) : ActivationCheckResult()
 }
 
 /** Context data for flag rollback operation. */
@@ -40,7 +46,17 @@ data class RollbackContext(
  * synchronous pre-checks + world mutation (main thread) and async DB write
  * followed by ArmorStand spawn (main thread callback).
  */
-class FlagActivationHelper(private val plugin: Plugin) {
+class FlagActivationHelper(
+    private val plugin: Plugin,
+) {
+    companion object {
+        private const val CHUNK_SHIFT = 4
+        private const val BLOCK_CENTER_OFFSET = 0.5
+        private const val ARMORSTAND_HEIGHT_OFFSET = 1.0
+
+        /** Y-coordinate threshold above which only 1 air block is required. */
+        const val MAX_BUILD_HEIGHT = 318
+    }
 
     /**
      * Validates placement constraints before acquiring the chunk lock.
@@ -53,7 +69,7 @@ class FlagActivationHelper(private val plugin: Plugin) {
     fun checkPreconditions(
         bannerBlock: Block,
         config: PluginConfig,
-        manager: FlagStabilityManager
+        manager: FlagStabilityManager,
     ): ActivationCheckResult {
         // World allowlist
         if (bannerBlock.world.name !in config.flagAllowedWorlds) {
@@ -62,17 +78,19 @@ class FlagActivationHelper(private val plugin: Plugin) {
 
         // Free air above the banner
         val airRequired = if (bannerBlock.y >= MAX_BUILD_HEIGHT) 1 else config.flagMinAirAbove
-        val freeAbove = (1..airRequired).count { offset ->
-            val mat = bannerBlock.world.getBlockAt(bannerBlock.x, bannerBlock.y + offset, bannerBlock.z).type
-            mat == Material.AIR || mat == Material.CAVE_AIR || mat == Material.VOID_AIR
-        }
+        val freeAbove =
+            (1..airRequired).count { offset ->
+                val mat = bannerBlock.world.getBlockAt(bannerBlock.x, bannerBlock.y + offset, bannerBlock.z).type
+                mat == Material.AIR || mat == Material.CAVE_AIR || mat == Material.VOID_AIR
+            }
         if (freeAbove < airRequired) {
             return ActivationCheckResult.Denied("Недостаточно места над флагом.")
         }
 
         // Chunk flag limit
-        val count = bannerBlock.chunk.persistentDataContainer.keys
-            .count { it.namespace == "comminusm" && it.key.startsWith("flag/") }
+        val count =
+            bannerBlock.chunk.persistentDataContainer.keys
+                .count { it.namespace == "comminusm" && it.key.startsWith("flag/") }
         if (count >= config.flagMaxPerChunk) {
             return ActivationCheckResult.Denied("Достигнут лимит флагов в этом чанке.")
         }
@@ -92,7 +110,7 @@ class FlagActivationHelper(private val plugin: Plugin) {
             .also { name ->
                 if (name == null) {
                     plugin.logger.warning(
-                        "Could not resolve name for UUID $ownerUuid — using UUID as fallback"
+                        "Could not resolve name for UUID $ownerUuid — using UUID as fallback",
                     )
                 }
             }
@@ -139,7 +157,7 @@ class FlagActivationHelper(private val plugin: Plugin) {
         lock: ReentrantLock,
         dbWrite: () -> Unit,
         onSuccess: (Player?) -> Unit,
-        onDbFailure: (Player?) -> Unit
+        onDbFailure: (Player?) -> Unit,
     ) {
         val supportBlock = bannerBlock.world.getBlockAt(bannerBlock.x, bannerBlock.y - 1, bannerBlock.z)
         val originalMaterial = supportBlock.type
@@ -155,18 +173,26 @@ class FlagActivationHelper(private val plugin: Plugin) {
         pdc.set(
             flagKey,
             PersistentDataType.LONG_ARRAY,
-            longArrayOf(bannerBlock.x.toLong(), bannerBlock.y.toLong(), bannerBlock.z.toLong())
+            longArrayOf(bannerBlock.x.toLong(), bannerBlock.y.toLong(), bannerBlock.z.toLong()),
         )
         pdc.set(supportMatKey, PersistentDataType.STRING, originalMaterial.name)
 
         // Phase 1c: Add both positions to cache
         manager.addToCache(
-            bannerBlock.world.name, bannerBlock.x shr CHUNK_SHIFT, bannerBlock.z shr CHUNK_SHIFT,
-            bannerBlock.x, bannerBlock.y, bannerBlock.z
+            bannerBlock.world.name,
+            bannerBlock.x shr CHUNK_SHIFT,
+            bannerBlock.z shr CHUNK_SHIFT,
+            bannerBlock.x,
+            bannerBlock.y,
+            bannerBlock.z,
         )
         manager.addToCache(
-            supportBlock.world.name, supportBlock.x shr CHUNK_SHIFT, supportBlock.z shr CHUNK_SHIFT,
-            supportBlock.x, supportBlock.y, supportBlock.z
+            supportBlock.world.name,
+            supportBlock.x shr CHUNK_SHIFT,
+            supportBlock.z shr CHUNK_SHIFT,
+            supportBlock.x,
+            supportBlock.y,
+            supportBlock.z,
         )
 
         // Phase 1d: Release lock before async work
@@ -176,20 +202,28 @@ class FlagActivationHelper(private val plugin: Plugin) {
         Bukkit.getScheduler().runTaskAsynchronously(
             plugin,
             Runnable {
+                @Suppress("TooGenericExceptionCaught")
                 try {
                     dbWrite()
-                } catch (e: RuntimeException) {
+                } catch (e: Exception) {
                     plugin.logger.severe("DB write failed for flag $flagId: ${e.message}")
-                    val rollbackContext = RollbackContext(
-                        bannerBlock, supportBlock, originalMaterial, flagId, manager, pdc,
-                        flagKey, supportMatKey
-                    )
+                    val rollbackContext =
+                        RollbackContext(
+                            bannerBlock,
+                            supportBlock,
+                            originalMaterial,
+                            flagId,
+                            manager,
+                            pdc,
+                            flagKey,
+                            supportMatKey,
+                        )
                     Bukkit.getScheduler().runTask(
                         plugin,
                         Runnable {
                             rollback(rollbackContext)
                             onDbFailure(Bukkit.getPlayer(ownerUuid))
-                        }
+                        },
                     )
                     return@Runnable
                 }
@@ -198,33 +232,51 @@ class FlagActivationHelper(private val plugin: Plugin) {
                 Bukkit.getScheduler().runTask(
                     plugin,
                     Runnable {
-                        val asLocation = bannerBlock.location.clone().add(0.5, 1.0, 0.5)
-                        val armorStand = try {
-                            bannerBlock.world.spawn(asLocation, ArmorStand::class.java) { stand ->
-                                stand.setVisible(false)
-                                stand.setGravity(false)
-                                stand.setMarker(true)
-                                val title = config.flagTitleFormat
-                                    .replace("{type}", flagType)
-                                    .replace("{player}", ownerName)
-                                stand.customName(Component.text(title))
-                                stand.isCustomNameVisible = true
+                        val asLocation =
+                            bannerBlock.location
+                                .clone()
+                                .add(BLOCK_CENTER_OFFSET, ARMORSTAND_HEIGHT_OFFSET, BLOCK_CENTER_OFFSET)
+
+                        @Suppress("TooGenericExceptionCaught")
+                        val armorStand =
+                            try {
+                                bannerBlock.world.spawn(asLocation, ArmorStand::class.java) { stand ->
+                                    stand.setVisible(false)
+                                    stand.setGravity(false)
+                                    stand.setMarker(true)
+                                    val title =
+                                        config.flagTitleFormat
+                                            .replace("{type}", flagType)
+                                            .replace("{player}", ownerName)
+                                    stand.customName(Component.text(title))
+                                    stand.isCustomNameVisible = true
+                                }
+                            } catch (e: Exception) {
+                                plugin.logger.severe("ArmorStand spawn failed for flag $flagId: ${e.message}")
+                                rollback(
+                                    RollbackContext(
+                                        bannerBlock,
+                                        supportBlock,
+                                        originalMaterial,
+                                        flagId,
+                                        manager,
+                                        pdc,
+                                        flagKey,
+                                        supportMatKey,
+                                    ),
+                                )
+                                onDbFailure(Bukkit.getPlayer(ownerUuid))
+                                return@Runnable
                             }
-                        } catch (e: RuntimeException) {
-                            plugin.logger.severe("ArmorStand spawn failed for flag $flagId: ${e.message}")
-                            rollback(RollbackContext(bannerBlock, supportBlock, originalMaterial, flagId, manager, pdc, flagKey, supportMatKey))
-                            onDbFailure(Bukkit.getPlayer(ownerUuid))
-                            return@Runnable
-                        }
 
                         // Write armorstand PDC key
                         val asKey = NamespacedKey(plugin, "armorstand/$flagId")
                         pdc.set(asKey, PersistentDataType.STRING, armorStand.uniqueId.toString())
 
                         onSuccess(Bukkit.getPlayer(ownerUuid))
-                    }
+                    },
                 )
-            }
+            },
         )
     }
 
@@ -235,22 +287,22 @@ class FlagActivationHelper(private val plugin: Plugin) {
         val bannerChunkX = context.bannerBlock.x shr CHUNK_SHIFT
         val bannerChunkZ = context.bannerBlock.z shr CHUNK_SHIFT
         context.manager.removeFromCache(
-            context.bannerBlock.world.name, bannerChunkX, bannerChunkZ,
-            context.bannerBlock.x, context.bannerBlock.y, context.bannerBlock.z
+            context.bannerBlock.world.name,
+            bannerChunkX,
+            bannerChunkZ,
+            context.bannerBlock.x,
+            context.bannerBlock.y,
+            context.bannerBlock.z,
         )
         val supportChunkX = context.supportBlock.x shr CHUNK_SHIFT
         val supportChunkZ = context.supportBlock.z shr CHUNK_SHIFT
         context.manager.removeFromCache(
-            context.supportBlock.world.name, supportChunkX, supportChunkZ,
-            context.supportBlock.x, context.supportBlock.y, context.supportBlock.z
+            context.supportBlock.world.name,
+            supportChunkX,
+            supportChunkZ,
+            context.supportBlock.x,
+            context.supportBlock.y,
+            context.supportBlock.z,
         )
-    }
-
-    private companion object {
-        /** Y-coordinate threshold above which only 1 air block is required. */
-        const val MAX_BUILD_HEIGHT = 318
-
-        /** Bit-shift to convert block X/Z to chunk coordinate. */
-        const val CHUNK_SHIFT = 4
     }
 }

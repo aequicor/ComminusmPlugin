@@ -14,12 +14,13 @@ class OrderMemberTest {
         val grantedAt = LocalDateTime.now()
         val grantedVia = "native"
 
-        val member = OrderMember(
-            playerUuid = playerUuid,
-            orderId = orderId,
-            grantedAt = grantedAt,
-            grantedVia = grantedVia
-        )
+        val member =
+            OrderMember(
+                playerUuid = playerUuid,
+                orderId = orderId,
+                grantedAt = grantedAt,
+                grantedVia = grantedVia,
+            )
 
         assertEquals(playerUuid, member.playerUuid)
         assertEquals(orderId, member.orderId)

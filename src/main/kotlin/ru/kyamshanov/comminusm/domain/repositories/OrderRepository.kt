@@ -9,12 +9,30 @@ import java.util.UUID
  */
 interface OrderRepository {
     fun findByOwner(uuid: UUID): Order?
+
     fun findById(id: Long): Order?
+
     fun findAllInWorld(world: String): List<Order>
+
     fun findAllActivated(): List<Order>
+
     fun insert(order: Order): Long
+
     fun update(order: Order)
-    fun activate(uuid: UUID, world: String, x: Int, y: Int, z: Int)
-    fun updateLevel(uuid: UUID, level: Int, radius: Int)
+
+    fun activate(
+        uuid: UUID,
+        world: String,
+        x: Int,
+        y: Int,
+        z: Int,
+    )
+
+    fun updateLevel(
+        uuid: UUID,
+        level: Int,
+        radius: Int,
+    )
+
     fun deleteByOwner(uuid: UUID)
 }

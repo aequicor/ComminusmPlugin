@@ -19,9 +19,8 @@ import java.util.UUID
  */
 class CommuneOrderDestroyListener(
     private val communeService: CommuneService,
-    private val crossOrderService: CrossOrderMembershipService
+    private val crossOrderService: CrossOrderMembershipService,
 ) : Listener {
-
     @EventHandler
     fun onFlagDeactivated(event: FlagDeactivatedEvent) {
         val orderId = event.orderId
@@ -54,7 +53,6 @@ class CommuneOrderDestroyListener(
             if (updatedCommune != null && updatedCommune.orderIds.isEmpty()) {
                 communeService.dissolveCommune(commune.id)
             }
-
         } finally {
             // Always reset cascade mode (§6.6 step 5, CC-Q5)
             // This ensures inCascadeMode is cleared even if an exception occurs

@@ -17,7 +17,6 @@ import kotlin.test.assertTrue
  * Addresses HIGH issue #5: version validation in grantCommuneMember (§6.13 step 7b)
  */
 class CrossOrderMembershipServiceTest {
-
     private lateinit var membershipService: OrderMembershipService
     private lateinit var service: CrossOrderMembershipService
 

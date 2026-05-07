@@ -9,8 +9,12 @@ import java.util.UUID
  */
 interface WorkFrontRepository {
     fun findByOwner(uuid: UUID): WorkFront?
+
     fun findAllInWorld(world: String): List<WorkFront>
+
     fun findAllActivated(): List<WorkFront>
+
     fun upsert(front: WorkFront)
+
     fun deleteByOwner(uuid: UUID)
 }

@@ -1,10 +1,10 @@
 package ru.kyamshanov.comminusm.commune
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.model.OrderMember
 import ru.kyamshanov.comminusm.commune.model.Result
 import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
@@ -125,11 +125,12 @@ class OrderMembershipServiceTest {
         val initiator = UUID.randomUUID()
         val now = LocalDateTime.now()
 
-        val threads = players.map { player ->
-            Thread {
-                membershipService.addNativeMember(orderId, player, initiator, now)
+        val threads =
+            players.map { player ->
+                Thread {
+                    membershipService.addNativeMember(orderId, player, initiator, now)
+                }
             }
-        }
 
         threads.forEach { it.start() }
         threads.forEach { it.join() }

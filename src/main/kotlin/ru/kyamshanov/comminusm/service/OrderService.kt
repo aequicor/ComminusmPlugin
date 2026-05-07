@@ -1,14 +1,16 @@
+@file:Suppress("ReturnCount")
+
 package ru.kyamshanov.comminusm.service
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import ru.kyamshanov.comminusm.config.OrderLevelConfig
+import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.event.FlagDeactivatedEvent
 import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
-import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import java.util.UUID
 import kotlin.math.abs
 
@@ -23,7 +25,6 @@ class OrderService(
     private val flagStabilityManager: FlagStabilityManager? = null,
     private val plugin: org.bukkit.plugin.Plugin? = null,
 ) {
-
     fun create(uuid: UUID): Order? {
         val existing = orderRepository.findByOwner(uuid)
         if (existing != null) return null
@@ -34,7 +35,10 @@ class OrderService(
         return order.copy(id = id)
     }
 
-    fun activate(uuid: UUID, location: Location): Boolean {
+    fun activate(
+        uuid: UUID,
+        location: Location,
+    ): Boolean {
         val order = orderRepository.findByOwner(uuid) ?: return false
         if (order.centerWorld != null) return false
 
@@ -60,7 +64,13 @@ class OrderService(
     fun isLeader(uuid: UUID): Boolean = orderRepository.findByOwner(uuid) != null
 
     @Suppress("UNUSED_PARAMETER")
-    fun checkOverlap(orders: List<Order>, x: Int, y: Int, z: Int, radius: Int): Boolean {
+    fun checkOverlap(
+        orders: List<Order>,
+        x: Int,
+        y: Int,
+        z: Int,
+        radius: Int,
+    ): Boolean {
         return orders.any { existing ->
             if (existing.centerWorld == null) return@any false
             val dx = abs(existing.centerX - x)
@@ -71,14 +81,13 @@ class OrderService(
     }
 
     fun getRadiusForLevel(level: Int): Int {
-        return levels.find { it.level == level }?.radius ?: levels.lastOrNull()?.radius ?: 2
+        val found = levels.find { it.level == level }?.radius
+        return found ?: levels.lastOrNull()?.radius ?: 2
     }
 
-    fun getCostForLevel(level: Int): Int {
-        return levels.find { it.level == level }?.cost ?: 0
-    }
+    fun getCostForLevel(level: Int): Int = levels.find { it.level == level }?.cost ?: 0
 
-    fun getMaxLevel(): Int = levels.maxOfOrNull { it.level } ?: 5
+    fun getMaxLevel(): Int = levels.maxOfOrNull { it.level } ?: DEFAULT_MAX_LEVEL
 
     fun upgrade(uuid: UUID): Boolean {
         val order = orderRepository.findByOwner(uuid) ?: return false
@@ -149,7 +158,8 @@ class OrderService(
         }
     }
 
-    private companion object {
-        const val CHUNK_SHIFT = 4
+    companion object {
+        private const val DEFAULT_MAX_LEVEL = 5
+        private const val CHUNK_SHIFT = 4
     }
 }

@@ -17,7 +17,6 @@ import kotlin.test.assertTrue
  * Addresses HIGH issue #6: API inconsistency - removeMember with grantedVia parameter
  */
 class OrderMembershipServiceTest {
-
     private lateinit var repository: OrderMembersRepository
     private lateinit var service: OrderMembershipService
 

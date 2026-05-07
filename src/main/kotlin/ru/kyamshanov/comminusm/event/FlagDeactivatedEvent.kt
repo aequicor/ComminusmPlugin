@@ -9,7 +9,9 @@ import org.bukkit.event.HandlerList
  * Listeners (e.g. [ru.kyamshanov.comminusm.listener.FlagEventListener]) use
  * this event to cancel any active home-teleport timers for the affected order.
  */
-class FlagDeactivatedEvent(val orderId: Long) : Event() {
+class FlagDeactivatedEvent(
+    val orderId: Long,
+) : Event() {
     companion object {
         private val HANDLERS = HandlerList()
 

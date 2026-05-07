@@ -7,7 +7,15 @@ import java.util.UUID
  * Defines contracts for workdays persistence operations without exposing implementation details.
  */
 interface WorkdaysRepository {
-    fun add(uuid: UUID, amount: Int)
-    fun spend(uuid: UUID, amount: Int): Boolean
+    fun add(
+        uuid: UUID,
+        amount: Int,
+    )
+
+    fun spend(
+        uuid: UUID,
+        amount: Int,
+    ): Boolean
+
     fun getBalance(uuid: UUID): Int
 }

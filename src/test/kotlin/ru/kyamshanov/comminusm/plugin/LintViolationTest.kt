@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
  * 3. OrderService has max 11 public methods
  */
 class LintViolationTest {
-
     @Test
     fun `wireFlagListeners parameter count is within threshold`() {
         // Get the wireFlagListeners method from ComminusmPlugin
@@ -49,10 +48,15 @@ class LintViolationTest {
         val clazz = ru.kyamshanov.comminusm.service.OrderService::class.java
 
         // Count public methods (excluding inherited ones from Any)
-        val publicMethods = clazz.declaredMethods
-            .filter { java.lang.reflect.Modifier.isPublic(it.modifiers) }
-            .filterNot { it.declaringClass == Any::class.java }
-            .filter { !it.name.startsWith("get") || it.parameterCount == 0 } // count getters as part of the threshold
+        val publicMethods =
+            clazz.declaredMethods
+                .filter {
+                    java.lang.reflect.Modifier
+                        .isPublic(it.modifiers)
+                }.filterNot { it.declaringClass == Any::class.java }
+                .filter {
+                    !it.name.startsWith("get") || it.parameterCount == 0
+                } // count getters as part of the threshold
 
         // Detekt threshold is 11, so max function count is 11
         assert(publicMethods.size <= 11) { "OrderService has ${publicMethods.size} public methods, max allowed is 11" }

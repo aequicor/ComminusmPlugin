@@ -9,7 +9,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import ru.kyamshanov.comminusm.service.OrderService
 
 class FlagDeletionConfirmListener(
-    private val orderService: OrderService
+    private val orderService: OrderService,
 ) : Listener {
     companion object {
         private const val CONFIRM_DELETION_TITLE = "Подтверждение удаления"
@@ -31,7 +31,7 @@ class FlagDeletionConfirmListener(
                 // Delete order, drop custom flag, break block
                 val order = orderService.findByOwner(uuid)
                 orderService.deleteByOwner(uuid)
-                
+
                 if (order != null && order.centerWorld != null) {
                     val world = org.bukkit.Bukkit.getWorld(order.centerWorld)
                     if (world != null) {
@@ -39,7 +39,7 @@ class FlagDeletionConfirmListener(
                         world.getBlockAt(order.centerX, order.centerY, order.centerZ).type = Material.AIR
                     }
                 }
-                
+
                 player.sendMessage(Component.text("§c☭ Ордер аннулирован."))
                 player.closeInventory()
             }

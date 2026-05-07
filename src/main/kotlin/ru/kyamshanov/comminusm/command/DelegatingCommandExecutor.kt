@@ -14,10 +14,14 @@ import org.bukkit.command.CommandSender
  */
 class DelegatingCommandExecutor(
     private val primary: CommandExecutor?,
-    private val secondary: CommandExecutor
+    private val secondary: CommandExecutor,
 ) : CommandExecutor {
-
-    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    override fun onCommand(
+        sender: CommandSender,
+        command: Command,
+        label: String,
+        args: Array<out String>,
+    ): Boolean {
         // Try primary executor first
         if (primary != null && primary.onCommand(sender, command, label, args)) {
             return true

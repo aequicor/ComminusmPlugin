@@ -1,7 +1,7 @@
 package ru.kyamshanov.comminusm.model
 
-import org.bukkit.Location
 import org.bukkit.Bukkit
+import org.bukkit.Location
 import java.util.UUID
 
 data class Order(
@@ -14,10 +14,15 @@ data class Order(
     val centerY: Int = 0,
     val centerZ: Int = 0,
     val radius: Int = 2,
-    val createdAt: String = ""
+    val createdAt: String = "",
 ) {
     val center: Location?
-        get() = centerWorld?.let { Bukkit.getWorld(it)?.let { w -> Location(w, centerX.toDouble(), centerY.toDouble(), centerZ.toDouble()) } }
+        get() =
+            centerWorld?.let { worldName ->
+                Bukkit.getWorld(worldName)?.let { world ->
+                    Location(world, centerX.toDouble(), centerY.toDouble(), centerZ.toDouble())
+                }
+            }
 
     val size: Int
         get() = radius * 2 + 1

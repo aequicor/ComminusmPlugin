@@ -15,9 +15,8 @@ import java.util.UUID
 class OrderMemberAddedEvent(
     val orderId: Long,
     val playerUUID: UUID,
-    val grantedVia: String
+    val grantedVia: String,
 ) : Event() {
-
     override fun getHandlers(): HandlerList = handlerList
 
     companion object {

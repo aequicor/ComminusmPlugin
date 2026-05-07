@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package ru.kyamshanov.comminusm.gui
 
 import net.kyori.adventure.text.Component
@@ -21,7 +23,11 @@ object GuiUtils {
         for (i in intArrayOf(9, 17, 18, 26, 27, 35)) inv.setItem(i, borderItem())
     }
 
-    fun namedItem(name: String, material: Material, vararg lore: String): ItemStack {
+    fun namedItem(
+        name: String,
+        material: Material,
+        vararg lore: String,
+    ): ItemStack {
         val item = ItemStack(material)
         val meta = item.itemMeta
         meta.displayName(Component.text(name))

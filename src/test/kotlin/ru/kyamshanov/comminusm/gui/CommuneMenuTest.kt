@@ -1,3 +1,5 @@
+@file:Suppress("SENSELESS_COMPARISON")
+
 package ru.kyamshanov.comminusm.gui
 
 import io.mockk.mockk
@@ -19,7 +21,6 @@ import ru.kyamshanov.comminusm.service.OrderService
  * - AC-38: Incoming invitation block hidden from non-leader
  */
 class CommuneMenuTest {
-
     private val communeService = mockk<CommuneService>()
     private val orderService = mockk<OrderService>()
     private val communeInvitationService = mockk<CommuneInvitationService>()
@@ -29,12 +30,13 @@ class CommuneMenuTest {
 
     @BeforeEach
     fun setUp() {
-        menu = CommuneMenu(
-            communeService,
-            orderService,
-            communeInvitationService,
-            orderMembershipService
-        )
+        menu =
+            CommuneMenu(
+                communeService,
+                orderService,
+                communeInvitationService,
+                orderMembershipService,
+            )
     }
 
     @Test

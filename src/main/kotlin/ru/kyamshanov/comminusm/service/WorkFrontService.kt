@@ -1,10 +1,10 @@
 package ru.kyamshanov.comminusm.service
 
+import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
 import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.model.WorkFront
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
-import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
 import java.util.UUID
 
 class WorkFrontService(
@@ -15,7 +15,13 @@ class WorkFrontService(
     private val flagCleanupHelper: FlagCleanupHelper? = null,
     private val flagStabilityManager: FlagStabilityManager? = null,
 ) {
-    fun activate(uuid: UUID, world: String, x: Int, y: Int, z: Int): Boolean {
+    fun activate(
+        uuid: UUID,
+        world: String,
+        x: Int,
+        y: Int,
+        z: Int,
+    ): Boolean {
         repository.deleteByOwner(uuid)
         val front = WorkFront(uuid, world, x, y, z, frontRadius)
         repository.upsert(front)
@@ -24,7 +30,7 @@ class WorkFrontService(
         chunkCacheManager?.let { cache ->
             val bukkitWorld = org.bukkit.Bukkit.getWorld(world)
             if (bukkitWorld != null) {
-                val chunk = bukkitWorld.getChunkAt(x shr 4, z shr 4)
+                val chunk = bukkitWorld.getChunkAt(x shr CHUNK_SHIFT, z shr CHUNK_SHIFT)
                 cache.markFrontChunk(chunk, uuid)
             }
         }
@@ -37,11 +43,12 @@ class WorkFrontService(
         val front = repository.findByOwner(uuid) ?: return
         val helper = flagCleanupHelper
         val manager = flagStabilityManager
-        val world = if (helper != null || chunkCacheManager != null) {
-            org.bukkit.Bukkit.getWorld(front.centerWorld)
-        } else {
-            null
-        }
+        val world =
+            if (helper != null || chunkCacheManager != null) {
+                org.bukkit.Bukkit.getWorld(front.centerWorld)
+            } else {
+                null
+            }
 
         if (world != null && helper != null && manager != null) {
             val chunk = world.getChunkAt(front.centerX shr CHUNK_SHIFT, front.centerZ shr CHUNK_SHIFT)

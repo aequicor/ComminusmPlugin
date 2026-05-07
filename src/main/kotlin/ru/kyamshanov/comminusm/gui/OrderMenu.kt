@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber", "MaxLineLength", "LongMethod")
+
 package ru.kyamshanov.comminusm.gui
 
 import net.kyori.adventure.text.Component
@@ -38,7 +40,10 @@ class OrderMenu(
     private val backSlot = 39
     private val homeSlot = 4
 
-    fun open(player: Player, order: Order) {
+    fun open(
+        player: Player,
+        order: Order,
+    ) {
         val inv = Bukkit.createInventory(null, 45, Component.text("§8Ордер №${order.id}"))
         GuiUtils.fillBorder(inv)
 
@@ -119,17 +124,19 @@ class OrderMenu(
         val buttonState = resolveHomeButtonState(fsm, orderId, playerWorld) { loc -> loc.world?.name }
         @Suppress("MaxLineLength")
         return when (buttonState) {
-            HomeButtonState.ACTIVE -> GuiUtils.namedItem(
-                "§aВернуться домой",
-                Material.COMPASS,
-                "§7Нажмите, чтобы начать телепортацию",
-                "§7Стойте неподвижно 30 сек.",
-            )
-            HomeButtonState.DISABLED_DIFFERENT_WORLD -> GuiUtils.namedItem(
-                "§7Вернуться домой",
-                Material.COMPASS,
-                "§cФлаг в другом мире — телепорт недоступен",
-            )
+            HomeButtonState.ACTIVE ->
+                GuiUtils.namedItem(
+                    "§aВернуться домой",
+                    Material.COMPASS,
+                    "§7Нажмите, чтобы начать телепортацию",
+                    "§7Стойте неподвижно 30 сек.",
+                )
+            HomeButtonState.DISABLED_DIFFERENT_WORLD ->
+                GuiUtils.namedItem(
+                    "§7Вернуться домой",
+                    Material.COMPASS,
+                    "§cФлаг в другом мире — телепорт недоступен",
+                )
             HomeButtonState.HIDDEN -> null
         }
     }
@@ -165,7 +172,7 @@ class OrderMenu(
         event.isCancelled = true
 
         val player = event.whoClicked as Player
-        if (event.rawSlot != event.slot) return  // skip player-inventory / hotbar clicks
+        if (event.rawSlot != event.slot) return // skip player-inventory / hotbar clicks
 
         when (event.slot) {
             upgradeSlot -> {
@@ -234,10 +241,11 @@ class OrderMenu(
                 val fsm = flagStabilityManager ?: return
                 val htm = homeTimerManager ?: return
 
-                val orderId = clickedItem.itemMeta
-                    ?.persistentDataContainer
-                    ?.get(NamespacedKey(pluginInstance, HOME_ORDER_ID_KEY), PersistentDataType.LONG)
-                    ?: return
+                val orderId =
+                    clickedItem.itemMeta
+                        ?.persistentDataContainer
+                        ?.get(NamespacedKey(pluginInstance, HOME_ORDER_ID_KEY), PersistentDataType.LONG)
+                        ?: return
 
                 handleHomeClick(
                     playerUuid = player.uniqueId,

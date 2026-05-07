@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package ru.kyamshanov.comminusm.gui
 
 /**
@@ -44,10 +46,52 @@ object GuiConstants {
     const val PARTY_MENU_BACK_SLOT = 25
 
     // Treasury Menu slots
-    const val TREASURY_MENU_WITHDRAW_SLOT = 11
-    const val TREASURY_MENU_DEPOSIT_SLOT = 13
-    const val TREASURY_MENU_STATS_SLOT = 15
-    const val TREASURY_MENU_BACK_SLOT = 26
+    const val TREASURY_MENU_SUBMIT_SLOT = 31
+    const val TREASURY_MENU_BACK_SLOT = 39
+    const val TREASURY_MENU_INVENTORY_SIZE = 45
+
+    // Party Menu slots (large inventory)
+    const val PARTY_MENU_ORDER_SLOT = 20
+    const val PARTY_MENU_FRONT_SLOT = 24
+    const val PARTY_MENU_TREASURY_SLOT = 31
+    const val PARTY_MENU_BALANCE_SLOT = 40
+    const val PARTY_MENU_INVENTORY_SIZE = 45
+
+    // Inventory slot range helpers
+    const val TREASURY_MENU_INVENTORY_MAX_SLOT = 44
+
+    // Border slot ranges for 45-slot inventories
+    val TREASURY_MENU_BORDER_SLOTS =
+        setOf(
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            17,
+            18,
+            26,
+            27,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+        )
+
+    // Common numeric constants
+    const val INVENTORY_SPLIT_FACTOR = 64
+    const val ZERO_AMOUNT = 0
 
     // Color codes for text (deprecated, prefer Component API)
     const val COLOR_RED = "§c"

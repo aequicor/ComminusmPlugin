@@ -9,9 +9,14 @@ import java.util.UUID
  */
 interface CommuneRepository {
     fun findById(id: UUID): Commune?
+
     fun findByName(name: String): Commune?
+
     fun findAllByMember(memberId: UUID): List<Commune>
+
     fun insert(commune: Commune): UUID
+
     fun update(commune: Commune)
+
     fun delete(id: UUID)
 }

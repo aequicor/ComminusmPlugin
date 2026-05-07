@@ -1,3 +1,5 @@
+@file:Suppress("ReturnCount")
+
 package ru.kyamshanov.comminusm.listener
 
 import org.bukkit.Material
@@ -7,7 +9,6 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 
 class FlagItemProtectionListener : Listener {
-
     @EventHandler
     fun onDrop(event: PlayerDropItemEvent) {
         val stack = event.itemDrop.itemStack
@@ -53,14 +54,14 @@ class FlagItemProtectionListener : Listener {
         }
 
         @JvmStatic
-        fun hasOrderFlagInInventory(player: org.bukkit.entity.Player): Boolean {
-            return player.inventory.contents.any { isOrderFlag(it) }
-        }
+        fun hasOrderFlagInInventory(player: org.bukkit.entity.Player): Boolean =
+            player.inventory.contents
+                .any { isOrderFlag(it) }
 
         @JvmStatic
-        fun hasFrontFlagInInventory(player: org.bukkit.entity.Player): Boolean {
-            return player.inventory.contents.any { isFrontFlag(it) }
-        }
+        fun hasFrontFlagInInventory(player: org.bukkit.entity.Player): Boolean =
+            player.inventory.contents
+                .any { isFrontFlag(it) }
 
         @JvmStatic
         fun removeAllOrderFlags(player: org.bukkit.entity.Player) {

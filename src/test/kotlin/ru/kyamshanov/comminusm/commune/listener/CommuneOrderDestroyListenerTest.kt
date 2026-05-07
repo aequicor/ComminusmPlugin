@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
  * Addresses CRITICAL issue #3: implement complete cascade (§6.6)
  */
 class CommuneOrderDestroyListenerTest {
-
     private lateinit var communeService: CommuneService
     private lateinit var crossOrderService: CrossOrderMembershipService
     private lateinit var listener: CommuneOrderDestroyListener
@@ -37,7 +36,7 @@ class CommuneOrderDestroyListenerTest {
     @Test
     fun testReturnsEarlyIfNotInCommune() {
         val event = mockk<FlagDeactivatedEvent>(relaxed = true)
-        every { event.orderId } returns 999L  // Non-existent order
+        every { event.orderId } returns 999L // Non-existent order
         every { communeService.getCommuneOfOrder(999L) } returns null
 
         // Act - should return early and not call cascade methods

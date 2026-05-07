@@ -1,16 +1,15 @@
 package ru.kyamshanov.comminusm.commune
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.model.Commune
 import ru.kyamshanov.comminusm.commune.model.Result
 import ru.kyamshanov.comminusm.commune.service.CommuneService
-import java.time.LocalDateTime
 import java.util.UUID
 
 class CommuneServiceTest {

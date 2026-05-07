@@ -14,9 +14,8 @@ import ru.kyamshanov.comminusm.manager.FlagStabilityManager
  * pistons, water/lava flow, and entity block changes (endermen, silverfish, etc.).
  */
 class FlagProtectionListener(
-    private val manager: FlagStabilityManager
+    private val manager: FlagStabilityManager,
 ) : Listener {
-
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     fun onPistonExtend(event: BlockPistonExtendEvent) {
         if (event.blocks.any { manager.isFlagPosition(it) }) {

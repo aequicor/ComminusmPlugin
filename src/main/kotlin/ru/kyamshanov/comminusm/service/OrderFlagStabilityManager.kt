@@ -15,18 +15,19 @@ class OrderFlagStabilityManager(
     private val orderRepository: OrderRepository,
     private val logger: Logger,
 ) : FlagStabilityManager {
-
     @Suppress("ReturnCount")
     override fun getFlagLocation(orderId: Long): Location? {
-        val order = runCatching { orderRepository.findById(orderId) }.getOrElse { e ->
-            logger.warning("getFlagLocation DB error for orderId=$orderId: $e")
-            return null
-        } ?: return null
+        val order =
+            runCatching { orderRepository.findById(orderId) }.getOrElse { e ->
+                logger.warning("getFlagLocation DB error for orderId=$orderId: $e")
+                return null
+            } ?: return null
         val worldName = order.centerWorld ?: return null
-        val world = Bukkit.getWorld(worldName) ?: run {
-            logger.warning("getFlagLocation: world '$worldName' not loaded for orderId=$orderId")
-            return null
-        }
+        val world =
+            Bukkit.getWorld(worldName) ?: run {
+                logger.warning("getFlagLocation: world '$worldName' not loaded for orderId=$orderId")
+                return null
+            }
         return Location(world, order.centerX.toDouble(), order.centerY.toDouble(), order.centerZ.toDouble())
     }
 

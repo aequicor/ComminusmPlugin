@@ -22,8 +22,9 @@ import kotlin.math.sqrt
  *
  * @param homeTimerManager Service managing active countdown timers.
  */
-class HomeTimerCancelListener(private val homeTimerManager: HomeTimerManager) : Listener {
-
+class HomeTimerCancelListener(
+    private val homeTimerManager: HomeTimerManager,
+) : Listener {
     /**
      * AC-05, AC-14 — cancels timer on any XYZ movement >= 0.1 blocks.
      *

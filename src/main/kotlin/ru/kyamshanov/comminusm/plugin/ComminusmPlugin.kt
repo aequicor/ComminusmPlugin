@@ -6,17 +6,39 @@ import org.bukkit.NamespacedKey
 import org.bukkit.entity.ArmorStand
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.java.JavaPlugin
+import ru.kyamshanov.comminusm.command.CommuneCommand
+import ru.kyamshanov.comminusm.command.DelegatingCommandExecutor
+import ru.kyamshanov.comminusm.command.OrderCommuneInfoCommand
 import ru.kyamshanov.comminusm.command.PartyCommand
-import ru.kyamshanov.comminusm.manager.FlagActivationHelper
-import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
-import ru.kyamshanov.comminusm.manager.FlagStabilityManager
+import ru.kyamshanov.comminusm.commune.listener.AsyncChatEventListener
+import ru.kyamshanov.comminusm.commune.listener.CommuneMembershipListener
+import ru.kyamshanov.comminusm.commune.listener.CommuneOrderDestroyListener
+import ru.kyamshanov.comminusm.commune.listener.CommunePlayerListener
+import ru.kyamshanov.comminusm.commune.listener.CommuneStartupTask
+import ru.kyamshanov.comminusm.commune.listener.FriendlyFireListener
+import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
+import ru.kyamshanov.comminusm.commune.service.CommuneChatServiceImpl
+import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
+import ru.kyamshanov.comminusm.commune.service.CommuneService
+import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
+import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
+import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
+import ru.kyamshanov.comminusm.domain.repositories.WorkdaysRepository
 import ru.kyamshanov.comminusm.event.PlayerJoinHandler
 import ru.kyamshanov.comminusm.gui.AdminMenu
+import ru.kyamshanov.comminusm.gui.CommuneMenu
+import ru.kyamshanov.comminusm.gui.CommuneOrderMenu
+import ru.kyamshanov.comminusm.gui.CommunePartyMenu
 import ru.kyamshanov.comminusm.gui.FrontMenu
+import ru.kyamshanov.comminusm.gui.OrderMembersMenu
 import ru.kyamshanov.comminusm.gui.OrderMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
 import ru.kyamshanov.comminusm.gui.TreasuryMenu
+import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
+import ru.kyamshanov.comminusm.infrastructure.repositories.WorkdaysRepositoryImpl
 import ru.kyamshanov.comminusm.listener.BlockListener
 import ru.kyamshanov.comminusm.listener.ExplosionListener
 import ru.kyamshanov.comminusm.listener.FlagChunkListener
@@ -29,6 +51,9 @@ import ru.kyamshanov.comminusm.listener.HomeTimerCancelListener
 import ru.kyamshanov.comminusm.listener.OrderFlagListener
 import ru.kyamshanov.comminusm.listener.OrderRespawnListener
 import ru.kyamshanov.comminusm.listener.PlayerListener
+import ru.kyamshanov.comminusm.manager.FlagActivationHelper
+import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
+import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.HomeTimerManager
 import ru.kyamshanov.comminusm.service.OrderFlagStabilityManager
 import ru.kyamshanov.comminusm.service.OrderService
@@ -36,43 +61,18 @@ import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager
 import ru.kyamshanov.comminusm.storage.DatabaseManager
-import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
-import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
-import ru.kyamshanov.comminusm.domain.repositories.WorkdaysRepository
-import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
-import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
-import ru.kyamshanov.comminusm.infrastructure.repositories.WorkdaysRepositoryImpl
-import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
-import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
-import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
-import ru.kyamshanov.comminusm.commune.service.CommuneChatServiceImpl
-import ru.kyamshanov.comminusm.commune.listener.CommuneStartupTask
-import ru.kyamshanov.comminusm.commune.listener.CommuneOrderDestroyListener
-import ru.kyamshanov.comminusm.commune.listener.CommuneMembershipListener
-import ru.kyamshanov.comminusm.commune.listener.CommunePlayerListener
-import ru.kyamshanov.comminusm.commune.listener.FriendlyFireListener
-import ru.kyamshanov.comminusm.commune.listener.AsyncChatEventListener
-import ru.kyamshanov.comminusm.command.CommuneCommand
-import ru.kyamshanov.comminusm.command.OrderCommuneInfoCommand
-import ru.kyamshanov.comminusm.command.DelegatingCommandExecutor
-import ru.kyamshanov.comminusm.gui.CommuneMenu
-import ru.kyamshanov.comminusm.gui.CommunePartyMenu
-import ru.kyamshanov.comminusm.gui.CommuneOrderMenu
-import ru.kyamshanov.comminusm.gui.OrderMembersMenu
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("TooManyFunctions")
 class ComminusmPlugin : JavaPlugin() {
-
     lateinit var flagStabilityManager: FlagStabilityManager
     private var homeTimerManager: HomeTimerManager? = null
 
     companion object {
-        private lateinit var INSTANCE: ComminusmPlugin
-        fun getInstance() = INSTANCE
+        private lateinit var instance: ComminusmPlugin
+
+        fun getInstance() = instance
 
         private const val STARTUP_SCAN_WARN_THRESHOLD = 100
         private const val CHUNK_SHIFT = 4
@@ -122,7 +122,7 @@ class ComminusmPlugin : JavaPlugin() {
     )
 
     override fun onEnable() {
-        INSTANCE = this
+        instance = this
         saveDefaultConfig()
 
         flagStabilityManager = FlagStabilityManager(this)
@@ -141,8 +141,8 @@ class ComminusmPlugin : JavaPlugin() {
                 flagActivationHelper,
                 flagCleanupHelper,
                 services.orderRepo,
-                services.frontRepo
-            )
+                services.frontRepo,
+            ),
         )
 
         val orderFlagStabilityManager = OrderFlagStabilityManager(services.orderRepo, logger)
@@ -155,19 +155,26 @@ class ComminusmPlugin : JavaPlugin() {
                 services.pluginConfig,
                 services.workFrontService,
                 htManager,
-                orderFlagStabilityManager
-            )
+                orderFlagStabilityManager,
+            ),
         )
 
         val communeResources = wireCommuneSystem(services.orderService, services.orderRepo)
-        registerCommands(services.pluginConfig, services.workdaysService, services.orderService,
-            services.workFrontService)
+        registerCommands(
+            services.pluginConfig,
+            services.workdaysService,
+            services.orderService,
+            services.workFrontService,
+        )
 
         logger.info("☭ Плагин активирован! Трудодни начисляются, Ордера выдаются.")
         startupRepairScan(services.orderRepo, services.frontRepo, services.pluginConfig.flagStartupScanBatchSize)
-        server.scheduler.runTaskAsynchronously(this, Runnable {
-            communeResources.communeStartupTask.onEnable()
-        })
+        server.scheduler.runTaskAsynchronously(
+            this,
+            Runnable {
+                communeResources.communeStartupTask.onEnable()
+            },
+        )
     }
 
     private fun initializePersistence(): DatabaseManager {
@@ -200,23 +207,32 @@ class ComminusmPlugin : JavaPlugin() {
         val frontRepo: WorkFrontRepository = WorkFrontRepositoryImpl(db.connection)
         val workdaysRepository: WorkdaysRepository = WorkdaysRepositoryImpl(db.connection)
         val workdaysService = WorkdaysService(workdaysRepository)
-        val orderService = initializeOrderService(
+        val orderService =
+            initializeOrderService(
+                orderRepo,
+                pluginConfig,
+                chunkCache,
+                workdaysService,
+                flagCleanupHelper,
+            )
+        val workFrontService =
+            WorkFrontService(
+                frontRepo,
+                pluginConfig.frontRadius,
+                chunkCache,
+                this,
+                flagCleanupHelper,
+                flagStabilityManager,
+            )
+        return InitializedServices(
+            orderService,
+            workFrontService,
             orderRepo,
-            pluginConfig,
-            chunkCache,
-            workdaysService,
-            flagCleanupHelper
-        )
-        val workFrontService = WorkFrontService(
             frontRepo,
-            pluginConfig.frontRadius,
+            pluginConfig,
+            workdaysService,
             chunkCache,
-            this,
-            flagCleanupHelper,
-            flagStabilityManager
         )
-        return InitializedServices(orderService, workFrontService, orderRepo, frontRepo,
-            pluginConfig, workdaysService, chunkCache)
     }
 
     private fun registerAllListeners(deps: ListenerDependencies) {
@@ -229,8 +245,8 @@ class ComminusmPlugin : JavaPlugin() {
                 deps.flagActivationHelper,
                 deps.flagCleanupHelper,
                 deps.orderRepo,
-                deps.frontRepo
-            )
+                deps.frontRepo,
+            ),
         )
     }
 
@@ -245,9 +261,10 @@ class ComminusmPlugin : JavaPlugin() {
         orderService: OrderService,
         workFrontService: WorkFrontService,
     ) {
-        val partyCmd = checkNotNull(getCommand("party")) {
-            "Команда 'party' не объявлена в plugin.yml"
-        }
+        val partyCmd =
+            checkNotNull(getCommand("party")) {
+                "Команда 'party' не объявлена в plugin.yml"
+            }
         partyCmd.setExecutor(PartyCommand(pluginConfig, workdaysService, orderService, workFrontService))
     }
 
@@ -257,8 +274,8 @@ class ComminusmPlugin : JavaPlugin() {
         chunkCache: ChunkCacheManager,
         workdaysService: WorkdaysService,
         flagCleanupHelper: FlagCleanupHelper,
-    ): OrderService {
-        return OrderService(
+    ): OrderService =
+        OrderService(
             orderRepo,
             pluginConfig.orderLevels,
             workdaysService,
@@ -266,9 +283,8 @@ class ComminusmPlugin : JavaPlugin() {
             chunkCache,
             flagCleanupHelper,
             flagStabilityManager,
-            this
+            this,
         )
-    }
 
     private fun wireFlagListeners(deps: FlagListenersDependencies) {
         server.pluginManager.registerEvents(PlayerJoinHandler(), this)
@@ -281,17 +297,17 @@ class ComminusmPlugin : JavaPlugin() {
                 deps.workFrontService,
                 this,
                 deps.flagActivationHelper,
-                flagStabilityManager
+                flagStabilityManager,
             ),
-            this
+            this,
         )
         server.pluginManager.registerEvents(
             BlockListener(deps.orderService, deps.workFrontService),
-            this
+            this,
         )
         server.pluginManager.registerEvents(
             ExplosionListener(deps.orderService, deps.workFrontService, flagStabilityManager),
-            this
+            this,
         )
         server.pluginManager.registerEvents(
             FrontFlagListener(
@@ -301,19 +317,19 @@ class ComminusmPlugin : JavaPlugin() {
                 deps.flagActivationHelper,
                 deps.flagCleanupHelper,
                 flagStabilityManager,
-                deps.pluginConfig
+                deps.pluginConfig,
             ),
-            this
+            this,
         )
         server.pluginManager.registerEvents(
             FlagDeletionConfirmListener(deps.orderService),
-            this
+            this,
         )
         server.pluginManager.registerEvents(FlagItemProtectionListener(), this)
         server.pluginManager.registerEvents(FlagProtectionListener(flagStabilityManager), this)
         server.pluginManager.registerEvents(
             FlagChunkListener(this, flagStabilityManager, deps.orderRepo, deps.frontRepo),
-            this
+            this,
         )
     }
 
@@ -325,21 +341,22 @@ class ComminusmPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(HomeTimerCancelListener(htManager), this)
         server.pluginManager.registerEvents(
             OrderRespawnListener(orderService, orderFlagStabilityManager, logger),
-            this
+            this,
         )
         server.pluginManager.registerEvents(FlagEventListener(htManager), this)
     }
 
     private fun wireMenus(deps: MenuDependencies) {
-        val orderMenu = OrderMenu(
-            deps.orderService,
-            deps.workdaysService,
-            deps.pluginConfig,
-            deps.workFrontService,
-            deps.htManager,
-            deps.orderFlagStabilityManager,
-            this
-        )
+        val orderMenu =
+            OrderMenu(
+                deps.orderService,
+                deps.workdaysService,
+                deps.pluginConfig,
+                deps.workFrontService,
+                deps.htManager,
+                deps.orderFlagStabilityManager,
+                this,
+            )
         server.pluginManager.registerEvents(
             PartyMenu(
                 deps.pluginConfig,
@@ -347,16 +364,16 @@ class ComminusmPlugin : JavaPlugin() {
                 deps.orderService,
                 deps.workFrontService,
                 this,
-                orderMenu
+                orderMenu,
             ),
-            this
+            this,
         )
         server.pluginManager.registerEvents(orderMenu, this)
         server.pluginManager.registerEvents(FrontMenu(deps.workFrontService), this)
         server.pluginManager.registerEvents(TreasuryMenu(deps.pluginConfig, deps.workdaysService), this)
         server.pluginManager.registerEvents(
             AdminMenu(deps.orderService, deps.workFrontService),
-            this
+            this,
         )
     }
 
@@ -388,30 +405,30 @@ class ComminusmPlugin : JavaPlugin() {
         // Listeners - Stage 06
         server.pluginManager.registerEvents(
             CommuneOrderDestroyListener(communeService, crossOrderMembershipService),
-            this
+            this,
         )
         server.pluginManager.registerEvents(
             CommuneMembershipListener(communeService, orderMembershipService),
-            this
+            this,
         )
         server.pluginManager.registerEvents(
             CommunePlayerListener(communeService, orderService),
-            this
+            this,
         )
         server.pluginManager.registerEvents(
             FriendlyFireListener(communeService, orderMembershipService),
-            this
+            this,
         )
 
         // Chat system
         server.pluginManager.registerEvents(
             AsyncChatEventListener(communeChatService),
-            this
+            this,
         )
 
         // Commands
         getCommand("cc")?.setExecutor(
-            CommuneCommand(communeService, orderMembershipService, communeChatService, null)
+            CommuneCommand(communeService, orderMembershipService, communeChatService, null),
         )
 
         getCommand("order")?.let { orderCmd ->
@@ -419,8 +436,8 @@ class ComminusmPlugin : JavaPlugin() {
             orderCmd.setExecutor(
                 DelegatingCommandExecutor(
                     existingExecutor,
-                    OrderCommuneInfoCommand(orderRepo, communeService)
-                )
+                    OrderCommuneInfoCommand(orderRepo, communeService),
+                ),
             )
         }
 
@@ -433,12 +450,12 @@ class ComminusmPlugin : JavaPlugin() {
 
         server.pluginManager.registerEvents(
             CommuneMenu(communeService, orderService, communeInvitationService, orderMembershipService),
-            this
+            this,
         )
 
         server.pluginManager.registerEvents(
             OrderMembersMenu(orderMembershipService, orderService),
-            this
+            this,
         )
 
         return CommuneResources(communeStartupTask)
@@ -452,27 +469,28 @@ class ComminusmPlugin : JavaPlugin() {
         server.scheduler.runTaskAsynchronously(
             this,
             Runnable {
-                val allFlags = buildList<FlagEntry> {
-                    @Suppress("TooGenericExceptionCaught")
-                    try {
-                        orderRepo.findAllActivated().forEach { o ->
-                            val world = o.centerWorld
-                            if (world != null) {
-                                add(FlagEntry("order/${o.ownerUuid}", world, o.centerX, o.centerY, o.centerZ))
+                val allFlags =
+                    buildList<FlagEntry> {
+                        @Suppress("TooGenericExceptionCaught")
+                        try {
+                            orderRepo.findAllActivated().forEach { o ->
+                                val world = o.centerWorld
+                                if (world != null) {
+                                    add(FlagEntry("order/${o.ownerUuid}", world, o.centerX, o.centerY, o.centerZ))
+                                }
                             }
+                        } catch (e: Exception) {
+                            logger.warning("Startup repair: DB error reading orders — ${e.message}")
                         }
-                    } catch (e: Exception) {
-                        logger.warning("Startup repair: DB error reading orders — ${e.message}")
-                    }
-                    @Suppress("TooGenericExceptionCaught")
-                    try {
-                        frontRepo.findAllActivated().forEach { f ->
-                            add(FlagEntry("front/${f.ownerUuid}", f.centerWorld, f.centerX, f.centerY, f.centerZ))
+                        @Suppress("TooGenericExceptionCaught")
+                        try {
+                            frontRepo.findAllActivated().forEach { f ->
+                                add(FlagEntry("front/${f.ownerUuid}", f.centerWorld, f.centerX, f.centerY, f.centerZ))
+                            }
+                        } catch (e: Exception) {
+                            logger.warning("Startup repair: DB error reading fronts — ${e.message}")
                         }
-                    } catch (e: Exception) {
-                        logger.warning("Startup repair: DB error reading fronts — ${e.message}")
                     }
-                }
                 if (allFlags.size > STARTUP_SCAN_WARN_THRESHOLD) {
                     logger.warning("Startup repair scan: processing ${allFlags.size} flags — this may take a moment")
                 }
@@ -485,7 +503,11 @@ class ComminusmPlugin : JavaPlugin() {
     }
 
     @Suppress("CyclomaticComplexMethod", "LoopWithTooManyJumpStatements")
-    private fun startupRepairBatch(allFlags: List<FlagEntry>, offset: Int, batchSize: Int) {
+    private fun startupRepairBatch(
+        allFlags: List<FlagEntry>,
+        offset: Int,
+        batchSize: Int,
+    ) {
         val batch = allFlags.drop(offset).take(batchSize)
         if (batch.isEmpty()) return
 
@@ -522,13 +544,14 @@ class ComminusmPlugin : JavaPlugin() {
 
             @Suppress("TooGenericExceptionCaught")
             try {
-                val armorStand = world.spawn(asLocation, ArmorStand::class.java) { stand ->
-                    stand.setVisible(false)
-                    stand.setGravity(false)
-                    stand.setMarker(true)
-                    stand.customName(Component.text("§6$flagType — §f$ownerName"))
-                    stand.isCustomNameVisible = true
-                }
+                val armorStand =
+                    world.spawn(asLocation, ArmorStand::class.java) { stand ->
+                        stand.setVisible(false)
+                        stand.setGravity(false)
+                        stand.setMarker(true)
+                        stand.customName(Component.text("§6$flagType — §f$ownerName"))
+                        stand.isCustomNameVisible = true
+                    }
                 pdc.set(asKey, PersistentDataType.STRING, armorStand.uniqueId.toString())
             } catch (e: Exception) {
                 logger.severe("Startup repair: ArmorStand spawn failed for ${entry.flagId}: ${e.message}")
@@ -545,11 +568,12 @@ class ComminusmPlugin : JavaPlugin() {
     }
 
     private fun extractStartupFlagOwnerUuid(flagId: String): UUID? {
-        val uuidStr = when {
-            flagId.startsWith("order/") -> flagId.removePrefix("order/")
-            flagId.startsWith("front/") -> flagId.removePrefix("front/")
-            else -> return null
-        }
+        val uuidStr =
+            when {
+                flagId.startsWith("order/") -> flagId.removePrefix("order/")
+                flagId.startsWith("front/") -> flagId.removePrefix("front/")
+                else -> return null
+            }
         return runCatching { UUID.fromString(uuidStr) }.getOrNull()
     }
 

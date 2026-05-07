@@ -20,7 +20,7 @@ import kotlin.concurrent.write
  * In Stage 02+, publishes OrderMemberAddedEvent and OrderMemberRemovedEvent.
  */
 class OrderMembershipService(
-    private val repository: OrderMembersRepository
+    private val repository: OrderMembersRepository,
 ) {
     private val orderLocks = ConcurrentHashMap<Long, ReentrantReadWriteLock>()
 
@@ -32,10 +32,8 @@ class OrderMembershipService(
         orderId: Long,
         playerUuid: UUID,
         @Suppress("UNUSED_PARAMETER") initiator: UUID,
-        grantedAt: LocalDateTime = LocalDateTime.now()
-    ): Result<OrderMember> {
-        return addMember(orderId, playerUuid, "native", grantedAt, initiator)
-    }
+        grantedAt: LocalDateTime = LocalDateTime.now(),
+    ): Result<OrderMember> = addMember(orderId, playerUuid, "native", grantedAt, initiator)
 
     /**
      * Add a member to an order with specified grantedVia type.
@@ -46,7 +44,7 @@ class OrderMembershipService(
         playerUuid: UUID,
         grantedVia: String,
         grantedAt: LocalDateTime = LocalDateTime.now(),
-        @Suppress("UNUSED_PARAMETER") initiator: UUID = UUID.randomUUID()
+        @Suppress("UNUSED_PARAMETER") initiator: UUID = UUID.randomUUID(),
     ): Result<OrderMember> {
         val lock = orderLocks.getOrPut(orderId) { ReentrantReadWriteLock() }
         return lock.write {
@@ -58,10 +56,12 @@ class OrderMembershipService(
             val member = repository.addMember(orderId, playerUuid, grantedVia, grantedAt)
 
             // Publish OrderMemberAddedEvent
+            @Suppress("TooGenericExceptionCaught")
             try {
                 Bukkit.getPluginManager().callEvent(OrderMemberAddedEvent(orderId, playerUuid, grantedVia))
-            } catch (e: RuntimeException) {
-                // Bukkit may not be initialized in tests; ignore event publication errors
+            } catch (e: Exception) {
+                // Bukkit may not be initialized in tests or may throw various exceptions; log but don't fail
+                e.printStackTrace()
             }
 
             Result.Success(member)
@@ -76,10 +76,8 @@ class OrderMembershipService(
     fun removeNativeMember(
         orderId: Long,
         playerUuid: UUID,
-        @Suppress("UNUSED_PARAMETER") initiator: UUID
-    ): Result<Boolean> {
-        return removeMember(orderId, playerUuid, "native")
-    }
+        @Suppress("UNUSED_PARAMETER") initiator: UUID,
+    ): Result<Boolean> = removeMember(orderId, playerUuid, "native")
 
     /**
      * Remove a member from an order with specified grantedVia type (public API, publishes events).
@@ -89,7 +87,7 @@ class OrderMembershipService(
     fun removeMember(
         orderId: Long,
         playerUuid: UUID,
-        grantedVia: String
+        grantedVia: String,
     ): Result<Boolean> {
         val lock = orderLocks.getOrPut(orderId) { ReentrantReadWriteLock() }
         return lock.write {
@@ -99,10 +97,12 @@ class OrderMembershipService(
             }
 
             // Publish OrderMemberRemovedEvent with correct grantedVia
+            @Suppress("TooGenericExceptionCaught")
             try {
                 Bukkit.getPluginManager().callEvent(OrderMemberRemovedEvent(orderId, playerUuid, grantedVia))
-            } catch (e: RuntimeException) {
-                // Bukkit may not be initialized in tests; ignore event publication errors
+            } catch (e: Exception) {
+                // Bukkit may not be initialized in tests or may throw various exceptions; log but don't fail
+                e.printStackTrace()
             }
 
             Result.Success(true)
@@ -112,7 +112,10 @@ class OrderMembershipService(
     /**
      * Check if a player is a native member of an order.
      */
-    fun isNativeMember(orderId: Long, playerUuid: UUID): Boolean {
+    fun isNativeMember(
+        orderId: Long,
+        playerUuid: UUID,
+    ): Boolean {
         val lock = orderLocks.getOrPut(orderId) { ReentrantReadWriteLock() }
         return lock.read {
             val members = repository.getMembersWithType(orderId, "native")
@@ -135,7 +138,10 @@ class OrderMembershipService(
      * Used during cascade operations and startup checks.
      * Not guarded by lock - caller is responsible for serialization.
      */
-    internal fun removeMemberSilently(orderId: Long, playerUuid: UUID) {
+    internal fun removeMemberSilently(
+        orderId: Long,
+        playerUuid: UUID,
+    ) {
         repository.removeMember(orderId, playerUuid)
     }
 
@@ -147,7 +153,7 @@ class OrderMembershipService(
         orderId: Long,
         playerUuid: UUID,
         grantedVia: String,
-        grantedAt: LocalDateTime
+        grantedAt: LocalDateTime,
     ) {
         repository.addMember(orderId, playerUuid, grantedVia, grantedAt)
     }
@@ -155,17 +161,16 @@ class OrderMembershipService(
     /**
      * Get all orders where a player is a member.
      */
-    fun getOrdersOfPlayer(playerUuid: UUID): Set<Long> {
-        return repository.getOrdersOfPlayer(playerUuid)
-    }
+    fun getOrdersOfPlayer(playerUuid: UUID): Set<Long> = repository.getOrdersOfPlayer(playerUuid)
 
     /**
      * Get all orders where a player is a native member.
      */
     fun getNativeOrdersOfPlayer(playerUuid: UUID): Set<Long> {
         val allOrders = repository.getOrdersOfPlayer(playerUuid)
-        return allOrders.filter { orderId ->
-            repository.getMembersWithType(orderId, "native").any { it.playerUuid == playerUuid }
-        }.toSet()
+        return allOrders
+            .filter { orderId ->
+                repository.getMembersWithType(orderId, "native").any { it.playerUuid == playerUuid }
+            }.toSet()
     }
 }

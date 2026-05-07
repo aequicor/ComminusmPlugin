@@ -26,32 +26,39 @@ import java.util.logging.Logger
  * Covered: TC-13, TC-20, TC-21.
  */
 class FlagEventListenerTest {
-
     // -------------------------------------------------------------------------
     // Test doubles
     // -------------------------------------------------------------------------
 
-    private data class CancelCall(val playerUuid: UUID, val reason: CancelReason, val silent: Boolean)
+    private data class CancelCall(
+        val playerUuid: UUID,
+        val reason: CancelReason,
+        val silent: Boolean,
+    )
 
     /** Subclass of the open [HomeTimerManager] that records every [cancelTimer] invocation. */
     private class RecordingHomeTimerManager(
         private val taskIdSeq: AtomicInteger,
     ) : HomeTimerManager(
-        plugin = FakePlugin(),
-        flagStabilityManager = NoOpFlagStabilityManager(),
-        taskScheduler = { taskIdSeq.getAndIncrement() },
-        taskCanceller = { /* no-op */ },
-        isPlayerOnline = { true },
-        sendActionBarToPlayer = { _, _ -> },
-        sendMessageToPlayer = { _, _ -> },
-        getPlayerWorldName = { "world" },
-        getFlagWorldName = { _, _ -> "world" },
-        teleportPlayerToFlag = { _, _ -> TeleportResult.SUCCESS },
-        mainThreadRunner = { r -> r.run() },
-    ) {
+            plugin = FakePlugin(),
+            flagStabilityManager = NoOpFlagStabilityManager(),
+            taskScheduler = { taskIdSeq.getAndIncrement() },
+            taskCanceller = { /* no-op */ },
+            isPlayerOnline = { true },
+            sendActionBarToPlayer = { _, _ -> },
+            sendMessageToPlayer = { _, _ -> },
+            getPlayerWorldName = { "world" },
+            getFlagWorldName = { _, _ -> "world" },
+            teleportPlayerToFlag = { _, _ -> TeleportResult.SUCCESS },
+            mainThreadRunner = { r -> r.run() },
+        ) {
         val cancelCalls = mutableListOf<CancelCall>()
 
-        override fun cancelTimer(playerUuid: UUID, reason: CancelReason, silent: Boolean) {
+        override fun cancelTimer(
+            playerUuid: UUID,
+            reason: CancelReason,
+            silent: Boolean,
+        ) {
             cancelCalls += CancelCall(playerUuid, reason, silent)
             super.cancelTimer(playerUuid, reason, silent)
         }
@@ -59,6 +66,7 @@ class FlagEventListenerTest {
 
     private class NoOpFlagStabilityManager : FlagStabilityManager {
         override fun getFlagLocation(orderId: Long): org.bukkit.Location? = null
+
         override fun isFlagActive(orderId: Long): Boolean = false
     }
 
@@ -117,12 +125,13 @@ class FlagEventListenerTest {
     fun `TC-20 FlagRelocatedEvent same-world does NOT cancel timers`() {
         assertTrue(manager.hasActiveTimer(playerUuid), "Pre-condition: timer must be active")
 
-        val event = FlagRelocatedEvent(
-            orderId = orderId,
-            oldWorld = "world",
-            newWorld = "world",
-            newLocation = org.bukkit.Location(null, 10.0, 64.0, 20.0),
-        )
+        val event =
+            FlagRelocatedEvent(
+                orderId = orderId,
+                oldWorld = "world",
+                newWorld = "world",
+                newLocation = org.bukkit.Location(null, 10.0, 64.0, 20.0),
+            )
         listener.onFlagRelocated(event)
 
         assertTrue(manager.hasActiveTimer(playerUuid), "Timer must NOT be cancelled for same-world relocation")
@@ -141,12 +150,13 @@ class FlagEventListenerTest {
     fun `TC-21 FlagRelocatedEvent different-world cancels timers with FLAG_WORLD_CHANGED`() {
         assertTrue(manager.hasActiveTimer(playerUuid), "Pre-condition: timer must be active")
 
-        val event = FlagRelocatedEvent(
-            orderId = orderId,
-            oldWorld = "world",
-            newWorld = "nether",
-            newLocation = org.bukkit.Location(null, 10.0, 64.0, 20.0),
-        )
+        val event =
+            FlagRelocatedEvent(
+                orderId = orderId,
+                oldWorld = "world",
+                newWorld = "nether",
+                newLocation = org.bukkit.Location(null, 10.0, 64.0, 20.0),
+            )
         listener.onFlagRelocated(event)
 
         assertFalse(manager.hasActiveTimer(playerUuid), "Timer must be cancelled for cross-world relocation")

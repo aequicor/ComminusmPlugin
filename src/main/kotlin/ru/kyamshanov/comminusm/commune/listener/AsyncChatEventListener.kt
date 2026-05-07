@@ -1,6 +1,5 @@
 package ru.kyamshanov.comminusm.commune.listener
 
-import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import ru.kyamshanov.comminusm.commune.service.CommuneChatService
 
@@ -15,9 +14,8 @@ import ru.kyamshanov.comminusm.commune.service.CommuneChatService
  */
 class AsyncChatEventListener(
     @Suppress("UnusedPrivateProperty")
-    private val communeChatService: CommuneChatService
+    private val communeChatService: CommuneChatService,
 ) : Listener {
-
     // Note: AsyncChatEvent implementation would go here
     // Handles /cc message routing in async chat mode
     // Addresses AC-18: "Commune chat mode - toggle and single message dispatch"

@@ -1,3 +1,5 @@
+@file:Suppress("ReturnCount")
+
 package ru.kyamshanov.comminusm.commune.listener
 
 import org.bukkit.entity.Player
@@ -18,9 +20,8 @@ import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
  */
 class FriendlyFireListener(
     private val communeService: CommuneService,
-    private val membershipService: OrderMembershipService
+    private val membershipService: OrderMembershipService,
 ) : Listener {
-
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
     fun onEntityDamageByEntity(event: EntityDamageByEntityEvent) {
         if (shouldCancelFriendlyFire(event.entity, event.damager)) {
@@ -31,7 +32,10 @@ class FriendlyFireListener(
         }
     }
 
-    private fun shouldCancelFriendlyFire(damagee: Any, damager: Any): Boolean {
+    private fun shouldCancelFriendlyFire(
+        damagee: Any,
+        damager: Any,
+    ): Boolean {
         // Both must be players
         if (damagee !is Player || damager !is Player) {
             return false
@@ -55,10 +59,11 @@ class FriendlyFireListener(
         // Check if any native orders are in the same commune
         return damagerNativeOrders.any { damagerOrderId ->
             val damagerCommune = communeService.getCommuneOfOrder(damagerOrderId)
-            damagerCommune != null && damageeNativeOrders.any { damageeOrderId ->
-                val damageeCommune = communeService.getCommuneOfOrder(damageeOrderId)
-                damageeCommune != null && damagerCommune.id == damageeCommune.id
-            }
+            damagerCommune != null &&
+                damageeNativeOrders.any { damageeOrderId ->
+                    val damageeCommune = communeService.getCommuneOfOrder(damageeOrderId)
+                    damageeCommune != null && damagerCommune.id == damageeCommune.id
+                }
         }
     }
 }

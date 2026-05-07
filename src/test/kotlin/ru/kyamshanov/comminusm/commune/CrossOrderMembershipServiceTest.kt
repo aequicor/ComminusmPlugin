@@ -1,11 +1,10 @@
 package ru.kyamshanov.comminusm.commune
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import ru.kyamshanov.comminusm.commune.model.Result
 import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
 import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
@@ -20,6 +19,7 @@ class CrossOrderMembershipServiceTest {
     @BeforeEach
     fun setUp() {
         val cache = mutableMapOf<Long, MutableSet<Any>>()
+
         @Suppress("UNCHECKED_CAST")
         val typedCache = cache as MutableMap<Long, MutableSet<ru.kyamshanov.comminusm.commune.model.OrderMember>>
         repository = OrderMembersRepository(typedCache)

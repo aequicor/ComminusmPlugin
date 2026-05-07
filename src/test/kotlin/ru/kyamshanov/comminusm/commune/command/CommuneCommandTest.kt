@@ -2,17 +2,13 @@ package ru.kyamshanov.comminusm.commune.command
 
 import io.mockk.every
 import io.mockk.mockk
-import org.bukkit.command.Command
-import org.bukkit.entity.Player
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.command.CommuneCommand
-import ru.kyamshanov.comminusm.commune.model.Commune
 import ru.kyamshanov.comminusm.commune.service.CommuneChatService
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.MuteService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import java.util.UUID
 import kotlin.test.assertTrue
 
 class CommuneCommandTest {

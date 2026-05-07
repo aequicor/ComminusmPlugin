@@ -23,7 +23,6 @@ class CommunePartyMenu(
     private val communeService: CommuneService,
     private val orderService: OrderService,
 ) : Listener {
-
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
     fun onInventoryOpen(event: InventoryOpenEvent) {
@@ -43,7 +42,7 @@ class CommunePartyMenu(
                     Material.PAPER,
                     "§7Управление альянсом ордеров",
                     "§8Нажми чтобы открыть",
-                )
+                ),
             )
         } else {
             inv.setItem(
@@ -53,7 +52,7 @@ class CommunePartyMenu(
                     Material.PAPER,
                     "§7Коммуну создаёт лидер ордера",
                     "§8(Отключено)",
-                )
+                ),
             )
         }
     }

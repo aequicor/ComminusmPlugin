@@ -31,7 +31,7 @@ class CommuneCommand(
     private val communeService: CommuneService,
     private val orderMembershipService: OrderMembershipService,
     private val communeChatService: CommuneChatService,
-    private val muteService: MuteService? = null // Optional mute service
+    private val muteService: MuteService? = null, // Optional mute service
 ) : CommandExecutor {
     private val logger = Logger.getLogger(CommuneCommand::class.java.name)
 
@@ -43,7 +43,7 @@ class CommuneCommand(
         sender: CommandSender,
         cmd: Command,
         label: String,
-        args: Array<String>
+        args: Array<String>,
     ): Boolean {
         if (sender !is Player) {
             sender.sendMessage("§cЭта команда доступна только игрокам")
@@ -84,8 +84,7 @@ class CommuneCommand(
     /**
      * Get the commune of player's native order, or null if not in a commune.
      */
-    private fun getPlayerCommune(playerUuid: UUID):
-        ru.kyamshanov.comminusm.commune.model.Commune? {
+    private fun getPlayerCommune(playerUuid: UUID): ru.kyamshanov.comminusm.commune.model.Commune? {
         val nativeOrders = orderMembershipService.getNativeOrdersOfPlayer(playerUuid)
         return nativeOrders
             .asSequence()
@@ -96,7 +95,10 @@ class CommuneCommand(
     /**
      * Handle toggle mode command (AC-18b, AC-18c, TC-124, CC-21).
      */
-    private fun handleToggleMode(player: Player, playerUuid: UUID): Boolean {
+    private fun handleToggleMode(
+        player: Player,
+        playerUuid: UUID,
+    ): Boolean {
         val currentMode = communeChatService.getToggleMode(playerUuid)
         communeChatService.setToggleMode(playerUuid, !currentMode)
         if (!currentMode) {
@@ -113,7 +115,7 @@ class CommuneCommand(
     private fun handleSendMessage(
         player: Player,
         args: Array<String>,
-        playerCommune: ru.kyamshanov.comminusm.commune.model.Commune
+        playerCommune: ru.kyamshanov.comminusm.commune.model.Commune,
     ): Boolean {
         val messageText = args.joinToString(" ")
 
@@ -128,7 +130,7 @@ class CommuneCommand(
             communeChatService.broadcastToCommune(
                 playerCommune.id,
                 player,
-                messageText
+                messageText,
             )
             true
         } catch (e: IllegalStateException) {
@@ -142,7 +144,5 @@ class CommuneCommand(
      * Check if player is muted.
      * Uses MuteService if provided; otherwise returns false.
      */
-    private fun isMuted(playerUuid: UUID): Boolean {
-        return muteService?.isMuted(playerUuid) ?: false
-    }
+    private fun isMuted(playerUuid: UUID): Boolean = muteService?.isMuted(playerUuid) ?: false
 }

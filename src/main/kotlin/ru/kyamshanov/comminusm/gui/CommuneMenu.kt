@@ -7,7 +7,6 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.inventory.Inventory
 import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
@@ -28,11 +27,14 @@ class CommuneMenu(
     @Suppress("UNUSED_PARAMETER")
     private val orderMembershipService: OrderMembershipService,
 ) : Listener {
-
     @Suppress("LongMethod", "MagicNumber")
-    fun open(player: Player, communeId: UUID) {
-        val commune = communeService.getCommune(communeId)
-            ?: return player.sendMessage(Component.text("§cКоммуна не найдена"))
+    fun open(
+        player: Player,
+        communeId: UUID,
+    ) {
+        val commune =
+            communeService.getCommune(communeId)
+                ?: return player.sendMessage(Component.text("§cКоммуна не найдена"))
 
         val isLeader = orderService.isLeader(player.uniqueId)
 
@@ -47,7 +49,7 @@ class CommuneMenu(
                 Material.PAPER,
                 "§7Участники: §e${commune.orderIds.size}",
                 "§7ID: §e${commune.id}",
-            )
+            ),
         )
 
         // Orders list (slots 19-34, max 7 orders for simple pagination)
@@ -66,16 +68,18 @@ class CommuneMenu(
                     Material.WHITE_BANNER,
                     "§7Владелец: §e${Bukkit.getOfflinePlayer(order.ownerUuid).name}",
                     "§7Уровень: §e${order.level}",
-                )
+                ),
             )
             slot++
         }
 
         // Incoming invitations block (AC-30) — only for leader
         // Collect all invitations for orders in this commune
-        val allInvitations = commune.orderIds.flatMap { orderId ->
-            communeInvitationService.getInvitationsForOrder(orderId)
-        }.toSet()
+        val allInvitations =
+            commune.orderIds
+                .flatMap { orderId ->
+                    communeInvitationService.getInvitationsForOrder(orderId)
+                }.toSet()
 
         if (allInvitations.isNotEmpty() && isLeader) {
             inv.setItem(
@@ -85,7 +89,7 @@ class CommuneMenu(
                     Material.REDSTONE,
                     "§7Количество: §e${allInvitations.size}",
                     "§7Нажми для управления",
-                )
+                ),
             )
         }
 
@@ -97,7 +101,7 @@ class CommuneMenu(
                     "§eПригласить ордер",
                     Material.NETHER_STAR,
                     "§7Отправить приглашение союзнику",
-                )
+                ),
             )
             inv.setItem(
                 LEAVE_BUTTON_SLOT,
@@ -106,7 +110,7 @@ class CommuneMenu(
                     Material.RED_DYE,
                     "§7Выйти из альянса",
                     "§8Все cross-order права будут отозваны",
-                )
+                ),
             )
         }
 

@@ -3,6 +3,7 @@ plugins {
     id("com.gradleup.shadow") version "8.3.0"
     id("xyz.jpenilla.run-paper") version "2.3.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.7"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
 val isDetekt = gradle.startParameter.taskNames.any { it.contains("detekt", ignoreCase = true) }
@@ -70,6 +71,20 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
         sarif.required.set(true)
         txt.required.set(true)
         xml.required.set(true)
+    }
+}
+
+ktlint {
+    version.set("1.3.1")
+    verbose.set(false)
+    outputToConsole.set(true)
+    coloredOutput.set(true)
+    reporters {
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+    }
+    filter {
+        exclude("**/generated/**")
     }
 }
 

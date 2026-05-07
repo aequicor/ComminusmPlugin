@@ -4,7 +4,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import ru.kyamshanov.comminusm.commune.event.OrderMemberRemovedEvent
 import ru.kyamshanov.comminusm.commune.service.CommuneService
-import ru.kyamshanov.comminusm.commune.service.CrossOrderMembershipService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 
 /**
@@ -18,9 +17,8 @@ import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
  */
 class CommuneMembershipListener(
     private val communeService: CommuneService,
-    private val membershipService: OrderMembershipService? = null
+    private val membershipService: OrderMembershipService? = null,
 ) : Listener {
-
     @EventHandler
     fun onOrderMemberRemoved(event: OrderMemberRemovedEvent) {
         // Only process native member removals (§6.10, AC-25)
@@ -51,14 +49,15 @@ class CommuneMembershipListener(
      */
     private fun recalculateCrossOrderRights(
         playerUuid: java.util.UUID,
-        commune: ru.kyamshanov.comminusm.commune.model.Commune
+        commune: ru.kyamshanov.comminusm.commune.model.Commune,
     ) {
         // Step 1: Collect all native orders of the player in this commune
-        val nativeOrdersInCommune = commune.orderIds.filter { orderId ->
-            membershipService?.isNativeMember(orderId, playerUuid) ?: false ||
-            // Also check if player owns this order
-            orderId in membershipService?.getNativeOrdersOfPlayer(playerUuid) ?: emptySet()
-        }
+        val nativeOrdersInCommune =
+            commune.orderIds.filter { orderId ->
+                membershipService?.isNativeMember(orderId, playerUuid) ?: false ||
+                    // Also check if player owns this order
+                    orderId in membershipService?.getNativeOrdersOfPlayer(playerUuid) ?: emptySet()
+            }
 
         // Step 2: If player has at least one native order in commune, keep cross-order rights
         //         If player has NO native orders in commune, revoke all cross-order rights

@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test
  *         BlockListener MUST NOT overwrite that restoration with an explicit AIR set.
  */
 class FrontFlagRelocationCleanupTest {
-
     // ---------------------------------------------------------------------------
     // TC-106 regression: support-coordinate calculation for relocation cleanup
     // ---------------------------------------------------------------------------
@@ -37,8 +36,11 @@ class FrontFlagRelocationCleanupTest {
         // This mirrors the calculation now in FrontFlagListener.onBlockPlace
         val supportY = bannerY - 1
 
-        assertEquals(expectedSupportY, supportY,
-            "Support block must be at bannerY - 1 so FlagCleanupHelper removes BEDROCK, not AIR at banner level")
+        assertEquals(
+            expectedSupportY,
+            supportY,
+            "Support block must be at bannerY - 1 so FlagCleanupHelper removes BEDROCK, not AIR at banner level",
+        )
     }
 
     /**
@@ -79,20 +81,25 @@ class FrontFlagRelocationCleanupTest {
         val storedMaterialName = "STONE"
 
         // Logic extracted from the fixed FlagCleanupHelper.doCleanup()
-        val originalMaterial = storedMaterialName
-            .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
-            ?: org.bukkit.Material.AIR
+        val originalMaterial =
+            storedMaterialName
+                .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
+                ?: org.bukkit.Material.AIR
 
-        assertEquals(org.bukkit.Material.STONE, originalMaterial,
-            "Support block must be restored to STONE, not AIR")
+        assertEquals(
+            org.bukkit.Material.STONE,
+            originalMaterial,
+            "Support block must be restored to STONE, not AIR",
+        )
     }
 
     @Test
     fun `TC-107 restoration uses PDC material for DIRT`() {
         val storedMaterialName = "DIRT"
-        val originalMaterial = storedMaterialName
-            .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
-            ?: org.bukkit.Material.AIR
+        val originalMaterial =
+            storedMaterialName
+                .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
+                ?: org.bukkit.Material.AIR
 
         assertEquals(org.bukkit.Material.DIRT, originalMaterial)
     }
@@ -100,9 +107,10 @@ class FrontFlagRelocationCleanupTest {
     @Test
     fun `TC-107 restoration uses PDC material for GRAVEL`() {
         val storedMaterialName = "GRAVEL"
-        val originalMaterial = storedMaterialName
-            .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
-            ?: org.bukkit.Material.AIR
+        val originalMaterial =
+            storedMaterialName
+                .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
+                ?: org.bukkit.Material.AIR
 
         assertEquals(org.bukkit.Material.GRAVEL, originalMaterial)
     }
@@ -115,12 +123,16 @@ class FrontFlagRelocationCleanupTest {
     fun `TC-107 restoration falls back to AIR when PDC value is null`() {
         val storedMaterialName: String? = null
 
-        val originalMaterial = storedMaterialName
-            ?.let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
-            ?: org.bukkit.Material.AIR
+        val originalMaterial =
+            storedMaterialName
+                ?.let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
+                ?: org.bukkit.Material.AIR
 
-        assertEquals(org.bukkit.Material.AIR, originalMaterial,
-            "Fallback to AIR when PDC key is absent (legacy flags)")
+        assertEquals(
+            org.bukkit.Material.AIR,
+            originalMaterial,
+            "Fallback to AIR when PDC key is absent (legacy flags)",
+        )
     }
 
     /**
@@ -131,14 +143,20 @@ class FrontFlagRelocationCleanupTest {
     fun `TC-107 restoration falls back to AIR when PDC value is invalid material name`() {
         val storedMaterialName = "WOOD" // legacy/invalid material name
 
-        val originalMaterial = storedMaterialName
-            .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
-            ?: org.bukkit.Material.AIR
+        val originalMaterial =
+            storedMaterialName
+                .let { runCatching { org.bukkit.Material.valueOf(it) }.getOrNull() }
+                ?: org.bukkit.Material.AIR
 
-        assertNull(runCatching { org.bukkit.Material.valueOf(storedMaterialName) }.getOrNull(),
-            "WOOD must not be a valid Material — confirms runCatching fallback triggers")
-        assertEquals(org.bukkit.Material.AIR, originalMaterial,
-            "Invalid material name must fall back to AIR, not throw an exception")
+        assertNull(
+            runCatching { org.bukkit.Material.valueOf(storedMaterialName) }.getOrNull(),
+            "WOOD must not be a valid Material — confirms runCatching fallback triggers",
+        )
+        assertEquals(
+            org.bukkit.Material.AIR,
+            originalMaterial,
+            "Invalid material name must fall back to AIR, not throw an exception",
+        )
     }
 
     /**

@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package ru.kyamshanov.comminusm.event
 
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -7,7 +9,6 @@ import org.bukkit.event.player.PlayerJoinEvent
 import ru.kyamshanov.comminusm.book.ManifestoBook
 
 class PlayerJoinHandler : Listener {
-
     private val mm = MiniMessage.miniMessage()
 
     @EventHandler
@@ -17,7 +18,7 @@ class PlayerJoinHandler : Listener {
         player.openBook(ManifestoBook.create())
 
         event.joinMessage(
-            mm.deserialize("<yellow>[ВХОД] <green>${event.player.name}<yellow> явился на собрание трудового коллектива!")
+            mm.deserialize("<yellow>[ВХОД] <green>${event.player.name}<yellow> явился на собрание трудового коллектива!"),
         )
     }
 }

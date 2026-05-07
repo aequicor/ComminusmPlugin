@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.model.WorkFront
 import ru.kyamshanov.comminusm.infrastructure.repositories.WorkFrontRepositoryImpl
+import ru.kyamshanov.comminusm.model.WorkFront
 import java.util.UUID
 
 class WorkFrontRepositoryFlagTest {

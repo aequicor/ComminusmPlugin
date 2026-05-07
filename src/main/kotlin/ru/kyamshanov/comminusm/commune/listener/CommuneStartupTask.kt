@@ -1,3 +1,5 @@
+@file:Suppress("TooGenericExceptionCaught")
+
 package ru.kyamshanov.comminusm.commune.listener
 
 import org.bukkit.Bukkit
@@ -20,9 +22,8 @@ import ru.kyamshanov.comminusm.commune.service.CommuneService
  */
 class CommuneStartupTask(
     @Suppress("UNUSED_PARAMETER") private val communeService: CommuneService,
-    private val plugin: Plugin? = null
+    private val plugin: Plugin? = null,
 ) {
-
     var startupComplete = false
         private set
 
@@ -35,18 +36,21 @@ class CommuneStartupTask(
      */
     fun onEnable() {
         val pluginInstance = plugin ?: return
-        Bukkit.getScheduler().runTaskAsynchronously(pluginInstance, Runnable {
-            try {
-                loadCommunes()
-                if (!storageLoadFailed) {
-                    performConsistencyCheck()
-                    startupComplete = true
+        Bukkit.getScheduler().runTaskAsynchronously(
+            pluginInstance,
+            Runnable {
+                try {
+                    loadCommunes()
+                    if (!storageLoadFailed) {
+                        performConsistencyCheck()
+                        startupComplete = true
+                    }
+                } catch (e: RuntimeException) {
+                    storageLoadFailed = true
+                    Bukkit.getLogger().severe("Failed to load communes at startup: ${e.message}")
                 }
-            } catch (e: RuntimeException) {
-                storageLoadFailed = true
-                Bukkit.getLogger().severe("Failed to load communes at startup: ${e.message}")
-            }
-        })
+            },
+        )
     }
 
     /**

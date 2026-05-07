@@ -12,37 +12,46 @@ import ru.kyamshanov.comminusm.service.WorkFrontService
 
 class AdminMenu(
     private val orderService: OrderService?,
-    private val workFrontService: WorkFrontService?
+    private val workFrontService: WorkFrontService?,
 ) : Listener {
-
     fun open(player: Player) {
-        val inv = Bukkit.createInventory(
-            null,
-            GuiConstants.SMALL_INVENTORY_SIZE,
-            Component.text(GuiConstants.ADMIN_PANEL_TITLE)
-        )
+        val inv =
+            Bukkit.createInventory(
+                null,
+                GuiConstants.SMALL_INVENTORY_SIZE,
+                Component.text(GuiConstants.ADMIN_PANEL_TITLE),
+            )
         GuiUtils.fillBorder(inv)
 
-        inv.setItem(GuiConstants.ADMIN_DELETE_ORDERS_SLOT, GuiUtils.namedItem(
-            GuiConstants.DELETE_ORDERS_TEXT,
-            Material.BARRIER,
-            GuiConstants.DELETE_WARNING
-        ))
+        inv.setItem(
+            GuiConstants.ADMIN_DELETE_ORDERS_SLOT,
+            GuiUtils.namedItem(
+                GuiConstants.DELETE_ORDERS_TEXT,
+                Material.BARRIER,
+                GuiConstants.DELETE_WARNING,
+            ),
+        )
 
-        inv.setItem(GuiConstants.ADMIN_DELETE_FRONTS_SLOT, GuiUtils.namedItem(
-            GuiConstants.DELETE_FRONTS_TEXT,
-            Material.BARRIER,
-            GuiConstants.DELETE_WARNING
-        ))
+        inv.setItem(
+            GuiConstants.ADMIN_DELETE_FRONTS_SLOT,
+            GuiUtils.namedItem(
+                GuiConstants.DELETE_FRONTS_TEXT,
+                Material.BARRIER,
+                GuiConstants.DELETE_WARNING,
+            ),
+        )
 
         val orderCount = orderService?.findAllInWorld(player.world.name)?.size ?: 0
         val frontCount = workFrontService?.getAllInWorld(player.world.name)?.size ?: 0
-        inv.setItem(GuiConstants.ADMIN_STATS_SLOT, GuiUtils.namedItem(
-            GuiConstants.STATS_TEXT,
-            Material.BOOK,
-            "${GuiConstants.ORDERS_PREFIX}$orderCount",
-            "${GuiConstants.FRONTS_PREFIX}$frontCount"
-        ))
+        inv.setItem(
+            GuiConstants.ADMIN_STATS_SLOT,
+            GuiUtils.namedItem(
+                GuiConstants.STATS_TEXT,
+                Material.BOOK,
+                "${GuiConstants.ORDERS_PREFIX}$orderCount",
+                "${GuiConstants.FRONTS_PREFIX}$frontCount",
+            ),
+        )
 
         inv.setItem(GuiConstants.ADMIN_BACK_SLOT, GuiUtils.namedItem(GuiConstants.BACK_TEXT, Material.BARRIER))
 
@@ -66,7 +75,10 @@ class AdminMenu(
         }
     }
 
-    private fun deleteAllOrders(player: Player, world: String) {
+    private fun deleteAllOrders(
+        player: Player,
+        world: String,
+    ) {
         val orders = orderService?.findAllInWorld(world) ?: emptyList()
         for (order in orders) {
             orderService?.deleteByOwner(order.ownerUuid)
@@ -75,7 +87,10 @@ class AdminMenu(
         player.closeInventory()
     }
 
-    private fun deleteAllFronts(player: Player, world: String) {
+    private fun deleteAllFronts(
+        player: Player,
+        world: String,
+    ) {
         val fronts = workFrontService?.getAllInWorld(world) ?: emptyList()
         for (front in fronts) {
             workFrontService?.deactivate(front.ownerUuid)
@@ -84,7 +99,10 @@ class AdminMenu(
         player.closeInventory()
     }
 
-    private fun showWorldStats(player: Player, world: String) {
+    private fun showWorldStats(
+        player: Player,
+        world: String,
+    ) {
         val orderCount = orderService?.findAllInWorld(world)?.size ?: 0
         val frontCount = workFrontService?.getAllInWorld(world)?.size ?: 0
         player.sendMessage(Component.text("${GuiConstants.STATS_PREFIX}\u00a7f$world\u00a7e:"))

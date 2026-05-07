@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.service.OrderService
 import java.util.UUID
 import kotlin.test.assertTrue
 
@@ -17,10 +16,8 @@ import kotlin.test.assertTrue
  * Tests that FriendlyFireListener doesn't use hardcoded § codes
  */
 class ChatColorTest {
-
     private lateinit var communeService: CommuneService
     private lateinit var membershipService: OrderMembershipService
-    private lateinit var orderService: OrderService
     private lateinit var listener: FriendlyFireListener
 
     @BeforeEach

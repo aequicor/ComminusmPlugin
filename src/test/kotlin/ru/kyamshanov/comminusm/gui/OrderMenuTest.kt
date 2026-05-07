@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.service.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.HomeTimerManager
-import ru.kyamshanov.comminusm.service.TeleportResult
 import ru.kyamshanov.comminusm.service.StubPluginBase
+import ru.kyamshanov.comminusm.service.TeleportResult
 import java.util.UUID
 
 /**
@@ -27,7 +27,6 @@ import java.util.UUID
  */
 @Suppress("TooManyFunctions")
 class OrderMenuTest {
-
     // -------------------------------------------------------------------------
     // Fake FlagStabilityManager
     // -------------------------------------------------------------------------
@@ -40,7 +39,11 @@ class OrderMenuTest {
     private inner class FakeFlagStabilityManager : FlagStabilityManager {
         private val entries = mutableMapOf<Long, Pair<String?, Boolean>>()
 
-        fun setFlag(orderId: Long, worldName: String?, active: Boolean) {
+        fun setFlag(
+            orderId: Long,
+            worldName: String?,
+            active: Boolean,
+        ) {
             entries[orderId] = Pair(worldName, active)
         }
 
@@ -54,30 +57,32 @@ class OrderMenuTest {
             return Location(null, 0.0, 64.0, 0.0)
         }
 
-        override fun isFlagActive(orderId: Long): Boolean =
-            entries[orderId]?.second ?: false
+        override fun isFlagActive(orderId: Long): Boolean = entries[orderId]?.second ?: false
     }
 
     // -------------------------------------------------------------------------
     // Fake HomeTimerManager — records startTimer calls without Bukkit tasks
     // -------------------------------------------------------------------------
 
-    private class FakeHomeTimerManager : HomeTimerManager(
-        plugin = object : StubPluginBase() {},
-        flagStabilityManager = object : FlagStabilityManager {
-            override fun getFlagLocation(orderId: Long): Location? = null
-            override fun isFlagActive(orderId: Long): Boolean = false
-        },
-        taskScheduler = { 0 },
-        taskCanceller = {},
-        isPlayerOnline = { false },
-        sendActionBarToPlayer = { _, _ -> },
-        sendMessageToPlayer = { _, _ -> },
-        getPlayerWorldName = { null },
-        getFlagWorldName = { _, _ -> null },
-        teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
-        mainThreadRunner = {},
-    ) {
+    private class FakeHomeTimerManager :
+        HomeTimerManager(
+            plugin = object : StubPluginBase() {},
+            flagStabilityManager =
+                object : FlagStabilityManager {
+                    override fun getFlagLocation(orderId: Long): Location? = null
+
+                    override fun isFlagActive(orderId: Long): Boolean = false
+                },
+            taskScheduler = { 0 },
+            taskCanceller = {},
+            isPlayerOnline = { false },
+            sendActionBarToPlayer = { _, _ -> },
+            sendMessageToPlayer = { _, _ -> },
+            getPlayerWorldName = { null },
+            getFlagWorldName = { _, _ -> null },
+            teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
+            mainThreadRunner = {},
+        ) {
         var cancelTimerCallCount: Int = 0
 
         /** cancelTimer is open — override to count cancel calls (TC-26 verification). */
@@ -126,16 +131,23 @@ class OrderMenuTest {
                 size INTEGER NOT NULL DEFAULT 33
                )""",
         )
-        val orderService = ru.kyamshanov.comminusm.service.OrderService(
-            orderRepository = ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl(conn),
-            levels = emptyList(),
-            workdaysService = null,
-            minDistanceBetweenCenters = 100,
-        )
+        val orderService =
+            ru.kyamshanov.comminusm.service.OrderService(
+                orderRepository =
+                    ru.kyamshanov.comminusm.infrastructure.repositories
+                        .OrderRepositoryImpl(conn),
+                levels = emptyList(),
+                workdaysService = null,
+                minDistanceBetweenCenters = 100,
+            )
         return OrderMenu(
             orderService = orderService,
             workdaysService = null,
-            config = PluginConfig(org.bukkit.configuration.file.YamlConfiguration()),
+            config =
+                PluginConfig(
+                    org.bukkit.configuration.file
+                        .YamlConfiguration(),
+                ),
             workFrontService = null,
             homeTimerManager = fakeHtm,
             flagStabilityManager = fakeFsm,
@@ -151,12 +163,13 @@ class OrderMenuTest {
     fun `TC-01 active flag in same world yields ACTIVE button state`() {
         fakeFsm.setFlag(orderId, playerWorld, active = true)
 
-        val state = menu.resolveHomeButtonState(
-            fsm = fakeFsm,
-            orderId = orderId,
-            playerWorld = playerWorld,
-            getFlagWorldName = { fakeFsm.worldNameOf(orderId) },
-        )
+        val state =
+            menu.resolveHomeButtonState(
+                fsm = fakeFsm,
+                orderId = orderId,
+                playerWorld = playerWorld,
+                getFlagWorldName = { fakeFsm.worldNameOf(orderId) },
+            )
 
         assertEquals(
             OrderMenu.HomeButtonState.ACTIVE,
@@ -173,12 +186,13 @@ class OrderMenuTest {
     fun `TC-02 inactive flag yields HIDDEN button state`() {
         fakeFsm.setFlag(orderId, playerWorld, active = false)
 
-        val state = menu.resolveHomeButtonState(
-            fsm = fakeFsm,
-            orderId = orderId,
-            playerWorld = playerWorld,
-            getFlagWorldName = { fakeFsm.worldNameOf(orderId) },
-        )
+        val state =
+            menu.resolveHomeButtonState(
+                fsm = fakeFsm,
+                orderId = orderId,
+                playerWorld = playerWorld,
+                getFlagWorldName = { fakeFsm.worldNameOf(orderId) },
+            )
 
         assertEquals(
             OrderMenu.HomeButtonState.HIDDEN,
@@ -191,12 +205,13 @@ class OrderMenuTest {
     fun `TC-02 absent flag location yields HIDDEN button state`() {
         // No entry in fakeFsm — getFlagLocation returns null (non-owner case)
 
-        val state = menu.resolveHomeButtonState(
-            fsm = fakeFsm,
-            orderId = orderId,
-            playerWorld = playerWorld,
-            getFlagWorldName = { null },
-        )
+        val state =
+            menu.resolveHomeButtonState(
+                fsm = fakeFsm,
+                orderId = orderId,
+                playerWorld = playerWorld,
+                getFlagWorldName = { null },
+            )
 
         assertEquals(
             OrderMenu.HomeButtonState.HIDDEN,
@@ -213,12 +228,13 @@ class OrderMenuTest {
     fun `TC-32 active flag in different world yields DISABLED_DIFFERENT_WORLD button state`() {
         fakeFsm.setFlag(orderId, differentWorld, active = true)
 
-        val state = menu.resolveHomeButtonState(
-            fsm = fakeFsm,
-            orderId = orderId,
-            playerWorld = playerWorld,
-            getFlagWorldName = { fakeFsm.worldNameOf(orderId) },
-        )
+        val state =
+            menu.resolveHomeButtonState(
+                fsm = fakeFsm,
+                orderId = orderId,
+                playerWorld = playerWorld,
+                getFlagWorldName = { fakeFsm.worldNameOf(orderId) },
+            )
 
         assertEquals(
             OrderMenu.HomeButtonState.DISABLED_DIFFERENT_WORLD,
@@ -238,23 +254,24 @@ class OrderMenuTest {
 
         // Use a recording HomeTimerManager (taskScheduler records the fact that startTimer was called)
         val scheduledIds = mutableListOf<Int>()
-        val recordingHtm = HomeTimerManager(
-            plugin = object : StubPluginBase() {},
-            flagStabilityManager = fakeFsm,
-            taskScheduler = { action ->
-                val id = scheduledIds.size + 1
-                scheduledIds.add(id)
-                id
-            },
-            taskCanceller = {},
-            isPlayerOnline = { false },
-            sendActionBarToPlayer = { _, _ -> },
-            sendMessageToPlayer = { _, _ -> },
-            getPlayerWorldName = { null },
-            getFlagWorldName = { _, _ -> null },
-            teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
-            mainThreadRunner = {},
-        )
+        val recordingHtm =
+            HomeTimerManager(
+                plugin = object : StubPluginBase() {},
+                flagStabilityManager = fakeFsm,
+                taskScheduler = { action ->
+                    val id = scheduledIds.size + 1
+                    scheduledIds.add(id)
+                    id
+                },
+                taskCanceller = {},
+                isPlayerOnline = { false },
+                sendActionBarToPlayer = { _, _ -> },
+                sendMessageToPlayer = { _, _ -> },
+                getPlayerWorldName = { null },
+                getFlagWorldName = { _, _ -> null },
+                teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
+                mainThreadRunner = {},
+            )
 
         menu.handleHomeClick(
             playerUuid = playerUuid,
@@ -371,19 +388,20 @@ class OrderMenuTest {
         var inventoryClosed = false
         val actionBarMessages = mutableListOf<String>()
 
-        val alreadyActiveHtm = HomeTimerManager(
-            plugin = object : StubPluginBase() {},
-            flagStabilityManager = fakeFsm,
-            taskScheduler = { _ -> 1 },
-            taskCanceller = {},
-            isPlayerOnline = { false },
-            sendActionBarToPlayer = { _, _ -> },
-            sendMessageToPlayer = { _, _ -> },
-            getPlayerWorldName = { null },
-            getFlagWorldName = { _, _ -> null },
-            teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
-            mainThreadRunner = {},
-        )
+        val alreadyActiveHtm =
+            HomeTimerManager(
+                plugin = object : StubPluginBase() {},
+                flagStabilityManager = fakeFsm,
+                taskScheduler = { _ -> 1 },
+                taskCanceller = {},
+                isPlayerOnline = { false },
+                sendActionBarToPlayer = { _, _ -> },
+                sendMessageToPlayer = { _, _ -> },
+                getPlayerWorldName = { null },
+                getFlagWorldName = { _, _ -> null },
+                teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
+                mainThreadRunner = {},
+            )
         // Pre-seed an active timer for playerUuid
         alreadyActiveHtm.startTimer(playerUuid, orderId)
 
@@ -440,19 +458,20 @@ class OrderMenuTest {
     fun `TC-26 timer remains active after handleHomeClick closes inventory`() {
         fakeFsm.setFlag(orderId, playerWorld, active = true)
 
-        val recordingHtm = HomeTimerManager(
-            plugin = object : StubPluginBase() {},
-            flagStabilityManager = fakeFsm,
-            taskScheduler = { _ -> 1 },
-            taskCanceller = {},
-            isPlayerOnline = { false },
-            sendActionBarToPlayer = { _, _ -> },
-            sendMessageToPlayer = { _, _ -> },
-            getPlayerWorldName = { null },
-            getFlagWorldName = { _, _ -> null },
-            teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
-            mainThreadRunner = {},
-        )
+        val recordingHtm =
+            HomeTimerManager(
+                plugin = object : StubPluginBase() {},
+                flagStabilityManager = fakeFsm,
+                taskScheduler = { _ -> 1 },
+                taskCanceller = {},
+                isPlayerOnline = { false },
+                sendActionBarToPlayer = { _, _ -> },
+                sendMessageToPlayer = { _, _ -> },
+                getPlayerWorldName = { null },
+                getFlagWorldName = { _, _ -> null },
+                teleportPlayerToFlag = { _, _ -> TeleportResult.FAILED },
+                mainThreadRunner = {},
+            )
 
         // Start the timer via handleHomeClick
         menu.handleHomeClick(

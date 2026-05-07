@@ -1,11 +1,11 @@
 package ru.kyamshanov.comminusm.commune
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.model.OrderMember
 import ru.kyamshanov.comminusm.commune.repository.OrderMembersRepository
 import java.time.LocalDateTime
@@ -140,12 +140,14 @@ class OrderMembersRepositoryTest {
 
         repository.addMember(orderId, playerId, "native", now)
 
-        val results = (0..9).map {
-            Thread {
-                val members = repository.getMembersOfOrder(orderId)
-                assertEquals(1, members.size)
-            }.apply { start() }
-        }.map { it.also { t -> t.join() } }
+        val results =
+            (0..9)
+                .map {
+                    Thread {
+                        val members = repository.getMembersOfOrder(orderId)
+                        assertEquals(1, members.size)
+                    }.apply { start() }
+                }.map { it.also { t -> t.join() } }
 
         // All threads completed successfully (no ConcurrentModificationException)
         assertTrue(results.isNotEmpty())

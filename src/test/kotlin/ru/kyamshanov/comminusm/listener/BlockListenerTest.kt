@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class BlockListenerTest {
-
     /**
      * Demonstrates the bug: Component.contains(Component) is style-sensitive.
      * A gold-colored "Флаг Ордера" does NOT "contain" a plain "Флаг Ордера"
@@ -27,14 +26,14 @@ class BlockListenerTest {
         assertFalse(
             styledName.contains(plainCheck),
             "BUG: Component.contains(Component) is style-sensitive — " +
-                "gold 'Флаг Ордера'.contains(white 'Флаг Ордера') = false"
+                "gold 'Флаг Ордера'.contains(white 'Флаг Ордера') = false",
         )
 
         // FIX: PlainTextComponentSerializer strips formatting, comparison works
         val plainText = PlainTextComponentSerializer.plainText().serialize(styledName)
         assertTrue(
             plainText.contains("Флаг Ордера"),
-            "FIX: plain-text serialization strips color, 'Флаг Ордера'.contains('Флаг Ордера') = true"
+            "FIX: plain-text serialization strips color, 'Флаг Ордера'.contains('Флаг Ордера') = true",
         )
     }
 
@@ -71,7 +70,7 @@ class BlockListenerTest {
         // but the key point: contains still finds the text
         assertTrue(
             plainText.contains("Флаг Ордера"),
-            "Even with §6 prefix, 'Флаг Ордера' substring exists in the serialized text"
+            "Even with §6 prefix, 'Флаг Ордера' substring exists in the serialized text",
         )
     }
 }

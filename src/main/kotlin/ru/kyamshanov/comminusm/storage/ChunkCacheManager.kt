@@ -5,11 +5,13 @@ import org.bukkit.persistence.PersistentDataType
 import ru.kyamshanov.comminusm.plugin.ComminusmPlugin
 
 class ChunkCacheManager {
-
     private val orderKey = NamespacedKey(ComminusmPlugin.getInstance(), "order_owner")
     private val frontKey = NamespacedKey(ComminusmPlugin.getInstance(), "front_owner")
 
-    fun markOrderChunk(chunk: org.bukkit.Chunk, uuid: java.util.UUID) {
+    fun markOrderChunk(
+        chunk: org.bukkit.Chunk,
+        uuid: java.util.UUID,
+    ) {
         val container = chunk.persistentDataContainer
         container.set(orderKey, PersistentDataType.STRING, uuid.toString())
     }
@@ -19,15 +21,23 @@ class ChunkCacheManager {
     }
 
     fun hasOrderMarker(chunk: org.bukkit.Chunk): Boolean {
-        return chunk.persistentDataContainer.has(orderKey, PersistentDataType.STRING)
+        val container = chunk.persistentDataContainer
+        return container.has(orderKey, PersistentDataType.STRING)
     }
 
     fun getOrderOwner(chunk: org.bukkit.Chunk): java.util.UUID? {
         val str = chunk.persistentDataContainer.get(orderKey, PersistentDataType.STRING) ?: return null
-        return try { java.util.UUID.fromString(str) } catch (_: IllegalArgumentException) { null }
+        return try {
+            java.util.UUID.fromString(str)
+        } catch (_: IllegalArgumentException) {
+            null
+        }
     }
 
-    fun markFrontChunk(chunk: org.bukkit.Chunk, uuid: java.util.UUID) {
+    fun markFrontChunk(
+        chunk: org.bukkit.Chunk,
+        uuid: java.util.UUID,
+    ) {
         val container = chunk.persistentDataContainer
         container.set(frontKey, PersistentDataType.STRING, uuid.toString())
     }
@@ -37,6 +47,7 @@ class ChunkCacheManager {
     }
 
     fun hasFrontMarker(chunk: org.bukkit.Chunk): Boolean {
-        return chunk.persistentDataContainer.has(frontKey, PersistentDataType.STRING)
+        val container = chunk.persistentDataContainer
+        return container.has(frontKey, PersistentDataType.STRING)
     }
 }

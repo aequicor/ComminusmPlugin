@@ -9,14 +9,12 @@ import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 import ru.kyamshanov.comminusm.service.OrderService
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
  * Unit tests for CommuneStartupTask: database loading and consistency checks
  * Addresses CRITICAL issue #1: implement loadCommunes() and performConsistencyCheck()
  */
 class CommuneStartupTaskTest {
-
     private lateinit var communeService: CommuneService
     private lateinit var membershipService: OrderMembershipService
     private lateinit var orderService: OrderService

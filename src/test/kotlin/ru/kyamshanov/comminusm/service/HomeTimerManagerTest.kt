@@ -21,7 +21,6 @@ import java.util.logging.Logger
  * Covered test cases: TC-03, TC-12, TC-08, TC-24, TC-35, TC-39.
  */
 class HomeTimerManagerTest {
-
     // -------------------------------------------------------------------------
     // In-memory fake infrastructure
     // -------------------------------------------------------------------------
@@ -67,7 +66,11 @@ class HomeTimerManagerTest {
          * Convenience setter: sets both flag location (world name) and active state.
          * [worldName] = null simulates an absent/unresolvable flag location.
          */
-        fun setFlag(id: Long, worldName: String?, active: Boolean) {
+        fun setFlag(
+            id: Long,
+            worldName: String?,
+            active: Boolean,
+        ) {
             worldNames[id] = worldName
             activeFlags[id] = active
         }
@@ -102,31 +105,32 @@ class HomeTimerManagerTest {
 
         fakeFsm = FakeFlagStabilityManager()
 
-        manager = HomeTimerManager(
-            plugin = FakePlugin(),
-            flagStabilityManager = fakeFsm,
-            taskScheduler = { action ->
-                val id = nextTaskId++
-                scheduledActions[id] = action
-                id
-            },
-            taskCanceller = { id -> cancelledTasks.add(id) },
-            isPlayerOnline = { uuid -> onlinePlayers.containsKey(uuid) },
-            sendActionBarToPlayer = { uuid, message ->
-                actionBarMessages.getOrPut(uuid) { mutableListOf() }.add(message)
-            },
-            sendMessageToPlayer = { uuid, component ->
-                val plain = PlainTextComponentSerializer.plainText().serialize(component)
-                sentMessages.getOrPut(uuid) { mutableListOf() }.add(plain)
-            },
-            getPlayerWorldName = { uuid -> onlinePlayers[uuid] },
-            getFlagWorldName = { oid, _ -> fakeFsm.getWorldName(oid) },
-            teleportPlayerToFlag = { uuid, oid ->
-                teleportCalls.getOrPut(uuid) { mutableListOf() }.add(oid)
-                if (teleportSucceeds) TeleportResult.SUCCESS else TeleportResult.FAILED
-            },
-            mainThreadRunner = { runnable -> mainThreadQueue.add(runnable) },
-        )
+        manager =
+            HomeTimerManager(
+                plugin = FakePlugin(),
+                flagStabilityManager = fakeFsm,
+                taskScheduler = { action ->
+                    val id = nextTaskId++
+                    scheduledActions[id] = action
+                    id
+                },
+                taskCanceller = { id -> cancelledTasks.add(id) },
+                isPlayerOnline = { uuid -> onlinePlayers.containsKey(uuid) },
+                sendActionBarToPlayer = { uuid, message ->
+                    actionBarMessages.getOrPut(uuid) { mutableListOf() }.add(message)
+                },
+                sendMessageToPlayer = { uuid, component ->
+                    val plain = PlainTextComponentSerializer.plainText().serialize(component)
+                    sentMessages.getOrPut(uuid) { mutableListOf() }.add(plain)
+                },
+                getPlayerWorldName = { uuid -> onlinePlayers[uuid] },
+                getFlagWorldName = { oid, _ -> fakeFsm.getWorldName(oid) },
+                teleportPlayerToFlag = { uuid, oid ->
+                    teleportCalls.getOrPut(uuid) { mutableListOf() }.add(oid)
+                    if (teleportSucceeds) TeleportResult.SUCCESS else TeleportResult.FAILED
+                },
+                mainThreadRunner = { runnable -> mainThreadQueue.add(runnable) },
+            )
     }
 
     // -------------------------------------------------------------------------
@@ -267,7 +271,7 @@ class HomeTimerManagerTest {
     fun `TC-35 executeHomeTP when isFlagActive is false cancels teleport (CC-02)`() {
         onlinePlayers[playerUuid] = "world"
 
-        fakeFsm.setFlag(orderId, worldName = "world", active = false)   // flag inactive
+        fakeFsm.setFlag(orderId, worldName = "world", active = false) // flag inactive
 
         manager.startTimer(playerUuid, orderId)
         val state = manager.timers[playerUuid]!!

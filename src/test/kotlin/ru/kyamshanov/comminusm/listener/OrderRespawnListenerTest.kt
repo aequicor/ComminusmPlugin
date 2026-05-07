@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package ru.kyamshanov.comminusm.listener
 
 import org.bukkit.Chunk
@@ -32,7 +34,6 @@ import java.util.logging.Logger
  * getChunkAt and the RecordingChunk records whether load(true) was called.
  */
 class OrderRespawnListenerTest {
-
     // -----------------------------------------------------------------------
     // Fake infrastructure
     // -----------------------------------------------------------------------
@@ -43,6 +44,7 @@ class OrderRespawnListenerTest {
         val activeFlags = mutableSetOf<Long>()
 
         override fun getFlagLocation(orderId: Long): Location? = locations[orderId]
+
         override fun isFlagActive(orderId: Long): Boolean = orderId in activeFlags
     }
 
@@ -62,7 +64,11 @@ class OrderRespawnListenerTest {
             Player::class.java.classLoader,
             arrayOf(Player::class.java),
             object : InvocationHandler {
-                override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? =
+                override fun invoke(
+                    proxy: Any,
+                    method: Method,
+                    args: Array<out Any>?,
+                ): Any? =
                     when (method.name) {
                         "getUniqueId" -> uuid
                         "getEntityId" -> 0
@@ -83,24 +89,29 @@ class OrderRespawnListenerTest {
         var loadForce = false
 
         @Suppress("UNCHECKED_CAST")
-        val proxy: Chunk = Proxy.newProxyInstance(
-            Chunk::class.java.classLoader,
-            arrayOf(Chunk::class.java),
-            object : InvocationHandler {
-                override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? =
-                    when (method.name) {
-                        "load" -> {
-                            loadCalled = true
-                            loadForce = args?.firstOrNull() as? Boolean ?: false
-                            true
+        val proxy: Chunk =
+            Proxy.newProxyInstance(
+                Chunk::class.java.classLoader,
+                arrayOf(Chunk::class.java),
+                object : InvocationHandler {
+                    override fun invoke(
+                        proxy: Any,
+                        method: Method,
+                        args: Array<out Any>?,
+                    ): Any? =
+                        when (method.name) {
+                            "load" -> {
+                                loadCalled = true
+                                loadForce = args?.firstOrNull() as? Boolean ?: false
+                                true
+                            }
+                            "toString" -> "RecordingChunk"
+                            "hashCode" -> System.identityHashCode(this)
+                            "equals" -> proxy === args?.firstOrNull()
+                            else -> throw UnsupportedOperationException("Chunk stub does not support ${method.name}")
                         }
-                        "toString" -> "RecordingChunk"
-                        "hashCode" -> System.identityHashCode(this)
-                        "equals" -> proxy === args?.firstOrNull()
-                        else -> throw UnsupportedOperationException("Chunk stub does not support ${method.name}")
-                    }
-            },
-        ) as Chunk
+                },
+            ) as Chunk
     }
 
     /**
@@ -108,12 +119,19 @@ class OrderRespawnListenerTest {
      * Uses Proxy to avoid implementing the entire World interface.
      */
     @Suppress("UNCHECKED_CAST")
-    private fun fakeWorld(worldName: String, chunkProxy: Chunk): World =
+    private fun fakeWorld(
+        worldName: String,
+        chunkProxy: Chunk,
+    ): World =
         Proxy.newProxyInstance(
             World::class.java.classLoader,
             arrayOf(World::class.java),
             object : InvocationHandler {
-                override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? =
+                override fun invoke(
+                    proxy: Any,
+                    method: Method,
+                    args: Array<out Any>?,
+                ): Any? =
                     when (method.name) {
                         "getName" -> worldName
                         "getChunkAt" -> chunkProxy
@@ -144,20 +162,27 @@ class OrderRespawnListenerTest {
         ordersByUuid.clear()
         recordingChunk = RecordingChunk()
         testWorld = fakeWorld("world", recordingChunk.proxy)
-        listener = OrderRespawnListener(
-            flagStabilityManager = flagManager,
-            logger = logger,
-            findOrderByOwner = { uuid -> ordersByUuid[uuid] },
-        )
+        listener =
+            OrderRespawnListener(
+                flagStabilityManager = flagManager,
+                logger = logger,
+                findOrderByOwner = { uuid -> ordersByUuid[uuid] },
+            )
     }
 
     /** Constructs a [PlayerRespawnEvent] with the given [player] and initial [respawnLoc]. */
-    private fun respawnEvent(player: Player, respawnLoc: Location, isBedSpawn: Boolean = false) =
-        PlayerRespawnEvent(player, respawnLoc, isBedSpawn)
+    private fun respawnEvent(
+        player: Player,
+        respawnLoc: Location,
+        isBedSpawn: Boolean = false,
+    ) = PlayerRespawnEvent(player, respawnLoc, isBedSpawn)
 
     /** Creates a [Location] bound to [testWorld]. */
-    private fun flagLocation(x: Double = 100.0, y: Double = 64.0, z: Double = 200.0) =
-        Location(testWorld, x, y, z)
+    private fun flagLocation(
+        x: Double = 100.0,
+        y: Double = 64.0,
+        z: Double = 200.0,
+    ) = Location(testWorld, x, y, z)
 
     // -----------------------------------------------------------------------
     // Tests
@@ -202,8 +227,11 @@ class OrderRespawnListenerTest {
 
         listener.onPlayerRespawn(event)
 
-        assertEquals(defaultLoc, event.respawnLocation,
-            "respawnLocation must stay at default when flag location is null")
+        assertEquals(
+            defaultLoc,
+            event.respawnLocation,
+            "respawnLocation must stay at default when flag location is null",
+        )
     }
 
     /**
@@ -298,26 +326,32 @@ class OrderRespawnListenerTest {
      */
     @Test
     fun `exception in collaborator is swallowed and respawnLocation stays unchanged`() {
-        val throwingFlagManager = object : FlagStabilityManager {
-            @Suppress("TooGenericExceptionThrown")
-            override fun getFlagLocation(orderId: Long): Location = throw RuntimeException("simulated failure")
-            override fun isFlagActive(orderId: Long): Boolean = true
-        }
+        val throwingFlagManager =
+            object : FlagStabilityManager {
+                @Suppress("TooGenericExceptionThrown")
+                override fun getFlagLocation(orderId: Long): Location = throw RuntimeException("simulated failure")
+
+                override fun isFlagActive(orderId: Long): Boolean = true
+            }
         val order = Order(id = orderId, ownerUuid = playerUuid)
         ordersByUuid[playerUuid] = order
 
-        val safeListener = OrderRespawnListener(
-            flagStabilityManager = throwingFlagManager,
-            logger = logger,
-            findOrderByOwner = { uuid -> ordersByUuid[uuid] },
-        )
+        val safeListener =
+            OrderRespawnListener(
+                flagStabilityManager = throwingFlagManager,
+                logger = logger,
+                findOrderByOwner = { uuid -> ordersByUuid[uuid] },
+            )
         val player = fakePlayer(playerUuid)
         val defaultLoc = Location(null, 0.0, 64.0, 0.0)
         val event = respawnEvent(player, defaultLoc)
 
         safeListener.onPlayerRespawn(event)
 
-        assertEquals(defaultLoc, event.respawnLocation,
-            "Exception must be caught; respawnLocation must stay at default")
+        assertEquals(
+            defaultLoc,
+            event.respawnLocation,
+            "Exception must be caught; respawnLocation must stay at default",
+        )
     }
 }

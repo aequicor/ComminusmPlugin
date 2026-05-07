@@ -1,6 +1,7 @@
+@file:Suppress("ReturnCount", "MaxLineLength")
+
 package ru.kyamshanov.comminusm.listener
 
-import kotlin.math.abs
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -20,6 +21,7 @@ import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.math.abs
 
 @Suppress("LongParameterList")
 class FrontFlagListener(
@@ -29,9 +31,8 @@ class FrontFlagListener(
     private val flagActivationHelper: FlagActivationHelper,
     private val flagCleanupHelper: FlagCleanupHelper,
     private val manager: FlagStabilityManager,
-    private val config: PluginConfig
+    private val config: PluginConfig,
 ) : Listener {
-
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     @EventHandler
     fun onBlockPlace(event: BlockPlaceEvent) {
@@ -92,7 +93,7 @@ class FrontFlagListener(
                     bannerZ = oldFront.centerZ,
                     flagId = "front/$ownerUuid",
                     manager = manager,
-                    dbDeleteFn = {}
+                    dbDeleteFn = {},
                 )
             }
         }
@@ -108,11 +109,12 @@ class FrontFlagListener(
         val lock = manager.getChunkLock(chunkKey)
 
         val isRelocation = oldFront != null
-        val successMsg = if (isRelocation) {
-            "§6☭ Старый Трудовой Фронт закрыт. Новый Трудовой Фронт активирован! Радиус: §e25 §6блоков."
-        } else {
-            "§6☭ Трудовой Фронт активирован! Радиус: §e25 §6блоков. Партия ждёт перевыполнения нормы!"
-        }
+        val successMsg =
+            if (isRelocation) {
+                "§6☭ Старый Трудовой Фронт закрыт. Новый Трудовой Фронт активирован! Радиус: §e25 §6блоков."
+            } else {
+                "§6☭ Трудовой Фронт активирован! Радиус: §e25 §6блоков. Партия ждёт перевыполнения нормы!"
+            }
 
         fun proceedWithActivation(acquiredLock: ReentrantLock) {
             val supportBlock = bannerBlock.world.getBlockAt(bannerBlock.x, bannerBlock.y - 1, bannerBlock.z)
@@ -139,7 +141,7 @@ class FrontFlagListener(
                 },
                 onDbFailure = { p ->
                     p?.sendMessage(Component.text("§cОшибка активации Трудового Фронта. Попробуйте ещё раз."))
-                }
+                },
             )
         }
 
@@ -153,14 +155,17 @@ class FrontFlagListener(
                     }
                     proceedWithActivation(lock)
                 },
-                LOCK_RETRY_TICKS
+                LOCK_RETRY_TICKS,
             )
             return
         }
         proceedWithActivation(lock)
     }
 
-    private fun isInsideOrder(order: Order, loc: org.bukkit.Location): Boolean {
+    private fun isInsideOrder(
+        order: Order,
+        loc: org.bukkit.Location,
+    ): Boolean {
         if (order.centerWorld == null) return false
         if (loc.world?.name != order.centerWorld) return false
         val dx = abs(order.centerX - loc.blockX)

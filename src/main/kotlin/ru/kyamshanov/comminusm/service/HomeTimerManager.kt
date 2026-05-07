@@ -77,12 +77,13 @@ open class HomeTimerManager(
     private val plugin: Plugin,
     private val flagStabilityManager: FlagStabilityManager,
     private val taskScheduler: (action: () -> Unit) -> Int = { action ->
-        plugin.server.scheduler.runTaskTimer(
-            plugin,
-            Runnable { action() },
-            TIMER_PERIOD_TICKS,
-            TIMER_PERIOD_TICKS,
-        ).taskId
+        plugin.server.scheduler
+            .runTaskTimer(
+                plugin,
+                Runnable { action() },
+                TIMER_PERIOD_TICKS,
+                TIMER_PERIOD_TICKS,
+            ).taskId
     },
     private val taskCanceller: (taskId: Int) -> Unit = { taskId ->
         plugin.server.scheduler.cancelTask(taskId)
@@ -97,7 +98,10 @@ open class HomeTimerManager(
         plugin.server.getPlayer(uuid)?.sendMessage(message)
     },
     private val getPlayerWorldName: (UUID) -> String? = { uuid ->
-        plugin.server.getPlayer(uuid)?.world?.name
+        plugin.server
+            .getPlayer(uuid)
+            ?.world
+            ?.name
     },
     private val getFlagWorldName: (orderId: Long, flagLoc: org.bukkit.Location) -> String? = { _, flagLoc ->
         flagLoc.world?.name
@@ -122,7 +126,6 @@ open class HomeTimerManager(
         plugin.server.scheduler.runTask(plugin, runnable)
     },
 ) {
-
     /** Backing store for active timers. Keyed by player UUID. */
     internal val timers = ConcurrentHashMap<UUID, HomeTimerState>()
 
@@ -133,7 +136,10 @@ open class HomeTimerManager(
      * Returns true when the timer was successfully started.
      * Must be called from the main thread.
      */
-    fun startTimer(playerUuid: UUID, orderId: Long): Boolean {
+    fun startTimer(
+        playerUuid: UUID,
+        orderId: Long,
+    ): Boolean {
         if (timers.containsKey(playerUuid)) return false
 
         val taskId = taskScheduler { tick(playerUuid) }
@@ -154,7 +160,11 @@ open class HomeTimerManager(
      * [silent] = true suppresses the cancellation ActionBar message.
      * Bukkit API calls are bounced to the main thread when [silent] = false.
      */
-    open fun cancelTimer(playerUuid: UUID, reason: CancelReason, silent: Boolean = false) {
+    open fun cancelTimer(
+        playerUuid: UUID,
+        reason: CancelReason,
+        silent: Boolean = false,
+    ) {
         val state = timers.remove(playerUuid) ?: return
         state.cancelled.set(true)
         if (!silent) {
@@ -175,8 +185,12 @@ open class HomeTimerManager(
      * Safe to call from any thread. Uses an explicit snapshot to avoid
      * ConcurrentModificationException (spec — cancelTimersForOrder contract).
      */
-    fun cancelTimersForOrder(orderId: Long, reason: CancelReason) {
-        timers.values.toList()
+    fun cancelTimersForOrder(
+        orderId: Long,
+        reason: CancelReason,
+    ) {
+        timers.values
+            .toList()
             .filter { it.orderId == orderId }
             .forEach { cancelTimer(it.playerUuid, reason) }
     }
@@ -279,21 +293,25 @@ open class HomeTimerManager(
         }
     }
 
-    private fun sendCancelMessage(playerUuid: UUID, reason: CancelReason) {
+    private fun sendCancelMessage(
+        playerUuid: UUID,
+        reason: CancelReason,
+    ) {
         val mm = MiniMessage.miniMessage()
-        val message = when (reason) {
-            CancelReason.MOVEMENT ->
-                mm.deserialize("<red>Телепортация отменена: вы сдвинулись с места.</red>")
-            CancelReason.DAMAGE ->
-                mm.deserialize("<red>Телепортация отменена: вы получили урон.</red>")
-            CancelReason.ATTACK ->
-                mm.deserialize("<red>Телепортация отменена: вы атаковали.</red>")
-            CancelReason.FLAG_DEACTIVATED ->
-                mm.deserialize("<red>Телепортация отменена: флаг ордера недоступен.</red>")
-            CancelReason.FLAG_WORLD_CHANGED ->
-                mm.deserialize("<red>Телепортация отменена: флаг перемещён в другой мир.</red>")
-            CancelReason.DISCONNECT, CancelReason.PLAYER_DIED -> return // always silent
-        }
+        val message =
+            when (reason) {
+                CancelReason.MOVEMENT ->
+                    mm.deserialize("<red>Телепортация отменена: вы сдвинулись с места.</red>")
+                CancelReason.DAMAGE ->
+                    mm.deserialize("<red>Телепортация отменена: вы получили урон.</red>")
+                CancelReason.ATTACK ->
+                    mm.deserialize("<red>Телепортация отменена: вы атаковали.</red>")
+                CancelReason.FLAG_DEACTIVATED ->
+                    mm.deserialize("<red>Телепортация отменена: флаг ордера недоступен.</red>")
+                CancelReason.FLAG_WORLD_CHANGED ->
+                    mm.deserialize("<red>Телепортация отменена: флаг перемещён в другой мир.</red>")
+                CancelReason.DISCONNECT, CancelReason.PLAYER_DIED -> return // always silent
+            }
         sendMessageToPlayer(playerUuid, message)
     }
 }

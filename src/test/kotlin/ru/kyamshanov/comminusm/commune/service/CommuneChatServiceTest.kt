@@ -1,13 +1,9 @@
 package ru.kyamshanov.comminusm.commune.service
 
-import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
-import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
-import io.mockk.verify
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
@@ -121,7 +117,7 @@ class CommuneChatServiceTest {
 
         assertTrue(
             service.isInCommune(playerUuid),
-            "isInCommune should return true when player has an order in a commune"
+            "isInCommune should return true when player has an order in a commune",
         )
     }
 
@@ -168,12 +164,13 @@ class CommuneChatServiceTest {
         // Create a custom PlayerCollection for testing
         val playerList = mutableListOf<Player>()
         for (uuid in listOf(player1Uuid, player2Uuid, player3Uuid)) {
-            val player = mockk<Player> {
-                every { uniqueId } returns uuid
-                every { sendMessage(any<Component>()) } answers {
-                    recipientUuids.add(uuid)
+            val player =
+                mockk<Player> {
+                    every { uniqueId } returns uuid
+                    every { sendMessage(any<Component>()) } answers {
+                        recipientUuids.add(uuid)
+                    }
                 }
-            }
             playerList.add(player)
         }
 
@@ -186,9 +183,10 @@ class CommuneChatServiceTest {
         every { membershipService.getNativeOrdersOfPlayer(player2Uuid) } returns setOf(orderId)
         every { membershipService.getNativeOrdersOfPlayer(player3Uuid) } returns emptySet()
 
-        val sender = mockk<Player> {
-            every { name } returns "TestPlayer"
-        }
+        val sender =
+            mockk<Player> {
+                every { name } returns "TestPlayer"
+            }
 
         // Broadcast
         service.broadcastToCommune(communeId, sender, "Test message")
@@ -217,12 +215,13 @@ class CommuneChatServiceTest {
 
         // Capture the sent components
         val sentComponents = mutableListOf<Component>()
-        val recipientPlayer = mockk<Player> {
-            every { uniqueId } returns recipientUuid
-            every { sendMessage(any<Component>()) } answers {
-                sentComponents.add(firstArg())
+        val recipientPlayer =
+            mockk<Player> {
+                every { uniqueId } returns recipientUuid
+                every { sendMessage(any<Component>()) } answers {
+                    sentComponents.add(firstArg())
+                }
             }
-        }
 
         // Mock Bukkit.getOnlinePlayers() using static mock
         io.mockk.mockkStatic(org.bukkit.Bukkit::class)
@@ -230,9 +229,10 @@ class CommuneChatServiceTest {
 
         every { membershipService.getNativeOrdersOfPlayer(recipientUuid) } returns setOf(orderId)
 
-        val sender = mockk<Player> {
-            every { name } returns senderName
-        }
+        val sender =
+            mockk<Player> {
+                every { name } returns senderName
+            }
 
         // Broadcast
         service.broadcastToCommune(communeId, sender, messageText)
@@ -245,8 +245,10 @@ class CommuneChatServiceTest {
         val componentStr = sentComponent.toString()
         assertTrue(componentStr.isNotEmpty(), "Component should have content")
         // Verify Component is not a bare string (Component API uses different structure)
-        assertTrue(componentStr.contains("Component") || componentStr.contains("text"),
-            "Should be a Component, not a plain string message")
+        assertTrue(
+            componentStr.contains("Component") || componentStr.contains("text"),
+            "Should be a Component, not a plain string message",
+        )
 
         // Clean up mocks
         io.mockk.unmockkStatic(org.bukkit.Bukkit::class)

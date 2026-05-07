@@ -1,10 +1,10 @@
 package ru.kyamshanov.comminusm.architecture
 
 import org.junit.jupiter.api.Test
+import ru.kyamshanov.comminusm.domain.repositories.CommuneRepository
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.domain.repositories.WorkFrontRepository
 import ru.kyamshanov.comminusm.domain.repositories.WorkdaysRepository
-import ru.kyamshanov.comminusm.domain.repositories.CommuneRepository
 import kotlin.test.assertNotNull
 
 /**
@@ -12,7 +12,6 @@ import kotlin.test.assertNotNull
  * This test ensures the domain layer repositories are properly defined.
  */
 class RepositoryInterfaceTest {
-
     @Test
     fun testOrderRepositoryInterfaceExists() {
         assertNotNull(OrderRepository::class)

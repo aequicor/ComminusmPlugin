@@ -17,27 +17,31 @@ import kotlin.concurrent.write
  */
 class CommuneService(
     private val communes: MutableMap<UUID, Commune>,
-    private val orderToCommuneId: MutableMap<Long, UUID>
+    private val orderToCommuneId: MutableMap<Long, UUID>,
 ) {
     private val lock = ReentrantReadWriteLock()
 
     /**
      * Create a new commune with a single initial order.
      */
-    fun createCommune(leadingOrderId: Long, createdBy: UUID): Result<Commune> {
+    fun createCommune(
+        leadingOrderId: Long,
+        createdBy: UUID,
+    ): Result<Commune> {
         return lock.write {
             if (orderToCommuneId.containsKey(leadingOrderId)) {
                 return@write Result.Failure("Order is already in a commune")
             }
 
             val communeId = UUID.randomUUID()
-            val commune = Commune(
-                id = communeId,
-                orderIds = setOf(leadingOrderId),
-                version = 0,
-                createdAt = LocalDateTime.now(),
-                createdBy = createdBy
-            )
+            val commune =
+                Commune(
+                    id = communeId,
+                    orderIds = setOf(leadingOrderId),
+                    version = 0,
+                    createdAt = LocalDateTime.now(),
+                    createdBy = createdBy,
+                )
 
             communes[communeId] = commune
             orderToCommuneId[leadingOrderId] = communeId
@@ -49,38 +53,41 @@ class CommuneService(
     /**
      * Get a commune by ID.
      */
-    fun getCommune(communeId: UUID): Commune? {
-        return lock.read {
+    fun getCommune(communeId: UUID): Commune? =
+        lock.read {
             communes[communeId]
         }
-    }
 
     /**
      * Get the commune containing a specific order.
      */
-    fun getCommuneOfOrder(orderId: Long): Commune? {
-        return lock.read {
+    fun getCommuneOfOrder(orderId: Long): Commune? =
+        lock.read {
             val communeId = orderToCommuneId[orderId]
             communeId?.let { communes[it] }
         }
-    }
 
     /**
      * Add an order to a commune, incrementing the version.
      */
-    fun addOrderToCommune(communeId: UUID, orderId: Long): Result<Unit> {
+    fun addOrderToCommune(
+        communeId: UUID,
+        orderId: Long,
+    ): Result<Unit> {
         return lock.write {
             if (orderToCommuneId.containsKey(orderId)) {
                 return@write Result.Failure("Order is already in a commune")
             }
 
-            val commune = communes[communeId]
-                ?: return@write Result.Failure("Commune not found")
+            val commune =
+                communes[communeId]
+                    ?: return@write Result.Failure("Commune not found")
 
-            val updatedCommune = commune.copy(
-                orderIds = commune.orderIds + orderId,
-                version = commune.version + 1
-            )
+            val updatedCommune =
+                commune.copy(
+                    orderIds = commune.orderIds + orderId,
+                    version = commune.version + 1,
+                )
 
             communes[communeId] = updatedCommune
             orderToCommuneId[orderId] = communeId
@@ -92,20 +99,25 @@ class CommuneService(
     /**
      * Remove an order from a commune, incrementing the version.
      */
-    fun removeOrderFromCommune(communeId: UUID, orderId: Long): Result<Unit> {
+    fun removeOrderFromCommune(
+        communeId: UUID,
+        orderId: Long,
+    ): Result<Unit> {
         return lock.write {
-            val commune = communes[communeId]
-                ?: return@write Result.Failure("Commune not found")
+            val commune =
+                communes[communeId]
+                    ?: return@write Result.Failure("Commune not found")
 
             if (!commune.orderIds.contains(orderId)) {
                 return@write Result.Failure("Order is not in this commune")
             }
 
             val updatedOrderIds = commune.orderIds - orderId
-            val updatedCommune = commune.copy(
-                orderIds = updatedOrderIds,
-                version = commune.version + 1
-            )
+            val updatedCommune =
+                commune.copy(
+                    orderIds = updatedOrderIds,
+                    version = commune.version + 1,
+                )
 
             communes[communeId] = updatedCommune
             orderToCommuneId.remove(orderId)
@@ -119,8 +131,9 @@ class CommuneService(
      */
     fun dissolveCommune(communeId: UUID): Result<Unit> {
         return lock.write {
-            val commune = communes.remove(communeId)
-                ?: return@write Result.Failure("Commune not found")
+            val commune =
+                communes.remove(communeId)
+                    ?: return@write Result.Failure("Commune not found")
 
             commune.orderIds.forEach { orderId ->
                 orderToCommuneId.remove(orderId)
@@ -136,8 +149,9 @@ class CommuneService(
      */
     fun incrementVersion(communeId: UUID): Long {
         return lock.write {
-            val commune = communes[communeId]
-                ?: return@write 0L
+            val commune =
+                communes[communeId]
+                    ?: return@write 0L
 
             val newVersion = commune.version + 1
             communes[communeId] = commune.copy(version = newVersion)
@@ -148,9 +162,8 @@ class CommuneService(
     /**
      * Get all order IDs in a commune.
      */
-    fun getCommuneOrders(communeId: UUID): Set<Long> {
-        return lock.read {
+    fun getCommuneOrders(communeId: UUID): Set<Long> =
+        lock.read {
             communes[communeId]?.orderIds ?: emptySet()
         }
-    }
 }

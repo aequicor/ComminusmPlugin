@@ -1,3 +1,5 @@
+@file:Suppress("ReturnCount", "MaxLineLength")
+
 package ru.kyamshanov.comminusm.listener
 
 import net.kyori.adventure.text.Component
@@ -27,9 +29,8 @@ class OrderFlagListener(
     private val workFrontService: WorkFrontService? = null,
     private val plugin: Plugin,
     private val flagActivationHelper: FlagActivationHelper,
-    private val manager: FlagStabilityManager
+    private val manager: FlagStabilityManager,
 ) : Listener {
-
     @EventHandler
     fun onBlockPlace(event: BlockPlaceEvent) {
         val item = event.itemInHand
@@ -99,13 +100,13 @@ class OrderFlagListener(
                 onSuccess = { p ->
                     p?.sendMessage(
                         Component.text(
-                            "§a☭ Ордер №${order.id} активирован! Ваша жилплощадь: §e${order.size}×${order.size} §aблоков."
-                        )
+                            "§a☭ Ордер №${order.id} активирован! Ваша жилплощадь: §e${order.size}×${order.size} §aблоков.",
+                        ),
                     )
                 },
                 onDbFailure = { p ->
                     p?.sendMessage(Component.text("§cОшибка активации Ордера. Попробуйте ещё раз."))
-                }
+                },
             )
         }
 
@@ -119,7 +120,7 @@ class OrderFlagListener(
                     }
                     proceedWithActivation(lock)
                 },
-                LOCK_RETRY_TICKS
+                LOCK_RETRY_TICKS,
             )
             return
         }

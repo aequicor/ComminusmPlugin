@@ -18,7 +18,10 @@ interface CommuneChatService {
      * Toggle mode (persistent per session, reset on leave commune)
      * Addresses AC-18b, AC-18c, CC-12
      */
-    fun setToggleMode(playerUUID: UUID, enabled: Boolean)
+    fun setToggleMode(
+        playerUUID: UUID,
+        enabled: Boolean,
+    )
 
     fun getToggleMode(playerUUID: UUID): Boolean
 
@@ -26,7 +29,11 @@ interface CommuneChatService {
      * Broadcast message to all online commune members
      * Addresses TC-10, AC-31, CC-09
      */
-    fun broadcastToCommune(communeId: UUID, sender: Player, text: String)
+    fun broadcastToCommune(
+        communeId: UUID,
+        sender: Player,
+        text: String,
+    )
 
     /**
      * Plain-text wrapping (CC-09) — no MiniMessage parsing
@@ -51,20 +58,20 @@ interface CommuneChatService {
  */
 class CommuneChatServiceImpl(
     private val communeService: CommuneService,
-    private val orderMembershipService: OrderMembershipService
+    private val orderMembershipService: OrderMembershipService,
 ) : CommuneChatService {
-
     // In-memory toggle state: Set<UUID> of playerUUIDs with toggle mode active
     // Addresses CC-12: reset on reload
     private val toggleModes = ConcurrentHashMap<UUID, Boolean>()
 
-    override fun setToggleMode(playerUUID: UUID, enabled: Boolean) {
+    override fun setToggleMode(
+        playerUUID: UUID,
+        enabled: Boolean,
+    ) {
         toggleModes[playerUUID] = enabled
     }
 
-    override fun getToggleMode(playerUUID: UUID): Boolean {
-        return toggleModes.getOrDefault(playerUUID, false)
-    }
+    override fun getToggleMode(playerUUID: UUID): Boolean = toggleModes.getOrDefault(playerUUID, false)
 
     override fun resetToggleMode(playerUUID: UUID) {
         toggleModes.remove(playerUUID)
@@ -81,7 +88,11 @@ class CommuneChatServiceImpl(
         return text
     }
 
-    override fun broadcastToCommune(communeId: UUID, sender: Player, text: String) {
+    override fun broadcastToCommune(
+        communeId: UUID,
+        sender: Player,
+        text: String,
+    ) {
         // Load commune by ID — explicit null check (CRITICAL #2)
         val commune = communeService.getCommune(communeId)
         if (commune == null) {
@@ -91,25 +102,29 @@ class CommuneChatServiceImpl(
         // Load online players who are members of this commune
         val communeOrderIds = communeService.getCommuneOrders(communeId)
 
-        val communeMembers = Bukkit.getOnlinePlayers()
-            .filter { player ->
-                val playerNativeOrders = orderMembershipService.getNativeOrdersOfPlayer(player.uniqueId)
-                playerNativeOrders.any { it in communeOrderIds }
-            }
+        val communeMembers =
+            Bukkit
+                .getOnlinePlayers()
+                .filter { player ->
+                    val playerNativeOrders = orderMembershipService.getNativeOrdersOfPlayer(player.uniqueId)
+                    playerNativeOrders.any { it in communeOrderIds }
+                }
 
         // Format message using Component API (not hardcoded ChatColor)
         val wrappedText = wrapPlainText(text)
 
         // Build message with Component API (spec §6.15 lines 700-701)
         // Format: [Commune] sender_name: message with colors
-        val component = Component.text()
-            .append(Component.text("[").color(NamedTextColor.DARK_GRAY))
-            .append(Component.text("Коммуна").color(NamedTextColor.GREEN))
-            .append(Component.text("] ").color(NamedTextColor.DARK_GRAY))
-            .append(Component.text(sender.name).color(NamedTextColor.YELLOW))
-            .append(Component.text(": ").color(NamedTextColor.GRAY))
-            .append(Component.text(wrappedText).color(NamedTextColor.WHITE))
-            .build()
+        val component =
+            Component
+                .text()
+                .append(Component.text("[").color(NamedTextColor.DARK_GRAY))
+                .append(Component.text("Коммуна").color(NamedTextColor.GREEN))
+                .append(Component.text("] ").color(NamedTextColor.DARK_GRAY))
+                .append(Component.text(sender.name).color(NamedTextColor.YELLOW))
+                .append(Component.text(": ").color(NamedTextColor.GRAY))
+                .append(Component.text(wrappedText).color(NamedTextColor.WHITE))
+                .build()
 
         communeMembers.forEach { it.sendMessage(component) }
     }

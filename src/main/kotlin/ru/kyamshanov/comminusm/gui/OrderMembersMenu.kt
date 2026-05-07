@@ -7,7 +7,6 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.inventory.Inventory
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 import ru.kyamshanov.comminusm.service.OrderService
 
@@ -23,7 +22,10 @@ class OrderMembersMenu(
 ) : Listener {
     private val occupiedMemberSlots = mutableSetOf<Int>()
 
-    fun open(player: Player, orderId: Long) {
+    fun open(
+        player: Player,
+        orderId: Long,
+    ) {
         val isLeader = orderService.isLeader(player.uniqueId)
 
         val inv = Bukkit.createInventory(null, 45, Component.text("§8Участники ордера №$orderId"))
@@ -37,7 +39,7 @@ class OrderMembersMenu(
                 "§6Участники",
                 Material.PAPER,
                 "§7Количество: §e${members.size}",
-            )
+            ),
         )
 
         // List members (slots 19-34, max 7 members for simple pagination)
@@ -50,11 +52,12 @@ class OrderMembersMenu(
                 break
             }
 
-            val grantedViaText = when (member.grantedVia) {
-                "native" -> "§aНативный"
-                "commune" -> "§eКоммунный"
-                else -> "§7Неизвестно"
-            }
+            val grantedViaText =
+                when (member.grantedVia) {
+                    "native" -> "§aНативный"
+                    "commune" -> "§eКоммунный"
+                    else -> "§7Неизвестно"
+                }
 
             val playerName = Bukkit.getOfflinePlayer(member.playerUuid).name ?: "Неизвестный игрок"
             inv.setItem(
@@ -64,7 +67,7 @@ class OrderMembersMenu(
                     Material.PLAYER_HEAD,
                     grantedViaText,
                     if (isLeader) "§8Нажми для исключения" else "§8(Только для лидера)",
-                )
+                ),
             )
             occupiedMemberSlots.add(slot)
 
@@ -79,7 +82,7 @@ class OrderMembersMenu(
                     "§eПригласить участника",
                     Material.NETHER_STAR,
                     "§7Пригласить игрока в этот ордер",
-                )
+                ),
             )
         }
 

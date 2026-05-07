@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.commune.model.Commune
 import ru.kyamshanov.comminusm.commune.service.CommuneService
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
-import ru.kyamshanov.comminusm.service.OrderService
 import java.util.UUID
 import kotlin.test.assertTrue
 
@@ -19,10 +18,8 @@ import kotlin.test.assertTrue
  * Addresses CRITICAL issue #2: spec §6.17 - use native orders not owner only
  */
 class FriendlyFireListenerTest {
-
     private lateinit var communeService: CommuneService
     private lateinit var membershipService: OrderMembershipService
-    private lateinit var orderService: OrderService
     private lateinit var listener: FriendlyFireListener
 
     @BeforeEach

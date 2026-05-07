@@ -8,8 +8,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 
 @Suppress("UnusedPrivateProperty")
-class FlagStabilityManager(private val plugin: Plugin) {
-
+class FlagStabilityManager(
+    private val plugin: Plugin,
+) {
     private companion object {
         /** Bit-shift to convert block X/Z coordinate to chunk coordinate. */
         const val CHUNK_SHIFT = 4
@@ -36,22 +37,30 @@ class FlagStabilityManager(private val plugin: Plugin) {
     // Chunk lock map — keyed by canonical chunk key string
     private val chunkLocks = ConcurrentHashMap<String, ReentrantLock>()
 
-    fun chunkKey(world: String, chunkX: Int, chunkZ: Int): String = "$world:$chunkX:$chunkZ"
+    fun chunkKey(
+        world: String,
+        chunkX: Int,
+        chunkZ: Int,
+    ): String = "$world:$chunkX:$chunkZ"
 
-    fun chunkKeyOf(block: Block): String = chunkKey(
-        block.world.name,
-        block.x shr CHUNK_SHIFT,
-        block.z shr CHUNK_SHIFT
-    )
+    fun chunkKeyOf(block: Block): String =
+        chunkKey(
+            block.world.name,
+            block.x shr CHUNK_SHIFT,
+            block.z shr CHUNK_SHIFT,
+        )
 
-    fun getChunkLock(key: String): ReentrantLock =
-        chunkLocks.getOrPut(key) { ReentrantLock() }
+    fun getChunkLock(key: String): ReentrantLock = chunkLocks.getOrPut(key) { ReentrantLock() }
 
     fun evictChunkLock(key: String) {
         chunkLocks.remove(key)
     }
 
-    private fun blockPos(x: Int, y: Int, z: Int): Long {
+    private fun blockPos(
+        x: Int,
+        y: Int,
+        z: Int,
+    ): Long {
         // Encode x (signed 26 bits), y (12 bits), z (signed 26 bits) into a Long
         val xBits = (x.toLong() and XZ_MASK) shl X_BIT_OFFSET
         val yBits = (y.toLong() and Y_MASK) shl Y_BIT_OFFSET
@@ -60,13 +69,27 @@ class FlagStabilityManager(private val plugin: Plugin) {
     }
 
     @Suppress("LongParameterList")
-    fun addToCache(worldName: String, chunkX: Int, chunkZ: Int, x: Int, y: Int, z: Int) {
+    fun addToCache(
+        worldName: String,
+        chunkX: Int,
+        chunkZ: Int,
+        x: Int,
+        y: Int,
+        z: Int,
+    ) {
         val key = chunkKey(worldName, chunkX, chunkZ)
         flagPositionCache.getOrPut(key) { ConcurrentHashMap.newKeySet() }.add(blockPos(x, y, z))
     }
 
     @Suppress("LongParameterList")
-    fun removeFromCache(worldName: String, chunkX: Int, chunkZ: Int, x: Int, y: Int, z: Int) {
+    fun removeFromCache(
+        worldName: String,
+        chunkX: Int,
+        chunkZ: Int,
+        x: Int,
+        y: Int,
+        z: Int,
+    ) {
         val key = chunkKey(worldName, chunkX, chunkZ)
         flagPositionCache[key]?.remove(blockPos(x, y, z))
     }
@@ -80,7 +103,11 @@ class FlagStabilityManager(private val plugin: Plugin) {
             .any { it.namespace == "comminusm" && it.key.startsWith("flag/") }
     }
 
-    fun evictChunkCache(worldName: String, chunkX: Int, chunkZ: Int) {
+    fun evictChunkCache(
+        worldName: String,
+        chunkX: Int,
+        chunkZ: Int,
+    ) {
         flagPositionCache.remove(chunkKey(worldName, chunkX, chunkZ))
     }
 
@@ -98,5 +125,4 @@ class FlagStabilityManager(private val plugin: Plugin) {
             }
         flagPositionCache[key] = positions
     }
-
 }
