@@ -8,7 +8,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
-import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.service.WorkdaysService
 
 class TreasuryMenu(

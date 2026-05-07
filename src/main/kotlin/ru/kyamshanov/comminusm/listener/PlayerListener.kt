@@ -4,7 +4,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.plugin.ComminusmPlugin
 import ru.kyamshanov.comminusm.service.WorkdaysService
 

@@ -14,7 +14,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
-import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.service.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.HomeTimerManager

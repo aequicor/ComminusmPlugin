@@ -12,7 +12,7 @@ import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
-import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 

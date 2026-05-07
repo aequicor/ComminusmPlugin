@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.config.PluginConfig
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.service.FlagStabilityManager
 import ru.kyamshanov.comminusm.service.HomeTimerManager
 import ru.kyamshanov.comminusm.service.StubPluginBase

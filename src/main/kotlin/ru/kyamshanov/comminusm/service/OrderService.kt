@@ -4,10 +4,10 @@ package ru.kyamshanov.comminusm.service
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
-import ru.kyamshanov.comminusm.config.OrderLevelConfig
 import ru.kyamshanov.comminusm.domain.repositories.OrderRepository
 import ru.kyamshanov.comminusm.event.FlagDeactivatedEvent
 import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
+import ru.kyamshanov.comminusm.infrastructure.config.OrderLevelConfig
 import ru.kyamshanov.comminusm.manager.FlagCleanupHelper
 import ru.kyamshanov.comminusm.manager.FlagStabilityManager
 import ru.kyamshanov.comminusm.storage.ChunkCacheManager

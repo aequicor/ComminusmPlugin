@@ -11,8 +11,8 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.plugin.Plugin
-import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.gui.FrontMenu
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.manager.ActivationCheckResult
 import ru.kyamshanov.comminusm.manager.FlagActivationHelper
 import ru.kyamshanov.comminusm.manager.FlagCleanupHelper

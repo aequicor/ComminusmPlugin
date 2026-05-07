@@ -7,9 +7,9 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.gui.AdminMenu
 import ru.kyamshanov.comminusm.gui.PartyMenu
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.service.OrderService
 import ru.kyamshanov.comminusm.service.WorkFrontService
 import ru.kyamshanov.comminusm.service.WorkdaysService

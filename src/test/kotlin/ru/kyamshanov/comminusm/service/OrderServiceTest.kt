@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kyamshanov.comminusm.config.PluginConfig
 import ru.kyamshanov.comminusm.infrastructure.adapters.DomainToModelAdapter
+import ru.kyamshanov.comminusm.infrastructure.config.PluginConfig
 import ru.kyamshanov.comminusm.infrastructure.repositories.OrderRepositoryImpl
 import ru.kyamshanov.comminusm.model.Order
 import ru.kyamshanov.comminusm.storage.DatabaseManager

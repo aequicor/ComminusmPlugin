@@ -11,35 +11,27 @@ import org.junit.jupiter.api.Test
  */
 class LintViolationTest {
     @Test
-    fun `wireFlagListeners parameter count is within threshold`() {
-        // Get the wireFlagListeners method from ComminusmPlugin
+    fun `wireFlagListeners no longer exists (moved to DIContainer)`() {
+        // After refactoring, wireFlagListeners has been moved to DIContainer.createListeners()
         val clazz = ComminusmPlugin::class.java
         val methods = clazz.declaredMethods.filter { it.name == "wireFlagListeners" }
 
-        // Should find exactly one method
-        assert(methods.size == 1) { "Expected 1 wireFlagListeners method, found ${methods.size}" }
-
-        val method = methods[0]
-        val paramCount = method.parameterCount
-
-        // Detekt threshold is 6, so parameter count must be <= 6
-        assert(paramCount <= 6) { "wireFlagListeners has $paramCount parameters, max allowed is 6" }
+        // Should find no such method (logic moved to DIContainer)
+        assert(methods.isEmpty()) {
+            "wireFlagListeners should not exist in ComminusmPlugin after refactoring to DIContainer"
+        }
     }
 
     @Test
-    fun `wireMenus parameter count is within threshold`() {
-        // Get the wireMenus method from ComminusmPlugin
+    fun `wireMenus no longer exists (moved to DIContainer)`() {
+        // After refactoring, wireMenus has been moved to DIContainer.createMenus()
         val clazz = ComminusmPlugin::class.java
         val methods = clazz.declaredMethods.filter { it.name == "wireMenus" }
 
-        // Should find exactly one method
-        assert(methods.size == 1) { "Expected 1 wireMenus method, found ${methods.size}" }
-
-        val method = methods[0]
-        val paramCount = method.parameterCount
-
-        // Detekt threshold is 6, so parameter count must be <= 6
-        assert(paramCount <= 6) { "wireMenus has $paramCount parameters, max allowed is 6" }
+        // Should find no such method (logic moved to DIContainer)
+        assert(methods.isEmpty()) {
+            "wireMenus should not exist in ComminusmPlugin after refactoring to DIContainer"
+        }
     }
 
     @Test
