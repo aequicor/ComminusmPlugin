@@ -2,28 +2,22 @@
     "MagicNumber",
     "LongMethod",
     "SwallowedException",
-    "Deprecation",
 )
 
 package ru.kyamshanov.comminusm.gui
 
+import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
-import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryCloseEvent
-import org.bukkit.event.inventory.InventoryType
-import org.bukkit.event.inventory.PrepareAnvilEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.view.AnvilView
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
@@ -44,45 +38,25 @@ class OrderRenameMenu(
 ) : Listener {
     companion object {
         private const val MAX_NAME_LENGTH = 20
-        private const val ANVIL_OUTPUT_SLOT = 2
+        private const val CANCEL_KEYWORD = "cancel"
     }
 
-    private val inProgressRenames = ConcurrentHashMap<UUID, Long>()
-    private val renameTexts = ConcurrentHashMap<UUID, String>()
+    private val pendingChatInputs = ConcurrentHashMap<UUID, Long>()
 
     fun open(
         player: Player,
         order: Order,
     ) {
-        if (inProgressRenames.containsKey(player.uniqueId)) return
+        if (pendingChatInputs.containsKey(player.uniqueId)) return
 
-        val title = Component.text("Название ордера")
-        val anvilInv = Bukkit.createInventory(null, InventoryType.ANVIL, title)
-        val inputItem = ItemStack(Material.PAPER)
-        inputItem.editMeta { meta ->
-            meta.displayName(Component.text(order.name))
-        }
-        anvilInv.setItem(0, inputItem)
-        inProgressRenames[player.uniqueId] = order.id
-        renameTexts[player.uniqueId] = order.name
-        player.openInventory(anvilInv)
-    }
-
-    @Suppress("ReturnCount")
-    @EventHandler
-    fun onPrepareAnvil(event: PrepareAnvilEvent) {
-        val text = event.inventory.renameText ?: return
-        val player = event.view.player as? Player ?: return
-        // Only cache non-blank text — Paper fires PrepareAnvilEvent with "" in some
-        // lifecycle phases; overwriting the cache with blank would erase the typed name.
-        if (text.isNotBlank()) {
-            renameTexts[player.uniqueId] = text
-        }
-        val result = ItemStack(Material.PAPER)
-        result.editMeta { meta ->
-            meta.displayName(Component.text(text))
-        }
-        event.result = result
+        pendingChatInputs[player.uniqueId] = order.id
+        player.closeInventory()
+        player.sendMessage(
+            Component.text("Введите новое название ордера в чат", NamedTextColor.YELLOW)
+                .append(Component.text(" (", NamedTextColor.GRAY))
+                .append(Component.text(CANCEL_KEYWORD, NamedTextColor.RED))
+                .append(Component.text(" — отмена):", NamedTextColor.GRAY)),
+        )
     }
 
     private fun validateTypedName(typedName: String): Component? =
@@ -100,70 +74,54 @@ class OrderRenameMenu(
         }
 
     @Suppress("ReturnCount")
-    @EventHandler
-    fun onInventoryClick(event: InventoryClickEvent) {
-        if (event.inventory.type != InventoryType.ANVIL) {
-            return
-        }
-
-        val playerUuid = (event.whoClicked as? Player)?.uniqueId ?: return
-        val orderId = inProgressRenames[playerUuid] ?: return
-
-        if (event.rawSlot != ANVIL_OUTPUT_SLOT) {
-            event.isCancelled = true
-            return
-        }
+    @EventHandler(priority = EventPriority.LOWEST)
+    fun onChat(event: AsyncChatEvent) {
+        val playerUuid = event.player.uniqueId
+        val orderId = pendingChatInputs.remove(playerUuid) ?: return
 
         event.isCancelled = true
 
-        val player = event.whoClicked as Player
+        val text = (event.message() as? TextComponent)?.content()?.trim() ?: ""
 
-        val anvilView = event.view as? AnvilView
-        val anvilViewText = anvilView?.renameText
-        val displayNameText = (event.currentItem?.itemMeta?.displayName() as? TextComponent)?.content()
-        val cachedText = renameTexts[playerUuid]
-        plugin.logger.info(
-            "[OrderRename] view=${event.view.javaClass.simpleName} " +
-                "AnvilView=${if (anvilView != null) "ok" else "null"} " +
-                "AnvilView.renameText='$anvilViewText' " +
-                "slot2DisplayName='$displayNameText' " +
-                "cache='$cachedText'",
-        )
+        if (text.equals(CANCEL_KEYWORD, ignoreCase = true)) {
+            Bukkit.getScheduler().runTask(
+                plugin,
+                Runnable {
+                    Bukkit.getPlayer(playerUuid)?.sendMessage(
+                        Component.text("Переименование отменено", NamedTextColor.GRAY),
+                    )
+                },
+            )
+            return
+        }
 
-        val typedName = anvilViewText?.takeIf { it.isNotBlank() }
-            ?: displayNameText?.takeIf { it.isNotBlank() }
-            ?: cachedText?.takeIf { it.isNotBlank() }
-            ?: ""
-        plugin.logger.info("[OrderRename] resolved typedName='$typedName'")
-
-        val validationError = validateTypedName(typedName)
+        val validationError = validateTypedName(text)
         if (validationError != null) {
-            player.sendActionBar(validationError)
-            inProgressRenames.remove(playerUuid)
-            player.closeInventory()
+            Bukkit.getScheduler().runTask(
+                plugin,
+                Runnable { Bukkit.getPlayer(playerUuid)?.sendActionBar(validationError) },
+            )
             return
         }
 
-        val domainOrder = getOrderByOwnerUseCase(playerUuid)
-        if (domainOrder == null || domainOrder.id != orderId) {
-            player.sendActionBar(Component.text("Этот ордер был расформирован", NamedTextColor.RED))
-            inProgressRenames.remove(playerUuid)
-            player.closeInventory()
-            return
-        }
+        Bukkit.getScheduler().runTask(
+            plugin,
+            Runnable {
+                val player = Bukkit.getPlayer(playerUuid) ?: return@Runnable
+                val domainOrder = getOrderByOwnerUseCase(playerUuid)
+                if (domainOrder == null || domainOrder.id != orderId) {
+                    player.sendActionBar(Component.text("Этот ордер был расформирован", NamedTextColor.RED))
+                    return@Runnable
+                }
 
-        val currentOrder = DomainToModelAdapter.toPresentationModel(domainOrder)
+                val currentOrder = DomainToModelAdapter.toPresentationModel(domainOrder)
 
-        // AC-19: same name = no-op, no DB write and no ArmorStand update
-        if (typedName == domainOrder.name) {
-            inProgressRenames.remove(playerUuid)
-            player.closeInventory()
-            return
-        }
+                // AC-19: same name = no-op, no DB write and no ArmorStand update
+                if (text == domainOrder.name) return@Runnable
 
-        inProgressRenames.remove(playerUuid)
-        player.closeInventory()
-        handleSuccessfulValidation(player, currentOrder, typedName)
+                handleSuccessfulValidation(player, currentOrder, text)
+            },
+        )
     }
 
     private fun handleSuccessfulValidation(
@@ -188,7 +146,6 @@ class OrderRenameMenu(
         val asyncTask =
             Runnable {
                 try {
-                    // Ownership re-check in async context — avoids DB call on main thread
                     val ownershipResult = renameOrderUseCase(playerUuid, typedName)
                     if (ownershipResult is Result.Failure) {
                         plugin.logger.warning(
@@ -279,16 +236,7 @@ class OrderRenameMenu(
     }
 
     @EventHandler
-    fun onInventoryClose(event: InventoryCloseEvent) {
-        if (event.inventory.type != InventoryType.ANVIL) return
-        val playerUuid = (event.player as? Player)?.uniqueId ?: return
-        inProgressRenames.remove(playerUuid)
-        renameTexts.remove(playerUuid)
-    }
-
-    @EventHandler
     fun onPlayerQuit(event: PlayerQuitEvent) {
-        inProgressRenames.remove(event.player.uniqueId)
-        renameTexts.remove(event.player.uniqueId)
+        pendingChatInputs.remove(event.player.uniqueId)
     }
 }
