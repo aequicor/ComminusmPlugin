@@ -8,6 +8,7 @@
 package ru.kyamshanov.comminusm.gui
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -21,7 +22,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.inventory.PrepareAnvilEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import org.bukkit.inventory.AnvilInventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
@@ -114,10 +114,12 @@ class OrderRenameMenu(
         event.isCancelled = true
 
         val player = event.whoClicked as Player
-        // Custom anvil inventories (CraftInventoryCustom) don't implement AnvilInventory,
-        // so the cast may return null — fall back to the renameTexts cache in that case.
-        val anvilInventory = event.inventory as? AnvilInventory
-        val typedName = anvilInventory?.renameText?.takeIf { it.isNotBlank() }
+        // CraftInventoryCustom (created via Bukkit.createInventory) does not implement
+        // AnvilInventory, so renameText is inaccessible. Read the display name that
+        // onPrepareAnvil wrote onto the output item — it encodes exactly what the player typed.
+        val typedName = (event.currentItem?.itemMeta?.displayName() as? TextComponent)
+            ?.content()
+            ?.takeIf { it.isNotBlank() }
             ?: renameTexts[playerUuid]?.takeIf { it.isNotBlank() }
             ?: ""
         plugin.logger.info("Rename attempt: player=$playerUuid, orderId=$orderId, typedName='$typedName'")
