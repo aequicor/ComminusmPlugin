@@ -60,7 +60,7 @@ class OrderMenu(
         order: Order,
     ) {
         val displayName = order.name.ifBlank { "Ордер №${order.id}" }
-        val inv = Bukkit.createInventory(null, 45, Component.text("§8$displayName"))
+        val inv = Bukkit.createInventory(null, 45, Component.text("§8Ордер №${order.id}"))
         GuiUtils.fillBorder(inv)
 
         inv.setItem(
