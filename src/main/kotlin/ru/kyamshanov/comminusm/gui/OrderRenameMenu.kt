@@ -23,6 +23,7 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.inventory.PrepareAnvilEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.view.AnvilView
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByOwnerUseCase
@@ -116,12 +117,14 @@ class OrderRenameMenu(
         event.isCancelled = true
 
         val player = event.whoClicked as Player
-        // CraftInventoryCustom (created via Bukkit.createInventory) does not implement
-        // AnvilInventory, so renameText is inaccessible. Read the display name that
-        // onPrepareAnvil wrote onto the output item — it encodes exactly what the player typed.
-        val typedName = (event.currentItem?.itemMeta?.displayName() as? TextComponent)
-            ?.content()
-            ?.takeIf { it.isNotBlank() }
+        // Resolution order (each fallback covers a different Paper/CraftBukkit edge case):
+        // 1. AnvilView.renameText — reads directly from the server-side menu container;
+        //    most reliable when the view is a real AnvilView (Paper 1.20.6+).
+        // 2. Output item display name — set by onPrepareAnvil via event.result;
+        //    reliable when PrepareAnvilEvent fires and result is applied to slot 2.
+        // 3. renameTexts cache — populated by onPrepareAnvil; fallback when slot 2 is empty.
+        val typedName = (event.view as? AnvilView)?.renameText?.takeIf { it.isNotBlank() }
+            ?: (event.currentItem?.itemMeta?.displayName() as? TextComponent)?.content()?.takeIf { it.isNotBlank() }
             ?: renameTexts[playerUuid]?.takeIf { it.isNotBlank() }
             ?: ""
         plugin.logger.info("Rename attempt: player=$playerUuid, orderId=$orderId, typedName='$typedName'")
