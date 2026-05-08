@@ -1,24 +1,60 @@
 ---
-description: Approve the pending plan or action that @Main is waiting on. Signals PO confirmation and continues the pipeline.
+description: "Approve the pending plan or action that @Main is waiting on. Signals user confirmation and continues the pipeline. Optional flag `--no-ground-truth` overrides the 5.6 ground-truth artefact gate (logged as technical debt in Defects log; do not use lightly)."
 ---
-
-You are the Product Owner authorizing the next phase. Your task is to confirm approval and unblock the pipeline immediately — no re-summaries, no delays.
-
-**PO approval received.**
-
-You are @Main. You were waiting for PO confirmation at a CONFIRM step. Act now:
-
-1. Read `.planning/CURRENT.md` → get `active_task`. Append to `.planning/tasks/<active_task>.md`:
-   ```
-   ## <ISO timestamp>
-   - DONE: PO approved via /kit-approve
-   - NEXT: proceeding to EXECUTE phase
-   ```
-2. Continue immediately to the next phase of the active pipeline:
-   - FEATURE → step 7 EXECUTE
-   - TECH → step 4 EXECUTE
-   - BUG → BUG pipeline has no CONFIRM step; if somehow reached here, report current state and ask PO what to do next.
-
-Do not ask for additional confirmation. Do not re-summarize the plan. Move forward.
-
-> If no CONFIRM step was pending — report the current state from the active task file and ask PO what to do next.
+# /kit-approve
+Approve the pending plan or action that @Main is waiting on. Signals user confirmation and continues the pipeline. Optional flag `--no-ground-truth` overrides the 5.6 ground-truth artefact gate (logged as technical debt in Defects log; do not use lightly).
+
+
+Project: ComminusmPlugin. Stack: kotlin / paper-plugin.
+
+Communicate with the user in Russian (ru). All prose — questions, explanations, status updates, summaries, and reasoning addressed to the user — must be in Russian. Keep code, file paths, shell commands, identifiers, manifest keys, error codes, and other technical tokens verbatim in their original form.
+
+
+
+
+
+## Workflow
+Approve the pending plan or action that @Main is waiting on. Signals user confirmation and continues the pipeline. Optional flag `--no-ground-truth` overrides the 5.6 ground-truth artefact gate (logged as technical debt in Defects log; do not use lightly).
+
+You are the user authorizing the next phase. Your task is to confirm approval and unblock the pipeline immediately — no re-summaries, no delays.
+
+**User approval received.**
+
+You are @Main. You were waiting for user confirmation at a CONFIRM-class gate. Act now:
+
+1. Read `.planning/CURRENT.md` → get `active_task`. Append to `.planning/tasks/<active_task>.md`:
+   ```
+   ## <ISO timestamp>
+   - DONE: User approved via /kit-approve<flags>
+   - NEXT: proceeding to next phase
+   ```
+   `<flags>` is `" --no-ground-truth"` if that flag was passed, empty otherwise.
+
+2. Determine which gate is unblocked:
+   - At step 4 CONFIRM (FEATURE/TECH) → continue to step 5 EXECUTE.
+   - At step 5.6 CHECKPOINT 3-way fork → continue to step 5.5 UPDATE for next step (or RECONCILE if last step).
+   - At step 5.10 DIFF-REVIEW → continue to step 6 CLOSE.
+   - At a /kit-revert-step confirmation prompt → execute the revert.
+   - At a /kit-defect re-open confirmation → re-enter EXECUTE at 5.2 WRITE.
+   - At BUG pipeline → BUG has no CONFIRM step; if reached, report state and ask user.
+
+3. `--no-ground-truth` flag handling (only meaningful at 5.6 CHECKPOINT):
+   - If the flag was passed AND the 5.6 ground-truth gate was BLOCKED on missing artefact:
+     - Append to test-cases.md § Defects log:
+       ```
+       - **GROUND-TRUTH-WAIVED step <N>** (severity: medium, status: OPEN, kind: technical-debt)
+         - Reported: <ISO>
+         - Source: ground-truth-waived (user override at 5.6)
+         - Description: Step <N> approved without ground-truth artefact (type: <REQUIRED_TYPE>).
+                        Class of defect this gate catches: UI/UX broken despite green AI checks;
+                        API contract mismatch; backend logic missing edge-case under mutation.
+                        Track here for retro and consider adding a regression test post-CLOSE.
+       ```
+     - Set `step_commits[N].ground_truth = {type: <REQUIRED_TYPE>, path: null, summary: "WAIVED by /kit-approve --no-ground-truth", waived: true}`.
+     - Output: "⚠️  Ground-truth waived for step <N>. Logged as technical debt. Proceeding."
+   - If the flag was passed but no 5.6 gate is pending → ignore flag, proceed normally.
+   - If the flag was NOT passed AND 5.6 gate is BLOCKED on missing artefact → STOP. Output: "Step <N> ground-truth artefact still missing. Attach via /kit-attach <path>, or override with /kit-approve --no-ground-truth."
+
+4. Continue immediately. Do not ask for additional confirmation. Do not re-summarize the plan.
+
+> If no CONFIRM-class gate was pending — report the current state from the active task file and ask user what to do next.

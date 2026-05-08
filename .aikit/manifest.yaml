@@ -1,0 +1,363 @@
+manifest_version: "1.0.0"
+kit_version: "2.3.2"
+language_code: ru
+
+project:
+  name: "ComminusmPlugin"
+  slug: "comminusm-plugin"
+  description: "Minecraft Paper plugin with communism-themed gameplay mechanics"
+
+stack:
+  languages: ["kotlin"]
+  frameworks: ["paper-plugin"]
+  build_command: "./gradlew build"
+  compile_command: "./gradlew compileKotlin"
+  lint_command: "./gradlew detekt ktlintCheck"
+  test_command: "./gradlew test"
+  format_command: "./gradlew detekt --auto-correct"
+  profiles:
+    - kotlin-gradle
+    - paper-plugin
+    - clean-architecture
+    - solid
+    - security-baseline
+    - quality-gates
+
+modules:
+  - name: comminusm
+    source_root: "src/main/kotlin"
+    test_root: "src/test/kotlin"
+    docs_path: "vault/comminusm/"
+    responsibility: "Minecraft Paper plugin — communism-themed gameplay mechanics"
+
+targets:
+  - id: claude-code
+    native_provider: anthropic
+    can_use_via: []
+  - id: opencode
+    native_provider: ollama-cloud
+    can_use_via: []
+
+render_targets: [claude-code, opencode]
+
+providers:
+  - id: anthropic
+    kind: anthropic
+    auth: subscription
+    timeout_seconds: 120
+    max_retries: 2
+  - id: ollama-cloud
+    kind: openai-compatible
+    auth: api_key
+    api_key_env: OLLAMA_API_KEY
+    timeout_seconds: 120
+    max_retries: 2
+
+models:
+  - id: opus
+    provider: anthropic
+    model: claude-opus-4-7
+    family: anthropic
+    tier: reasoner
+    capabilities: [reasoning, code, vision, tools, long-context]
+    context_window: 200000
+    params: { temperature: 0.2, max_tokens: 8000 }
+    cost_hint: premium
+    priority: 10
+  - id: sonnet
+    provider: anthropic
+    model: claude-sonnet-4-6
+    family: anthropic
+    tier: balanced
+    capabilities: [code, tools, long-context]
+    context_window: 200000
+    params: { temperature: 0.1, max_tokens: 16000 }
+    cost_hint: balanced
+    priority: 10
+  - id: haiku
+    provider: anthropic
+    model: claude-haiku-4-5
+    family: anthropic
+    tier: fast
+    capabilities: [tools]
+    context_window: 200000
+    params: { temperature: 0.1, max_tokens: 4000 }
+    cost_hint: cheap
+    priority: 10
+  - id: kimi-k2
+    provider: ollama-cloud
+    model: kimi-k2.6:cloud
+    family: openai
+    tier: reasoner
+    capabilities: [reasoning, code, tools, long-context]
+    context_window: 131072
+    params: { temperature: 0.2, max_tokens: 8000 }
+    cost_hint: balanced
+    priority: 20
+  - id: deepseek-flash
+    provider: ollama-cloud
+    model: deepseek-v4-flash:cloud
+    family: openai
+    tier: fast
+    capabilities: [code, tools]
+    context_window: 65536
+    params: { temperature: 0.1, max_tokens: 4000 }
+    cost_hint: cheap
+    priority: 20
+
+task_types:
+  - { id: planning, prefers: reasoner, needs: [reasoning, long-context] }
+  - { id: implementation, prefers: balanced, needs: [code] }
+  - { id: review, prefers: reasoner, needs: [reasoning, code] }
+  - { id: debug, prefers: reasoner, needs: [code, reasoning] }
+  - { id: refactor, prefers: balanced, needs: [code] }
+  - { id: research, prefers: reasoner, needs: [reasoning] }
+  - { id: security-audit, prefers: reasoner, min_tier: reasoner, needs: [reasoning, code] }
+  - { id: triage, prefers: fast }
+  - { id: summarize, prefers: fast }
+
+prompt_dialects:
+  - { id: anthropic, path: ./dialects/anthropic }
+  - { id: openai, path: ./dialects/openai }
+  - { id: generic, path: ./dialects/generic }
+
+target_adapters:
+  - { id: claude-code, path: ./target_adapters/claude-code }
+  - { id: opencode, path: ./target_adapters/opencode }
+
+shared:
+  path: ./_shared
+
+agents:
+  - id: Main
+    role: orchestrator
+    description: "Точка входа. Классифицирует задачи, диспатчит субагентов."
+    mode: primary
+    model_selection:
+      needs: [reasoning, tools]
+      prefers: reasoner
+      by_task: { triage: { prefers: fast }, summarize: { prefers: fast } }
+    prompt: { default: { include: prompts/Main.md } }
+    tools: ["*"]
+    permissions: { edit: true, bash: true, web: true }
+
+  - id: Architect
+    role: architect
+    description: "Spec.md + plan.md. Один проход."
+    model_selection:
+      needs: [reasoning, long-context]
+      prefers: reasoner
+      min_tier: reasoner
+    prompt: { default: { include: prompts/Architect.md } }
+    tools: [serena, context7, web-search]
+    permissions: { edit: true, web: true }
+    context_scope:
+      include_paths: ["vault/**", "docs/**", "README.md"]
+      max_tokens: 30000
+
+  - id: CodeWriter
+    role: code-writer
+    description: "TDD-first реализация, один срез за раз."
+    model_selection:
+      needs: [code]
+      prefers: balanced
+      by_task: { debug: { prefers: reasoner }, refactor: { prefers: balanced } }
+    prompt:
+      default: { include: prompts/CodeWriter.md }
+      anthropic: { include: prompts/CodeWriter.anthropic.md }
+    tools: [serena]
+    permissions: { edit: true, bash: true }
+
+  - id: Verifier
+    role: verifier
+    description: "Mode-driven ревью (build/review/DoD/trace/mutation-sample)."
+    model_selection:
+      needs: [reasoning, code]
+      prefers: reasoner
+      min_tier: balanced
+    prompt: { default: { include: prompts/Verifier.md } }
+    permissions: { edit: false, bash: true }
+
+  - id: BugFixer
+    role: bug-fixer
+    description: "Debug + fix + регрессионный тест."
+    model_selection:
+      needs: [code]
+      prefers: balanced
+      by_severity:
+        critical: { prefers: reasoner, min_tier: reasoner }
+        high: { prefers: reasoner }
+        medium: { prefers: balanced }
+        low: { prefers: balanced, max_cost: cheap }
+    prompt: { default: { include: prompts/BugFixer.md } }
+    tools: [serena]
+    permissions: { edit: true, bash: true }
+
+  - id: Researcher
+    role: researcher
+    description: "Исследование библиотек, API, паттернов. Только чтение."
+    model_selection:
+      needs: [reasoning]
+      prefers: reasoner
+    prompt: { default: { include: prompts/Researcher.md } }
+    tools: [serena, context7, web-search]
+    permissions: { edit: false, web: true }
+
+knowledge:
+  constitution:
+    sections:
+      - routing: { source: { include: knowledge/routing-table.md } }
+      - conventions: { source: { include: knowledge/conventions.md } }
+      - retrieval_hooks: { source: { include: knowledge/retrieval-hooks.md } }
+      - orchestration: { source: { include: knowledge/orchestration.md } }
+    max_tokens: 5000
+
+  specs:
+    kind: filesystem
+    path: vault/specs
+    layout:
+      feature: "features/{module}/{feature}/spec.md"
+      plan: "features/{module}/{feature}/plan.md"
+      retro: "features/{module}/{feature}/retro.md"
+      subsystem: "subsystems/{name}.md"
+      decision: "DECISIONS.md"
+      techdebt: "tech-debt/{module}/{slug}.md"
+    indexing:
+      include: ["**/*.md"]
+      exclude: ["**/draft-*.md"]
+
+  session:
+    kind: filesystem
+    path: .planning
+    layout:
+      current: "CURRENT.md"
+      task: "tasks/{task_id}.md"
+      decision: "DECISIONS.md"
+
+tools:
+  - id: serena
+    kind: mcp-stdio
+    command: "serena"
+    args: ["start-mcp-server"]
+  - id: knowledge-my-app
+    kind: mcp-http
+    url: "http://localhost:8010/mcp"
+  - id: context7
+    kind: mcp-http
+    url: "https://mcp.context7.com/mcp"
+    api_key_env: CONTEXT7_API_KEY
+  - id: web-search
+    kind: builtin
+    enabled: true
+
+workflows:
+  - id: feature
+    description: "Plan → execute → review → diff."
+    trigger: "/kit-new-feature"
+    steps:
+      - { agent: Architect, task: planning, gate: approve }
+      - { agent: CodeWriter, task: implementation, gate: auto, on_fail: retry, max_retries: 3 }
+      - { agent: Verifier, task: review, gate: auto, on_fail: rollback }
+      - { agent: Verifier, task: review, gate: ground-truth }
+      - { agent: Verifier, task: review, gate: diff-review }
+
+  - id: bug-fix
+    trigger: "/kit-fix"
+    steps:
+      - { agent: BugFixer, task: triage, gate: auto }
+      - { agent: BugFixer, task: debug, gate: auto }
+      - { agent: Verifier, task: review, gate: approve }
+
+  - id: tech-debt
+    trigger: "/kit-techdebt"
+    steps:
+      - { agent: Architect, task: planning, gate: approve }
+      - { agent: CodeWriter, task: refactor, gate: auto }
+      - { agent: Verifier, task: review, gate: diff-review }
+
+  - id: sleep
+    trigger: "/kit-sleep"
+    steps:
+      - { agent: Architect, task: planning, gate: auto }
+      - { agent: CodeWriter, task: implementation, gate: auto, on_fail: retry, max_retries: 6 }
+      - { agent: Verifier, task: review, gate: auto, on_fail: retry, max_retries: 6 }
+      - { agent: Verifier, task: review, gate: auto }
+
+policies:
+  auto_approve:
+    feature: false
+    bug:
+      low: true
+      medium: true
+      high: false
+      critical: false
+    diff_review: false
+
+  slice_caps:
+    max_steps: 6
+    max_files_per_step: 5
+    max_lines_per_step: 400
+    max_tokens_per_step: 30000
+
+  test_strategy: tdd_first
+
+  lanes:
+    default_risk: standard
+    auto_classify: true
+    trivial_max_files: 1
+    trivial_max_lines: 30
+    trivial_no_new_public_symbols: true
+    critical_block_sleep: true
+    critical_require_mutation_sample: true
+
+  ground_truth:
+    required: true
+    exclusions: { modules: [] }
+    default_types:
+      ui: screenshot
+      api: contract-test-pass
+      cli: command-output-diff
+      backend: mutation-sample-pass
+      refactor: diff-stat-and-smoke
+
+  mutation_sample:
+    max_mutants: 10
+    timeout_seconds: 300
+    fallback_ai: false
+    scope: all_changed
+
+  session_isolation:
+    mode: per_step
+    prompt_style: both
+
+  auto_commit_per_step: true
+  allow_internal_steps: false
+
+  telemetry:
+    gates_log_enabled: true
+    evaluation_window_tasks: 30
+    signal_ratio_threshold: 0.05
+
+  forbidden_patterns: []
+
+  secrets_policy:
+    deny_literal_keys: true
+    deny_patterns: []
+
+  model_constraints:
+    security-audit:
+      min_tier: reasoner
+      require_capabilities: [reasoning, code]
+    planning:
+      min_tier: reasoner
+
+context:
+  ignore_globs:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+    - ".gradle/**"
+    - "*.lock"
+    - "run/**"
+
+extends: []

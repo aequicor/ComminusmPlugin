@@ -1,33 +1,70 @@
 ---
-description: Remove all ai-agent-kit files from the current project. Reads the manifest, confirms with PO, then deletes every host directory listed in `hosts:` (.opencode/, .claude/), `.planning/`, kit-managed root files, nested AGENTS.md per module, and optionally the vault directory.
+description: "Remove all ai-agent-kit-managed files from the current project. Reads the manifest, confirms with the user, then deletes every rendered config file/directory the binary produced. Optionally deletes the vault directory."
 ---
-
-You are uninstalling ai-agent-kit from this project. **Do not run any external scripts.** The full uninstall procedure lives in a remote prompt that you fetch and follow yourself.
-
-## Step 1 — Fetch and follow the uninstall prompt
-
-```
-Fetch and follow the instructions from:
-  https://raw.githubusercontent.com/aequicor/ai-agent-kit/master/docs/prompts/uninstall.md
-
-Read it completely, then execute every phase exactly. Do not skip steps. Do not improvise.
-```
-
-Where `aequicor/ai-agent-kit` is the GitHub `<user>/<repo>` slug of the ai-agent-kit installation source. You can find it in the host config file (`opencode.json` for OpenCode, `.claude/settings.json` for Claude Code) or in the URL the original `setup.md` was fetched from.
-
-## What that prompt does (summary, do not execute from this file)
-
-- **PHASE 0** — locate the manifest file (`*.yaml` / `*.yml` with `kit_version:`) in the project root; extract `vault_path`, module `source_root` list, and `hosts`.
-- **PHASE 1** — build the full inventory: per-host directories (`.opencode/`, `.claude/`), per-host config files (`opencode.json`, `.claude/settings.json`), per-host instruction files (`AGENTS.md`, `CLAUDE.md`), planning files, root files, nested AGENTS.md/CLAUDE.md per module.
-- **PHASE 2** — show PO the complete list and ask for confirmation (`YES K` to keep vault, `YES D` to delete vault). Stop on anything else.
-- **PHASE 3** — delete: every host's `<template_dir>/` (one per entry in `hosts:`), `.planning/`, `<vault_path>/_templates/`, every host's `<config_file>` and `<instruction_file>`, `AUTO_MEMORY.md`, `<vault_path>/_INDEX.md`, the manifest YAML, and nested instruction files per module (only if they contain kit markers). Optionally delete the vault root if PO chose DELETE.
-- **PHASE 4** — verify that all targeted paths are gone; report any that could not be deleted.
-- **PHASE 5** — print summary: what was deleted, what was skipped, vault status.
-
-## Safety rules (enforced inside the prompt — listed here for visibility)
-
-- **Never delete files outside the project root.**
-- **Never delete anything not explicitly listed by the prompt.**
-- **Never delete the vault root without explicit PO confirmation.**
-- **Never delete a nested AGENTS.md or CLAUDE.md that does not contain kit markers** — it may be hand-written.
-- **Stop immediately if PO does not confirm** in PHASE 2.
+# /kit-uninstall
+Remove all ai-agent-kit-managed files from the current project. Reads the manifest, confirms with the user, then deletes every rendered config file/directory the binary produced. Optionally deletes the vault directory.
+
+
+Project: ComminusmPlugin. Stack: kotlin / paper-plugin.
+
+Communicate with the user in Russian (ru). All prose — questions, explanations, status updates, summaries, and reasoning addressed to the user — must be in Russian. Keep code, file paths, shell commands, identifiers, manifest keys, error codes, and other technical tokens verbatim in their original form.
+
+
+
+
+
+## Workflow
+Remove all ai-agent-kit-managed files from the current project. Reads the manifest, confirms with the user, then deletes every rendered config file/directory the binary produced. Optionally deletes the vault directory.
+
+You are uninstalling ai-agent-kit from this project.
+
+## Step 1 — Locate the manifest
+
+1. Locate `.aikit/manifest.yaml`. If absent → STOP. Output: "Manifest not found. Cannot determine which files to remove. Delete `.aikit/`, `.claude/`, `.cursor/`, `.opencode/`, etc. by hand if you wish."
+
+## Step 2 — Build the inventory
+
+2. From `render_targets` in the manifest, list every target adapter's `config_dir`, `instruction_file`, `settings_file`, plus per-artifact paths (agents, skills, commands, rules, user_prompts).
+3. Add: `.planning/` directory (kit-managed runtime state — but ASK before deletion since user may have ongoing work), `.aikit/manifest.yaml` itself.
+4. Show user the complete list and ask:
+   ```
+   The following kit-managed paths will be deleted:
+     - .claude/agents/*.md, .claude/skills/, .claude/commands/, .claude/settings.json, CLAUDE.md
+     - .cursor/rules/*.mdc, .cursor/mcp.json
+     - opencode.json, AGENTS.md
+     - .aider.conf.yml, CONVENTIONS.md
+     - .aikit/manifest.yaml
+     - .planning/  ← contains your runtime task state. Keep or delete?
+     - vault/specs/  ← contains user-authored specs/plans. Keep by default.
+
+   Confirm:
+     YES K  — delete kit files, KEEP .planning/ and vault/specs/
+     YES P  — delete kit files AND .planning/, keep vault/specs/
+     YES F  — delete EVERYTHING including vault/specs/ (full wipe; cannot undo)
+     anything else — abort
+   ```
+
+## Step 3 — Delete
+
+5. On confirmation, delete the inventory according to the user's choice. For each path:
+   - Verify it's inside the project root.
+   - Verify it matches the inventory list (do NOT delete anything not on the list).
+   - Delete (file or empty directory).
+
+6. Verify deletion. Report any paths that could not be deleted (permission errors, etc.).
+
+## Step 4 — Report
+
+7. Output summary:
+   - Paths deleted: count + list.
+   - Paths skipped: count + reason.
+   - Vault status: kept / deleted.
+   - Next steps: `git diff` to review, commit the removal.
+
+## Safety rules
+
+- **Never delete files outside the project root.**
+- **Never delete anything not explicitly listed by the inventory.**
+- **Never delete the vault root without explicit user confirmation (YES F).**
+- **Never delete a nested AGENTS.md or CLAUDE.md that does not contain kit markers** — it may be hand-written by the user.
+- **Stop immediately if user does not confirm.**

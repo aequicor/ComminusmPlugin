@@ -1,44 +1,73 @@
 ---
-description: Add an extra profile to this installed kit by URL. Usage `/kit-extend <url-to-profile.yaml>`. Fetches the profile, validates against profile.schema.json, merges into the manifest (with PO confirmation), and re-renders kit-managed files. Supports both `github.com/.../blob/...` and `raw.githubusercontent.com/...` URLs, including profiles hosted outside this kit's repo.
+description: "Add an extra agent, command, skill, dialect, or target adapter package to this installed kit. Argument: $URL_OR_PATH (URL to a YAML/MD package or local path). The command fetches/copies the package, validates against the relevant schema, registers it in the manifest (with user confirmation), and re-runs `kit-setup generate`."
 ---
-
-You are extending an installed ai-agent-kit with one additional profile. **Do not run any external scripts.** The full procedure lives in a remote prompt that you fetch and follow yourself.
-
-## Step 1 — Fetch and follow the extend prompt
-
-```
-Fetch and follow the instructions from:
-  https://raw.githubusercontent.com/aequicor/ai-agent-kit/master/docs/prompts/extend.md
-
-Read it completely, then execute every phase exactly. Do not skip steps. Do not improvise.
-Pass the URL the PO supplied as the `PROFILE_URL` constant.
-```
-
-Where `aequicor/ai-agent-kit` is the GitHub `<user>/<repo>` slug of the ai-agent-kit installation source.
-
-The PO calls this command as `/kit-extend <url>`. The single argument is `PROFILE_URL`. If the argument is missing, stop and tell PO:
-
-> Pass a profile URL, for example:
-> `/kit-extend https://github.com/aequicor/ai-agent-kit/blob/master/profiles/capability/solid.yaml`
-
-## What that prompt does (summary, do not execute from this file)
-
-- **PHASE 0** — find the project's manifest, sanity-check `stack.profiles`.
-- **PHASE 1** — normalise `PROFILE_URL` (`github.com/.../blob/...` → `raw.githubusercontent.com/...`); detect whether it points at this kit's repo (`IS_OFFICIAL`) or an external repo.
-- **PHASE 2** — fetch the YAML, validate the front-matter and the full body against `kit/profile.schema.json`. Cross-check `_profile_axis` against the URL path when the URL is under `profiles/<axis>/`.
-- **PHASE 3** — if the URL is external, print the parsed profile and ask PO for explicit confirmation before adding.
-- **PHASE 4** — duplicate check (no-op + message), then cardinality check (`language` / `provider` are exactly 1; `host` is 1..N — extending with a second `host` profile adds it; replacing an existing `language`/`provider` asks for confirmation).
-- **PHASE 5** — deep-merge the profile into the manifest (lists concat+dedupe; scalars only overwritten on confirmed `language`/`provider` replacement and only for fields the axis owns). Append the name to `stack.profiles[]`. For external profiles, record the URL in `stack.external_profiles[<name>] = <url>` so `/kit-update` can refetch later. Show a manifest diff and wait for PO confirmation before writing.
-- **PHASE 6** — re-render every kit-managed file in merge mode (same skip-list as `/kit-update`: never touch `vault/concepts/**`, `vault/reference/**`, `.planning/CURRENT.md`, `.planning/tasks/`, etc.).
-- **PHASE 7** — re-validate the manifest, check every host's config file (`opencode.json` / `.claude/settings.json`) is valid JSON with no literal API keys, scan for unresolved `{{...}}` placeholders.
-- **PHASE 8** — print summary (profile added / replaced, source, files touched, next steps `git diff` + commit).
-
-## Safety rules (enforced inside the prompt — listed here for visibility)
-
-- **External profiles need PO confirmation.** A profile fetched from outside `aequicor/ai-agent-kit` cannot be added silently.
-- **Cardinality replacement needs PO confirmation.** Adding a `language` or `provider` profile when one is already present asks "Replace `<old>` with `<new>`?" and stops on no.
-- **Manifest write needs PO confirmation.** A unified diff is shown before the manifest is overwritten.
-- **Never modify files outside the project root.**
-- **Never touch `vault/` content created by PO** — only `vault/_templates/` and `vault/_INDEX.md` are kit-managed.
-- **Never touch `.planning/CURRENT.md`, `.planning/tasks/*.md`, `.planning/tasks/done/*.md`, `.planning/HISTORY.md`** — runtime state.
-- **If any host's config file** (`opencode.json` / `.claude/settings.json`) **ends up with a literal API key** (matches `sk-`, `ghp_`, `glpat-`, `AKIA*`, `xox[bp]-`, or 32+ chars high-entropy) → STOP immediately, warn PO.
+# /kit-extend
+Add an extra agent, command, skill, dialect, or target adapter package to this installed kit. Argument: $URL_OR_PATH (URL to a YAML/MD package or local path). The command fetches/copies the package, validates against the relevant schema, registers it in the manifest (with user confirmation), and re-runs `kit-setup generate`.
+
+
+Project: ComminusmPlugin. Stack: kotlin / paper-plugin.
+
+Communicate with the user in Russian (ru). All prose — questions, explanations, status updates, summaries, and reasoning addressed to the user — must be in Russian. Keep code, file paths, shell commands, identifiers, manifest keys, error codes, and other technical tokens verbatim in their original form.
+
+
+
+
+
+## Workflow
+Add an extra agent, command, skill, dialect, or target adapter package to this installed kit. Argument: $URL_OR_PATH (URL to a YAML/MD package or local path). The command fetches/copies the package, validates against the relevant schema, registers it in the manifest (with user confirmation), and re-runs `kit-setup generate`.
+
+You are extending an installed ai-agent-kit with one additional package. Argument: $URL_OR_PATH.
+
+## Step 1 — Resolve source
+
+1. If $URL_OR_PATH starts with `http(s)://`:
+   - Normalize `github.com/.../blob/...` → `raw.githubusercontent.com/...`.
+   - Fetch the resource. If it's a directory listing (e.g. github tree URL) — STOP, ask user for a single file URL.
+2. Otherwise treat as a local path. Verify exists.
+
+## Step 2 — Determine package kind
+
+3. Inspect the file:
+   - YAML with `_profile_name` / `_profile_description` and a `tools[]` / `agents[]` block → **manifest profile** (deep-merge into manifest).
+   - YAML at `dialect.yaml` shape → **prompt dialect** package.
+   - YAML at `adapter.yaml` shape → **target adapter** package.
+   - Markdown at `prompts/<Agent>.md` shape → **agent prompt** body.
+   - Markdown at `commands/<name>.md` → **slash command**.
+   - Directory containing `SKILL.md` → **skill**.
+
+## Step 3 — Validate
+
+4. Schema-validate against the relevant schema in `.aikit/schema/`.
+5. For external sources, print the parsed package and ask for explicit confirmation before registering.
+
+## Step 4 — Register
+
+6. Copy/place files into the appropriate templates directory under the project's kit-setup templates root (or extend by reference if the package lives outside).
+7. Update `.aikit/manifest.yaml`:
+   - **dialect** → append to `prompt_dialects[]` with `path` pointing at the package.
+   - **adapter** → append to `target_adapters[]`.
+   - **agent** → append to `agents[]` with prompt include path.
+   - **command/skill** → no manifest update needed; the binary auto-discovers.
+
+8. Show a manifest diff and wait for user confirmation before writing.
+
+## Step 5 — Re-render
+
+9. Run `kit-setup verify .aikit/manifest.yaml`. If it errors → revert and STOP.
+10. Run `kit-setup generate .aikit/manifest.yaml`.
+
+## Step 6 — Report
+
+11. Output summary:
+    - Package registered (kind, id).
+    - Files written by re-generation.
+    - Next steps: `git diff`, review, commit.
+
+## Safety rules
+
+- **External packages need user confirmation.** A package fetched from outside the kit's own repo cannot be added silently.
+- **Cardinality replacement needs user confirmation.** Adding a `language` profile when one is already present asks "Replace `<old>` with `<new>`?" and stops on no.
+- **Manifest write needs user confirmation.** A unified diff is shown before the manifest is overwritten.
+- **Never modify files outside the project root.**
+- **Never touch user-authored content** in `vault/specs/`.
+- **If any rendered host config file** (e.g. `.claude/settings.json`, `opencode.json`) **ends up with a literal API key** → STOP and warn user.

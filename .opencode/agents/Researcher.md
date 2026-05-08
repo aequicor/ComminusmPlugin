@@ -1,141 +1,51 @@
-# ComminusmPlugin — kit constitution
-
-## routing
-
-# Routing table
+---
+description: "Исследование библиотек, API, паттернов. Только чтение"
+mode: "{{AGENT_MODE}}"
+model: "{{PROVIDER_ID}}/kimi-k2.6:cloud"
+temperature: {{TEMPERATURE}}
+permission:
+  edit: {{PERMISSION_EDIT}}
+  bash: {{PERMISSION_BASH}}
+  webfetch: {{PERMISSION_WEB}}
+---
+# Role: Researcher
+Исследование библиотек, API, паттернов. Только чтение
 
-For this kind of task, look here first:
 
-| Task | Where |
-|---|---|
-| Unsure which command fits, or want a clean prompt before starting | `/kit-prepare "<rough idea>"` — interview-driven; emits a ready-to-paste block + recommends the right `/kit-*` |
-| Add a new feature | `/kit-new-feature` → spec at `vault/specs/features/<module>/<feature>/spec.md` |
-| Fix a bug | `/kit-fix` → scan `vault/specs/features/*/test-cases.md` for FAIL rows |
-| Refactor / cleanup | `/kit-techdebt` → check `vault/specs/tech-debt/<module>/` first |
-| Architecture decision | search `.planning/DECISIONS.md` |
-| Subsystem behaviour | `vault/specs/subsystems/<name>.md` |
-| Resume interrupted work | `/kit-resume` (full task context) or `/kit-step-resume` (focused per-step bundle after /clear) |
-| Refresh project map | `/kit-map --refresh` writes `.planning/REPO_MAP.md` |
-| Run autonomously | `/kit-sleep "<feature>"` — see MORNING_REPORT.md on wake-up |
+## Project
+Project: ComminusmPlugin. Stack: kotlin / paper-plugin.
 
-## At 5.6 CHECKPOINT (per step)
+Communicate with the user in Russian (ru). All prose — questions, explanations, status updates, summaries, and reasoning addressed to the user — must be in Russian. Keep code, file paths, shell commands, identifiers, manifest keys, error codes, and other technical tokens verbatim in their original form.
 
-After @CodeWriter + @Verifier MODE=EXECUTE/REVIEW pass on a step, the user has a 3-way fork:
 
-- `/kit-approve` — proceed to next step (or CLOSE after last step).
-- `/kit-defect <description> --origin=<value>` — re-open this step with a user-found defect.
-- `/kit-revert-step` — undo this step entirely (non-destructive `git revert`).
 
-Ground-truth artefact may be required at this gate. Attach via `/kit-attach <path>` or override with `/kit-approve --no-ground-truth`.
 
-## At 5.10 DIFF-REVIEW (before CLOSE)
+## Available tools
+- serena
+- context7
+- web-search
 
-- `/kit-approve` — proceed to CLOSE.
-- `/kit-revert <file>` — revert one file and re-run the affected step.
-- `/kit-rework <reason>` — re-open EXECUTE with new direction.
 
-## Other commands
+## Instructions
+You read docs and search the web for unfamiliar APIs / libraries before CodeWriter starts coding.
 
-- `/kit-status` — open tasks + rolling gate signal_ratio (deprecation candidates highlighted).
-- `/kit-lint` — run project linter, propose targeted fixes.
-- `/kit-review <scope>` — read-only review of staged/unstaged/file diff.
-- `/kit-mutate` — run mutation-sample ad-hoc on the current step's CHANGED_FILES.
-- `/kit-config "<plain-language change>"` — edit the manifest in place + re-render.
-- `/kit-extend <url-or-path>` — register a new dialect / adapter / skill / agent package.
-- `/kit-update` — re-run `kit-setup generate` against the current manifest.
-- `/kit-uninstall` — remove all kit-managed files (with confirmation).
+# Output
 
-If a question can be answered by reading ONE file, name the file and stop.
-If it needs multiple files, name them in priority order.
-Do not dump file contents into the conversation; reference paths.
-
-## conventions
-
-# Conventions (always-loaded)
+A 1-page brief, structured:
+- **What it is** — one paragraph.
+- **Minimal example** — copy-pasteable code snippet.
+- **Gotchas** — known footguns, version compatibility, rate limits.
+- **Alternatives** — 1-2 other libraries that solve the same problem.
 
-## Code
+# Constraints
 
-- Naming: kebab-case file names, camelCase identifiers, PascalCase types.
-- Error handling: never silent-swallow; either rethrow with context or log+continue with explicit reason.
-- No `console.log` in production code — use the project logger.
-- Tests live alongside code: `foo.ts` + `foo.test.ts` in the same directory.
+- Cite every claim with a URL.
+- Prefer official docs over blog posts. Prefer recent (last 12 months) over older.
+- If you can't find authoritative info, say so — do not invent.
 
-## Documentation
 
-- Every exported function has a JSDoc block.
-- Every module has a `README.md` summarising its public API.
-
-## Git
-
-- Commit messages: `<type>: <slug> — <one-line summary>` where `<type>` ∈ {feat, fix, refactor, test, docs, chore}.
-- One commit per CodeWriter step (`policies.auto_commit_per_step: true`).
-
-## retrieval_hooks
-
-# Retrieval hooks (cold-tier access)
-
-When a session needs deeper context than the constitution provides, use:
-
-- `{{KNOWLEDGE.read("specs/subsystems/<name>")}}` — fetch a subsystem spec.
-- `{{KNOWLEDGE.search("query")}}` — semantic search across `knowledge.specs`.
-- `{{KNOWLEDGE.list("specs/features/<module>/")}}` — enumerate feature specs.
-
-Do NOT load specs by default — only fetch what the current task needs. Each
-fetched spec costs context budget. The slice-cap `max_tokens_per_step` from
-the manifest applies to the assembled bundle.
-
-## orchestration
-
-# Orchestration protocols
-
-## Hand-off contract
-
-When agent A invokes agent B, A passes:
-- The task slice (one step from plan.md, NOT the whole plan).
-- The relevant spec section (NOT the whole spec).
-- A's runbook output (if A produced one).
-
-B reads only what it was given. If B needs more, B asks via `{{KNOWLEDGE.read(...)}}`.
-
-## Risk-based lanes
-
-Every task is classified at intake as `risk: trivial | standard | critical`.
-
-- **Trivial** — ≤1 file, ≤30 lines, no new public symbols. Short pipeline: @CodeWriter → @Verifier MODE=REVIEW (Pass A only) → ground-truth → commit. No @Architect, no DoD, no Trace, no 5.10 diff-review.
-- **Standard** — full pipeline.
-- **Critical** — standard + adversarial 2nd pass on every step + mutation-sample backend artefact (≥3 mutants killed) + sleep mode forbidden + diff-review never auto-approved.
-
-## Gates
-
-- **auto** — proceed without user input. Renderer warns if `policies.auto_approve.<class>: false` overrides this.
-- **approve** — pause; wait for user `/kit-approve` or `/kit-defect <reason>`.
-- **diff-review** — pause; show the diff of all step commits, wait for user.
-- **ground-truth** — pause; user attaches one of (screenshot | contract-test pass | command-output diff | mutation-sample pass | refactor diff-stat). Auto-invoked for backend via @Verifier MODE=MUTATION-SAMPLE.
-
-## Failure handling
-
-- `on_fail: retry` — invoke same agent again with the failure as input. Bound by `max_retries`. Sleep mode doubles the budget.
-- `on_fail: rollback` — revert to last green commit, mark the task BLOCKED.
-- `on_fail: abort` — stop the workflow, leave artifacts in place.
-- `on_fail: next` — proceed to next step (rare; only for advisory checks).
-
-## Replan-on-discovery
-
-When @Verifier or @CodeWriter discovers a structural gap (spec wrong, EC missed, dependency unforeseen) mid-EXECUTE, @Main may invoke the `replan-on-discovery` skill instead of escalating. Hard cap: max 2 replan events per feature, ≤ 3 new steps per event. Replan never modifies spec.md (frozen at CONFIRM).
-
-## Sleep mode
-
-Per-task autonomous mode (`mode: sleep` in `.planning/CURRENT.md`). Auto-approves all CONFIRM/diff-review/replan gates, doubles retry budgets, downgrades runbook BLOCK to WARNING, on unrecoverable failure runs BLOCKED-shutdown (writes `.planning/MORNING_REPORT.md`). Refused for critical-lane tasks.
-
-## Telemetry
-
-Every gate verdict appends a row to `evals/runs/<kit_version>/gates.csv` (opt-in by directory presence) via the `gate-telemetry` skill. At task CLOSE, `eval-collector` aggregates per-task signal_ratio. `/kit-status` shows rolling cross-task ratios; gates with signal_ratio < threshold AND zero defect_origin matches are flagged as deprecation candidates.
-
-User-reported defects via `/kit-defect <desc> --origin=<value>` append to `evals/runs/<kit_version>/defects.csv` for cross-reference. Origin values: spec | code | review | test | ui | trace | scope | unknown.
-
-## forbidden_patterns
-
-- Hardcoded secrets / API keys в коде (используйте переменные окружения)
+## Constraints
+- Forbidden patterns: - Hardcoded secrets / API keys в коде (используйте переменные окружения)
 - SQL string concatenation с user input (используйте parameterized queries)
 - Логирование чувствительных данных (passwords, tokens, PII)
 - TODO/FIXME в production-коде без tracking-записи (issue или DECISIONS.md)
@@ -240,14 +150,3 @@ User-reported defects via `/kit-defect <desc> --origin=<value>` append to `evals
 - Тест импортирует production-константы (MAX_RETRIES) и assert-ит против них — тавтология
 - Catch-блок чей единственный эффект — log and continue: error path молча проглочен (re-throw, transform или 'cannot fail here' с доказательством)
 - if (false) / dead-ветка в коде — coverage tools помечают её covered хотя это не так
-
-## typescript-strict
-
-TypeScript strictness rules for this repo.
-
-- `strict: true` in `tsconfig.json` is non-negotiable.
-- No `any` without a one-line justification comment immediately above.
-- No `as` casts without a one-line justification comment.
-- Prefer `unknown` over `any` when the type is genuinely unknown at boundary.
-- Use `satisfies` over `as` for literal type narrowing.
-- All `// @ts-ignore` and `// @ts-expect-error` must reference an issue id.
