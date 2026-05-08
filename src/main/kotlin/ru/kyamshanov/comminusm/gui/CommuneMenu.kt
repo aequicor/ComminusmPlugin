@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByIdUseCase
 import ru.kyamshanov.comminusm.commune.service.CommuneInvitationService
@@ -25,6 +26,8 @@ class CommuneMenu(
     private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
     private val getOrderByIdUseCase: GetOrderByIdUseCase,
     private val communeInvitationService: CommuneInvitationService,
+    private val plugin: Plugin,
+    private val partyMenu: PartyMenu,
 ) : Listener {
     @Suppress("LongMethod", "MagicNumber")
     fun open(
@@ -116,7 +119,7 @@ class CommuneMenu(
         // Back button
         inv.setItem(BACK_BUTTON_SLOT, GuiUtils.namedItem("§cНазад", Material.BARRIER))
 
-        player.openInventory(inv)
+        Bukkit.getScheduler().runTask(plugin, Runnable { player.openInventory(inv) })
     }
 
     @EventHandler
@@ -129,8 +132,7 @@ class CommuneMenu(
 
         when (event.slot) {
             BACK_BUTTON_SLOT -> {
-                // Return to party menu
-                player.sendMessage(Component.text("§aВозврат в меню партии (планируется)"))
+                Bukkit.getScheduler().runTask(plugin, Runnable { partyMenu.open(player) })
             }
             INVITE_BUTTON_SLOT -> {
                 player.sendMessage(Component.text("§aПригласить ордер (планируется)"))

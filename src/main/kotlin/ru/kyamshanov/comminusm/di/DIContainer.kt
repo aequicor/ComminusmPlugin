@@ -424,17 +424,7 @@ class DIContainer(
 
     // ========== Menu Creation ==========
     fun createMenus(): List<Listener> {
-        val orderMembersMenu =
-            OrderMembersMenu(checkOrderLeadershipUseCase, orderMembershipService)
-        val communeMenu =
-            CommuneMenu(
-                communeService,
-                checkOrderLeadershipUseCase,
-                getOrderByIdUseCase,
-                communeInvitationService,
-            )
-
-        return listOf(
+        val partyMenu =
             PartyMenu(
                 pluginConfig,
                 getWorkdaysBalanceUseCase,
@@ -446,7 +436,21 @@ class DIContainer(
                 orderMenu,
                 frontMenu,
                 treasuryMenu,
-            ),
+            )
+        val orderMembersMenu =
+            OrderMembersMenu(checkOrderLeadershipUseCase, orderMembershipService, plugin, partyMenu)
+        val communeMenu =
+            CommuneMenu(
+                communeService,
+                checkOrderLeadershipUseCase,
+                getOrderByIdUseCase,
+                communeInvitationService,
+                plugin,
+                partyMenu,
+            )
+
+        return listOf(
+            partyMenu,
             orderMenu,
             orderRenameMenu,
             frontMenu,

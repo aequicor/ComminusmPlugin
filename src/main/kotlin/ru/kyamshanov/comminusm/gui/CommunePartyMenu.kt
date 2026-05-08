@@ -103,9 +103,6 @@ class CommunePartyMenu(
         // Check if order already has a commune
         val existingCommune = communeService.getCommuneOfOrder(order.id)
         if (existingCommune != null) {
-            // Close the party menu before opening commune menu
-            player.closeInventory()
-            // Open existing commune menu
             communeMenu.open(player, existingCommune.id)
             return
         }
@@ -115,9 +112,6 @@ class CommunePartyMenu(
         when (result) {
             is ru.kyamshanov.comminusm.commune.model.Result.Success -> {
                 player.sendMessage(Component.text("§aКоммуна создана!"))
-                // Close the party menu after successful creation
-                player.closeInventory()
-                // Open the newly created commune menu
                 communeMenu.open(player, result.data.id)
             }
             is ru.kyamshanov.comminusm.commune.model.Result.Failure -> {

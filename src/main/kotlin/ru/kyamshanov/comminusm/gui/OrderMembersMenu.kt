@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 
@@ -20,6 +21,8 @@ import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
 class OrderMembersMenu(
     private val checkOrderLeadershipUseCase: CheckOrderLeadershipUseCase,
     private val orderMembershipService: OrderMembershipService,
+    private val plugin: Plugin,
+    private val partyMenu: PartyMenu,
 ) : Listener {
     private val occupiedMemberSlots = mutableSetOf<Int>()
 
@@ -90,7 +93,8 @@ class OrderMembersMenu(
         // Back
         inv.setItem(BACK_BUTTON_SLOT, GuiUtils.namedItem("§cНазад", Material.BARRIER))
 
-        player.openInventory(inv)
+        // Deferred to avoid cursor shift when called from InventoryClickEvent
+        Bukkit.getScheduler().runTask(plugin, Runnable { player.openInventory(inv) })
     }
 
     @EventHandler
@@ -106,8 +110,7 @@ class OrderMembersMenu(
 
         when {
             event.slot == BACK_BUTTON_SLOT -> {
-                // Back to previous menu
-                player.sendMessage(Component.text("§aВозврат в меню (планируется)"))
+                Bukkit.getScheduler().runTask(plugin, Runnable { partyMenu.open(player) })
             }
             event.slot == INVITE_BUTTON_SLOT -> {
                 // Show invite player menu
