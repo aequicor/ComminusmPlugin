@@ -114,10 +114,10 @@ class OrderRenameMenu(
         event.isCancelled = true
 
         val player = event.whoClicked as Player
-        val anvilInventory = event.inventory as AnvilInventory
-        // AnvilInventory.renameText is the authoritative source at click time.
-        // renameTexts cache is the fallback in case renameText was already cleared.
-        val typedName = anvilInventory.renameText?.takeIf { it.isNotBlank() }
+        // Custom anvil inventories (CraftInventoryCustom) don't implement AnvilInventory,
+        // so the cast may return null — fall back to the renameTexts cache in that case.
+        val anvilInventory = event.inventory as? AnvilInventory
+        val typedName = anvilInventory?.renameText?.takeIf { it.isNotBlank() }
             ?: renameTexts[playerUuid]?.takeIf { it.isNotBlank() }
             ?: ""
         plugin.logger.info("Rename attempt: player=$playerUuid, orderId=$orderId, typedName='$typedName'")
