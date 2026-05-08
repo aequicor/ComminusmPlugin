@@ -21,6 +21,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.inventory.PrepareAnvilEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.inventory.AnvilInventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
@@ -71,7 +72,11 @@ class OrderRenameMenu(
     fun onPrepareAnvil(event: PrepareAnvilEvent) {
         val text = event.inventory.renameText ?: return
         val player = event.view.player as? Player ?: return
-        renameTexts[player.uniqueId] = text
+        // Only cache non-blank text — Paper fires PrepareAnvilEvent with "" in some
+        // lifecycle phases; overwriting the cache with blank would erase the typed name.
+        if (text.isNotBlank()) {
+            renameTexts[player.uniqueId] = text
+        }
         val result = ItemStack(Material.PAPER)
         result.editMeta { meta ->
             meta.displayName(Component.text(text))
@@ -109,7 +114,12 @@ class OrderRenameMenu(
         event.isCancelled = true
 
         val player = event.whoClicked as Player
-        val typedName = renameTexts[playerUuid] ?: ""
+        val anvilInventory = event.inventory as AnvilInventory
+        // AnvilInventory.renameText is the authoritative source at click time.
+        // renameTexts cache is the fallback in case renameText was already cleared.
+        val typedName = anvilInventory.renameText?.takeIf { it.isNotBlank() }
+            ?: renameTexts[playerUuid]?.takeIf { it.isNotBlank() }
+            ?: ""
         plugin.logger.info("Rename attempt: player=$playerUuid, orderId=$orderId, typedName='$typedName'")
 
         val validationError = validateTypedName(typedName)
