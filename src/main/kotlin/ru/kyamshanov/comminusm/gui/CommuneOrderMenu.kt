@@ -2,6 +2,7 @@ package ru.kyamshanov.comminusm.gui
 
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -9,7 +10,10 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
+import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataType
+import org.bukkit.plugin.Plugin
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
 import ru.kyamshanov.comminusm.application.usecases.order.GetOrderByIdUseCase
 import ru.kyamshanov.comminusm.commune.service.OrderMembershipService
@@ -25,12 +29,22 @@ class CommuneOrderMenu(
     private val orderMembershipService: OrderMembershipService,
     private val orderMembersMenu: OrderMembersMenu,
     private val getOrderByIdUseCase: GetOrderByIdUseCase,
+    private val plugin: Plugin,
 ) : Listener {
+
+    private val orderIdKey = NamespacedKey(plugin, OrderMenu.ORDER_ID_PDC_KEY)
+
+    private fun extractOrderId(topInventory: Inventory): Long? =
+        topInventory.getItem(OrderMenu.INFO_SLOT)
+            ?.itemMeta
+            ?.persistentDataContainer
+            ?.get(orderIdKey, PersistentDataType.LONG)
+
     @EventHandler(priority = EventPriority.HIGH)
     @Suppress("ReturnCount")
     fun onInventoryOpen(event: InventoryOpenEvent) {
         val title = event.view.title().toString()
-        if (!title.contains("Ордер №")) return
+        if (!title.contains("Ордер - ")) return
 
         val player = event.player as Player
         val inv = event.view.topInventory
@@ -40,12 +54,12 @@ class CommuneOrderMenu(
 
         // Only show button to leaders and native members
         if (nativeOrders.isNotEmpty() || isLeader) {
-            val skull = buildParticipantsButton(title)
+            val skull = buildParticipantsButton(inv)
             inv.setItem(PARTICIPANTS_BUTTON_SLOT, skull)
         }
     }
 
-    private fun buildParticipantsButton(title: String): ItemStack {
+    private fun buildParticipantsButton(topInventory: Inventory): ItemStack {
         val skull =
             GuiUtils.namedItem(
                 "§6Участники",
@@ -54,9 +68,7 @@ class CommuneOrderMenu(
                 "§8Нажми чтобы открыть",
             )
 
-        // Extract order ID from title and set skull owner
-        val orderIdMatch = """Ордер №(\d+)""".toRegex().find(title)
-        val orderId = orderIdMatch?.groupValues?.getOrNull(1)?.toLongOrNull()
+        val orderId = extractOrderId(topInventory)
         if (orderId != null) {
             val order = getOrderByIdUseCase(orderId)
             if (order != null) {
@@ -75,7 +87,7 @@ class CommuneOrderMenu(
     @Suppress("ReturnCount")
     fun onInventoryClick(event: InventoryClickEvent) {
         val title = event.view.title().toString()
-        if (!title.contains("Ордер №")) return
+        if (!title.contains("Ордер - ")) return
 
         // TC-155: Cancel ALL clicks in the menu to prevent item dragging
         event.isCancelled = true
@@ -93,9 +105,7 @@ class CommuneOrderMenu(
             return
         }
 
-        // Extract order ID from title (e.g., "§8Ордер №123" -> 123)
-        val orderIdMatch = """Ордер №(\d+)""".toRegex().find(title)
-        val orderId = orderIdMatch?.groupValues?.getOrNull(1)?.toLongOrNull()
+        val orderId = extractOrderId(event.view.topInventory)
         if (orderId == null) {
             player.sendMessage(Component.text("§cОшибка при открытии меню участников"))
             return
@@ -107,7 +117,7 @@ class CommuneOrderMenu(
     @EventHandler(priority = EventPriority.LOWEST)
     fun onInventoryDrag(event: InventoryDragEvent) {
         val title = event.view.title().toString()
-        if (!title.contains("Ордер №")) return
+        if (!title.contains("Ордер - ")) return
 
         // TC-155: Cancel ALL drag operations in the menu to prevent item dragging
         event.isCancelled = true

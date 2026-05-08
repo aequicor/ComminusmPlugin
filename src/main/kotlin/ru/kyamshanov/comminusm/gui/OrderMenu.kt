@@ -59,19 +59,26 @@ class OrderMenu(
         player: Player,
         order: Order,
     ) {
-        val displayName = order.name.ifBlank { "Ордер №${order.id}" }
-        val inv = Bukkit.createInventory(null, 45, Component.text("§8Ордер №${order.id}"))
+        val displayName = order.name.ifBlank { "${order.id}" }
+        val inv = Bukkit.createInventory(null, 45, Component.text("§8Ордер - $displayName"))
         GuiUtils.fillBorder(inv)
 
-        inv.setItem(
-            infoSlot,
-            GuiUtils.namedItem(
-                "§e$displayName",
-                Material.WHITE_BANNER,
-                "§7Уровень: §e${order.level}/${getMaxOrderLevelUseCase()}",
-                "§7Владелец: §e${player.name}",
-            ),
+        val infoItem = GuiUtils.namedItem(
+            "§e$displayName",
+            Material.WHITE_BANNER,
+            "§7Уровень: §e${order.level}/${getMaxOrderLevelUseCase()}",
+            "§7Владелец: §e${player.name}",
         )
+        plugin?.let { p ->
+            val meta = infoItem.itemMeta
+            meta?.persistentDataContainer?.set(
+                NamespacedKey(p, ORDER_ID_PDC_KEY),
+                PersistentDataType.LONG,
+                order.id,
+            )
+            infoItem.itemMeta = meta
+        }
+        inv.setItem(infoSlot, infoItem)
 
         inv.setItem(
             sizeSlot,
@@ -93,7 +100,7 @@ class OrderMenu(
                     "§eПереименовать ордер",
                     Material.ANVIL,
                     "§7Изменить название ордера",
-                    "§7Текущее: §f${order.name.ifBlank { "Ордер №${order.id}" }}",
+                    "§7Текущее: §f${order.name.ifBlank { "${order.id}" }}",
                 ),
             )
         } else {
@@ -207,7 +214,7 @@ class OrderMenu(
     @Suppress("LongMethod", "CyclomaticComplexMethod", "ReturnCount", "NestedBlockDepth")
     fun onClick(event: InventoryClickEvent) {
         val title = event.view.title().toString()
-        if (!title.contains("Ордер №")) return
+        if (!title.contains("Ордер - ")) return
         event.isCancelled = true
 
         val player = event.whoClicked as Player
@@ -376,6 +383,12 @@ class OrderMenu(
     companion object {
         /** PDC key used to store orderId on the home button ItemStack (avoids DB call on click). */
         const val HOME_ORDER_ID_KEY = "home_order_id"
+
+        /** PDC key stored on the info item (slot [INFO_SLOT]) — lets other menus read orderId. */
+        const val ORDER_ID_PDC_KEY = "menu_order_id"
+
+        /** Index of the banner info item inside the order menu inventory. */
+        const val INFO_SLOT = 20
     }
 
     /** Decision result for home-button rendering. No Bukkit objects — fully testable. */

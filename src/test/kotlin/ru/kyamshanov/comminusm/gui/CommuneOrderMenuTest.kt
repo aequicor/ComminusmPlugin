@@ -3,6 +3,7 @@
 package ru.kyamshanov.comminusm.gui
 
 import io.mockk.mockk
+import org.bukkit.plugin.Plugin
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kyamshanov.comminusm.application.usecases.order.CheckOrderLeadershipUseCase
@@ -23,6 +24,7 @@ class CommuneOrderMenuTest {
     private val orderMembershipService = mockk<OrderMembershipService>()
     private val orderMembersMenu = mockk<OrderMembersMenu>()
     private val getOrderByIdUseCase = mockk<GetOrderByIdUseCase>()
+    private val plugin = mockk<Plugin>(relaxed = true)
 
     private lateinit var menu: CommuneOrderMenu
 
@@ -34,6 +36,7 @@ class CommuneOrderMenuTest {
                 orderMembershipService,
                 orderMembersMenu,
                 getOrderByIdUseCase,
+                plugin,
             )
     }
 

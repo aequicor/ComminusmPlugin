@@ -463,6 +463,7 @@ class DIContainer(
                 orderMembershipService,
                 orderMembersMenu,
                 getOrderByIdUseCase,
+                plugin,
             ),
             communeMenu,
             orderMembersMenu,

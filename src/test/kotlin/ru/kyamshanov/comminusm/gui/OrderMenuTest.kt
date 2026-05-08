@@ -542,14 +542,14 @@ class OrderMenuTest {
         // Pure logic test: verify that displayName logic uses name or fallback
         val orderWithBlankName = ""
         val orderId = 42L
-        val displayName = orderWithBlankName.ifBlank { "Ордер №$orderId" }
-        assertEquals("Ордер №42", displayName, "Blank name should fall back to order number format")
+        val displayName = orderWithBlankName.ifBlank { "$orderId" }
+        assertEquals("42", displayName, "Blank name should fall back to order id")
     }
 
     @Test
     fun `TC-02 order name displays as-is when not blank`() {
         val orderWithName = "MyGuild"
-        val displayName = orderWithName.ifBlank { "Ордер №42" }
+        val displayName = orderWithName.ifBlank { "42" }
         assertEquals("MyGuild", displayName, "Non-blank name should be displayed as-is")
     }
 
