@@ -160,6 +160,33 @@ User-reported defects via `/kit-defect <desc> --origin=<value>` append to `evals
 - Хранение Player ссылок за пределами event scope (утечка памяти)
 - Вызов Bukkit API из non-main потока без переключения через scheduler
 - Long-running task в event handler (offload в BukkitScheduler.runTaskAsynchronously)
+- Класс с >1 причиной для изменения (god class, делает persistence + business logic + formatting одновременно)
+- Метод длиннее 30 строк, смешивающий уровни абстракции (orchestration + low-level detail)
+- Repository класс, содержащий business rules или validation логику
+- Use case / interactor с >1 публичной business-операции
+- switch/when по type tags или string-дискриминаторам вместо полиморфизма
+- Feature flag внутри domain logic вместо инъекции strategy/decorator
+- Захардкоженный выбор алгоритма внутри класса, который должен делегировать strategy
+- Subclass, бросающий UnsupportedOperationException / NotImplementedError для унаследованных методов
+- Subclass, ослабляющий preconditions или усиливающий postconditions родительского контракта
+- Type-checking через instanceof/is внутри метода, принимающего базовый тип
+- Интерфейс с >5–7 методами, которые клиенты реализуют лишь частично (fat interface)
+- Передача full service/repository интерфейса в потребителя, использующего лишь 1 метод
+- Marker-метод, реализованный как no-op, потому что интерфейс forced его
+- Concrete класс инстанцируется через 'new' / constructor внутри business logic (используйте DI / factory)
+- Domain или use-case импортирует из infrastructure layer (DB, HTTP, filesystem)
+- Static / global доступ к shared mutable state из domain logic (singletons как hidden dependencies)
+- Тест, который не запускается без реальной БД/сети, потому что зависимость не была инвертирована
+- Дублирование business-логики в 2+ use cases вместо извлечения shared domain service
+- Abstract base class или интерфейс созданы спекулятивно с 1 реализацией без планируемого расширения
+- Over-engineered абстракция для одноразовой операции (factory-of-factories для фиксированного flow)
+- Mutable публичное поле на domain entity или value object (используйте val / readonly)
+- Метод, мутирующий свой аргумент вместо возврата нового значения (неожиданный side-effect)
+- Shared mutable state, доступ без синхронизации в concurrent контексте
+- Длинная цепочка a.b().c().doSomething() ≥3 уровней — нарушает LoD
+- Caller извлекает данные из объекта и принимает решения вместо того, чтобы попросить объект действовать
+- Глубокая иерархия наследования (3+ уровня) ради переиспользования — предпочитайте композицию или делегирование
+- Наследование от concrete класса исключительно ради переиспользования реализации
 - Inner-layer модуль импортирует из outer-layer модуля (domain → infrastructure, use-case → controller, entity → web/HTTP) — нарушает dependency rule
 - Domain или use-case package ссылается на framework-типы по имени (Spring, Ktor, Compose, React, Express, Django, Rails, Flask) — inner layers framework-agnostic
 - Use-case (interactor) импортирует concrete repository implementation, HTTP client, ORM session или filesystem API — зависьте от port-интерфейса
@@ -190,33 +217,6 @@ User-reported defects via `/kit-defect <desc> --origin=<value>` append to `evals
 - Use-case unit test требует реальную БД, HTTP server, message broker или filesystem — use-cases тестируются через порты с in-memory adapters
 - Domain entity test boots framework runtime (Spring context, Ktor server, Compose runtime, Rails environment) — entities testable plain
 - Use-case test mocks the use-case under test вместо подмены зависимостей через порты
-- Класс с >1 причиной для изменения (god class, делает persistence + business logic + formatting одновременно)
-- Метод длиннее 30 строк, смешивающий уровни абстракции (orchestration + low-level detail)
-- Repository класс, содержащий business rules или validation логику
-- Use case / interactor с >1 публичной business-операции
-- switch/when по type tags или string-дискриминаторам вместо полиморфизма
-- Feature flag внутри domain logic вместо инъекции strategy/decorator
-- Захардкоженный выбор алгоритма внутри класса, который должен делегировать strategy
-- Subclass, бросающий UnsupportedOperationException / NotImplementedError для унаследованных методов
-- Subclass, ослабляющий preconditions или усиливающий postconditions родительского контракта
-- Type-checking через instanceof/is внутри метода, принимающего базовый тип
-- Интерфейс с >5–7 методами, которые клиенты реализуют лишь частично (fat interface)
-- Передача full service/repository интерфейса в потребителя, использующего лишь 1 метод
-- Marker-метод, реализованный как no-op, потому что интерфейс forced его
-- Concrete класс инстанцируется через 'new' / constructor внутри business logic (используйте DI / factory)
-- Domain или use-case импортирует из infrastructure layer (DB, HTTP, filesystem)
-- Static / global доступ к shared mutable state из domain logic (singletons как hidden dependencies)
-- Тест, который не запускается без реальной БД/сети, потому что зависимость не была инвертирована
-- Дублирование business-логики в 2+ use cases вместо извлечения shared domain service
-- Abstract base class или интерфейс созданы спекулятивно с 1 реализацией без планируемого расширения
-- Over-engineered абстракция для одноразовой операции (factory-of-factories для фиксированного flow)
-- Mutable публичное поле на domain entity или value object (используйте val / readonly)
-- Метод, мутирующий свой аргумент вместо возврата нового значения (неожиданный side-effect)
-- Shared mutable state, доступ без синхронизации в concurrent контексте
-- Длинная цепочка a.b().c().doSomething() ≥3 уровней — нарушает LoD
-- Caller извлекает данные из объекта и принимает решения вместо того, чтобы попросить объект действовать
-- Глубокая иерархия наследования (3+ уровня) ради переиспользования — предпочитайте композицию или делегирование
-- Наследование от concrete класса исключительно ради переиспользования реализации
 - Тест, чьё единственное assertion — non-null / non-empty / defined проверка результата SUT — для Critical/High EC требуется проверка ожидаемого поведения, а не факта что что-то вернулось
 - Тест, утверждающий только что не было исключения (пустой catch, комментарий 'no throw = pass')
 - Тест, сравнивающий значение само с собой или с константой возвращаемой SUT (assertTrue(result.success), assertEquals(x, x)) — тавтология

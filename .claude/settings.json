@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [],
+    "allow": []
+  },
+  "mcpServers": {"serena":{"command":"serena-mcp","args":["--workspace","."]},"knowledge-os":{"url":"http://localhost:8010/mcp"},"context7":{"url":"https://mcp.context7.com/mcp"}},
+  "env": {
+    "KIT_LANG": "ru"
+  }
+}

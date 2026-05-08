@@ -8,5 +8,5 @@
       }
     }
   },
-  "mcp": {"serena":{"command":"serena","args":["--workspace",".","start-mcp-server"]},"knowledge-my-app":{"url":"http://localhost:8010/mcp"},"context7":{"url":"https://mcp.context7.com/mcp"}}
+  "mcp": {"serena":{"command":"serena-mcp","args":["--workspace","."]},"knowledge-os":{"url":"http://localhost:8010/mcp"},"context7":{"url":"https://mcp.context7.com/mcp"}}
 }
