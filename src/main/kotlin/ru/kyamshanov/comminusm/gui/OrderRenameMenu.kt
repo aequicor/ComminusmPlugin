@@ -105,12 +105,14 @@ class OrderRenameMenu(
             return
         }
 
+        val playerUuid = (event.whoClicked as? Player)?.uniqueId ?: return
+        val orderId = inProgressRenames[playerUuid] ?: return
+
         if (event.rawSlot != ANVIL_OUTPUT_SLOT) {
+            event.isCancelled = true
             return
         }
 
-        val playerUuid = (event.whoClicked as? Player)?.uniqueId ?: return
-        val orderId = inProgressRenames[playerUuid] ?: return
         event.isCancelled = true
 
         val player = event.whoClicked as Player
