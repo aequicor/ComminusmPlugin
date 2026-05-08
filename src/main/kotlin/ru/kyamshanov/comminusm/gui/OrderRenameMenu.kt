@@ -78,30 +78,6 @@ class OrderRenameMenu(
         event.result = result
     }
 
-    private fun handleRenameResult(
-        player: Player,
-        playerUuid: UUID,
-        result: Result<Unit>,
-        currentOrder: Order,
-        typedName: String,
-    ) {
-        when (result) {
-            is Result.Success -> {
-                handleSuccessfulValidation(player, currentOrder, typedName)
-            }
-            is Result.Failure -> {
-                val errorMsg =
-                    when (result.error) {
-                        "unauthorized" -> Component.text("Вы больше не лидер этого ордера", NamedTextColor.RED)
-                        "not_found" -> Component.text("Этот ордер был расформирован", NamedTextColor.RED)
-                        else -> Component.text("Ошибка при переименовании. Попробуйте позже", NamedTextColor.RED)
-                    }
-                player.sendActionBar(errorMsg)
-                plugin.logger.warning("Rename rejected: player=$playerUuid, error=${result.error}")
-            }
-        }
-    }
-
     private fun validateTypedName(typedName: String): Component? =
         when {
             typedName.isBlank() || typedName.all { it.isWhitespace() } ->
@@ -152,12 +128,17 @@ class OrderRenameMenu(
         }
 
         val currentOrder = DomainToModelAdapter.toPresentationModel(domainOrder)
-        val result = renameOrderUseCase(playerUuid, typedName)
+
+        // AC-19: same name = no-op, no DB write and no ArmorStand update
+        if (typedName == domainOrder.name) {
+            inProgressRenames.remove(playerUuid)
+            player.closeInventory()
+            return
+        }
 
         inProgressRenames.remove(playerUuid)
         player.closeInventory()
-
-        handleRenameResult(player, playerUuid, result, currentOrder, typedName)
+        handleSuccessfulValidation(player, currentOrder, typedName)
     }
 
     private fun handleSuccessfulValidation(
@@ -182,6 +163,35 @@ class OrderRenameMenu(
         val asyncTask =
             Runnable {
                 try {
+                    // Ownership re-check in async context — avoids DB call on main thread
+                    val ownershipResult = renameOrderUseCase(playerUuid, typedName)
+                    if (ownershipResult is Result.Failure) {
+                        plugin.logger.warning(
+                            "Rename rejected in async check: player=$playerUuid, error=${ownershipResult.error}",
+                        )
+                        val errorMsg =
+                            when (ownershipResult.error) {
+                                "unauthorized" ->
+                                    Component.text("Вы больше не лидер этого ордера", NamedTextColor.RED)
+                                "not_found" ->
+                                    Component.text("Этот ордер был расформирован", NamedTextColor.RED)
+                                else ->
+                                    Component.text(
+                                        "Ошибка при переименовании. Попробуйте позже",
+                                        NamedTextColor.RED,
+                                    )
+                            }
+                        Bukkit.getScheduler().runTask(
+                            plugin,
+                            Runnable {
+                                val actualPlayer = Bukkit.getPlayer(playerUuid) ?: return@Runnable
+                                updateArmorStand(currentOrder, oldName)
+                                actualPlayer.sendActionBar(errorMsg)
+                            },
+                        )
+                        return@Runnable
+                    }
+
                     orderRepository.rename(orderId, typedName)
                     val mainTask =
                         Runnable {

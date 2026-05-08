@@ -121,6 +121,7 @@ PEND  •  PASS  •  FAIL  •  SKIP
 | TC-88 | PEND   | —     | error       | [spec] Order not found error: disbanded order → "Этот ордер был расформирован"          | Missing order error message shown                           |
 | TC-89 | PEND   | —     | error       | [spec] DB error message: write fails → "Ошибка при сохранении названия. Попробуйте позже" | Generic DB error user message shown                         |
 | TC-90 | PEND   | —     | error       | [spec] DB failure: in-memory name rolls back to cached old value, no state corruption    | Rollback preserves data consistency on DB write error        |
+| TC-91 | PASS   | —     | regression  | [BUG] Rename confirm: DB not updated, ArmorStand not updated — renameOrderUseCase called on main thread blocked async write path. Fixed: moved ownership re-check to async context in performAsyncRename; onInventoryClick now calls handleSuccessfulValidation directly after AC-19 no-op guard. (impl: src/main/kotlin/ru/kyamshanov/comminusm/gui/OrderRenameMenu.kt:onInventoryClick,performAsyncRename) | DB updated async after confirm; ArmorStand updated on main thread; success action-bar shown |
 
 ---
 
