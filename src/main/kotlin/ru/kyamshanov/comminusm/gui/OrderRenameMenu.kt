@@ -117,17 +117,24 @@ class OrderRenameMenu(
         event.isCancelled = true
 
         val player = event.whoClicked as Player
-        // Resolution order (each fallback covers a different Paper/CraftBukkit edge case):
-        // 1. AnvilView.renameText — reads directly from the server-side menu container;
-        //    most reliable when the view is a real AnvilView (Paper 1.20.6+).
-        // 2. Output item display name — set by onPrepareAnvil via event.result;
-        //    reliable when PrepareAnvilEvent fires and result is applied to slot 2.
-        // 3. renameTexts cache — populated by onPrepareAnvil; fallback when slot 2 is empty.
-        val typedName = (event.view as? AnvilView)?.renameText?.takeIf { it.isNotBlank() }
-            ?: (event.currentItem?.itemMeta?.displayName() as? TextComponent)?.content()?.takeIf { it.isNotBlank() }
-            ?: renameTexts[playerUuid]?.takeIf { it.isNotBlank() }
+
+        val anvilView = event.view as? AnvilView
+        val anvilViewText = anvilView?.renameText
+        val displayNameText = (event.currentItem?.itemMeta?.displayName() as? TextComponent)?.content()
+        val cachedText = renameTexts[playerUuid]
+        plugin.logger.info(
+            "[OrderRename] view=${event.view.javaClass.simpleName} " +
+                "AnvilView=${if (anvilView != null) "ok" else "null"} " +
+                "AnvilView.renameText='$anvilViewText' " +
+                "slot2DisplayName='$displayNameText' " +
+                "cache='$cachedText'",
+        )
+
+        val typedName = anvilViewText?.takeIf { it.isNotBlank() }
+            ?: displayNameText?.takeIf { it.isNotBlank() }
+            ?: cachedText?.takeIf { it.isNotBlank() }
             ?: ""
-        plugin.logger.info("Rename attempt: player=$playerUuid, orderId=$orderId, typedName='$typedName'")
+        plugin.logger.info("[OrderRename] resolved typedName='$typedName'")
 
         val validationError = validateTypedName(typedName)
         if (validationError != null) {
