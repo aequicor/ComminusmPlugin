@@ -52,12 +52,13 @@ class OrderRenameMenuIntegrationTest {
     fun `TC-27b entity null — PDC has UUID but entity missing — no NPE warning logged`() {
         val mockPlugin = MockBukkit.createMockPlugin()
         val orderId = 42L
+        val ownerUuid = UUID.randomUUID()
         val fakeEntityUuid = UUID.randomUUID()
 
         // Place the UUID in the chunk PDC (mimics FlagActivationHelper writing it)
         val chunk = world.getChunkAt(0, 0)
         val asKey =
-            NamespacedKey(mockPlugin, "armorstand/$orderId")
+            NamespacedKey(mockPlugin, "armorstand/order/$ownerUuid")
         chunk.persistentDataContainer.set(
             asKey,
             PersistentDataType.STRING,
@@ -69,7 +70,7 @@ class OrderRenameMenuIntegrationTest {
         val order =
             Order(
                 id = orderId,
-                ownerUuid = UUID.randomUUID(),
+                ownerUuid = ownerUuid,
                 name = "OldName",
                 centerWorld = "world",
                 centerX = 0,
@@ -136,11 +137,12 @@ class OrderRenameMenuIntegrationTest {
     fun `TC-27c invalid UUID in PDC — IllegalArgumentException caught no NPE`() {
         val mockPlugin = MockBukkit.createMockPlugin()
         val orderId = 99L
+        val ownerUuid = UUID.randomUUID()
 
         // Store a garbage string that is not a valid UUID
         val chunk = world.getChunkAt(0, 0)
         val asKey =
-            NamespacedKey(mockPlugin, "armorstand/$orderId")
+            NamespacedKey(mockPlugin, "armorstand/order/$ownerUuid")
         chunk.persistentDataContainer.set(
             asKey,
             PersistentDataType.STRING,
@@ -150,7 +152,7 @@ class OrderRenameMenuIntegrationTest {
         val order =
             Order(
                 id = orderId,
-                ownerUuid = UUID.randomUUID(),
+                ownerUuid = ownerUuid,
                 name = "OldName",
                 centerWorld = "world",
                 centerX = 0,
@@ -220,12 +222,13 @@ class OrderRenameMenuIntegrationTest {
     fun `TC-32 despawned ArmorStand — chunk loaded but entity gone — no NPE`() {
         val mockPlugin = MockBukkit.createMockPlugin()
         val orderId = 55L
+        val ownerUuid = UUID.randomUUID()
         val despawnedUuid = UUID.randomUUID()
 
         // Chunk has the PDC entry (set during FlagActivationHelper)...
         val chunk = world.getChunkAt(2, 2) // different chunk to keep tests isolated
         val asKey =
-            NamespacedKey(mockPlugin, "armorstand/$orderId")
+            NamespacedKey(mockPlugin, "armorstand/order/$ownerUuid")
         chunk.persistentDataContainer.set(
             asKey,
             PersistentDataType.STRING,
@@ -236,7 +239,7 @@ class OrderRenameMenuIntegrationTest {
         val order =
             Order(
                 id = orderId,
-                ownerUuid = UUID.randomUUID(),
+                ownerUuid = ownerUuid,
                 name = "GuildA",
                 centerWorld = "world",
                 centerX = 2 * 16, // centerX=32 → chunk x=2

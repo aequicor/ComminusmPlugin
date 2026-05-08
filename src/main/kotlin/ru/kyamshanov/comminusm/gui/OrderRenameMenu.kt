@@ -211,7 +211,7 @@ class OrderRenameMenu(
 
         val world = Bukkit.getWorld(order.centerWorld ?: return) ?: return
         val chunk = world.getChunkAt(order.centerX shr 4, order.centerZ shr 4)
-        val asKey = NamespacedKey(plugin, "armorstand/${order.id}")
+        val asKey = NamespacedKey(plugin, "armorstand/order/${order.ownerUuid}")
 
         val asUuidStr =
             chunk.persistentDataContainer.get(asKey, PersistentDataType.STRING) ?: run {
