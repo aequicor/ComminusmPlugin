@@ -62,6 +62,7 @@ class OrderRenameMenu(
         }
         anvilInv.setItem(0, inputItem)
         inProgressRenames[player.uniqueId] = order.id
+        renameTexts[player.uniqueId] = order.name
         player.openInventory(anvilInv)
     }
 
