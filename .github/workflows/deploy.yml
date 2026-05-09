@@ -69,14 +69,24 @@ jobs:
           echo "Staged files:"
           ls -la staging/plugins
 
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
       - name: Upload to server via SFTP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SFTP_HOST }}
-          port: ${{ secrets.SFTP_PORT }}
-          username: ${{ secrets.SFTP_USER }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          source: "staging/plugins/*"
-          target: "/home/container/plugins"
-          strip_components: 2
-          overwrite: true
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          lftp -c "
+            set sftp:auto-confirm yes;
+            set net:max-retries 2;
+            set net:timeout 20;
+            open -u '${SFTP_USER}','${SFTP_PASSWORD}' sftp://${SFTP_HOST}:${SFTP_PORT};
+            cd /home/container/plugins;
+            lcd staging/plugins;
+            mput *;
+            bye
+          "
