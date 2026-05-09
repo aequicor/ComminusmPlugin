@@ -1,0 +1,81 @@
+name: Deploy to server
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build plugin (shadowJar)
+        run: ./gradlew shadowJar --no-daemon
+
+      - name: Stage artifacts
+        id: stage
+        run: |
+          set -euo pipefail
+          mkdir -p staging/plugins
+          # Main plugin (shadow jar) — strip "-all" classifier on upload
+          src=$(ls build/libs/*-all.jar | head -n1)
+          cp "$src" staging/plugins/ComminusmPlugin.jar
+
+          # Additional plugins from deploy/plugins.txt
+          # Lines:
+          #   https://...           direct .jar URL
+          #   modrinth:<slug>       latest Paper-compatible version from Modrinth
+          # Comments (#) and blank lines ignored.
+          if [ -f deploy/plugins.txt ]; then
+            while IFS= read -r line || [ -n "$line" ]; do
+              entry="${line%%#*}"
+              entry="$(echo "$entry" | xargs)"
+              [ -z "$entry" ] && continue
+
+              if [[ "$entry" == modrinth:* ]]; then
+                slug="${entry#modrinth:}"
+                echo "Resolving Modrinth: $slug"
+                api="https://api.modrinth.com/v2/project/${slug}/version?loaders=%5B%22paper%22%5D"
+                json=$(curl -fsSL "$api")
+                url=$(echo "$json" | jq -r '.[0].files[] | select(.primary==true) | .url' | head -n1)
+                if [ -z "$url" ] || [ "$url" = "null" ]; then
+                  url=$(echo "$json" | jq -r '.[0].files[0].url')
+                fi
+                fname=$(echo "$json" | jq -r '.[0].files[0].filename')
+                echo "  -> $url"
+                curl -fsSL "$url" -o "staging/plugins/$fname"
+              else
+                echo "Downloading: $entry"
+                fname="$(basename "${entry%%\?*}")"
+                curl -fsSL "$entry" -o "staging/plugins/$fname"
+              fi
+            done < deploy/plugins.txt
+          fi
+
+          echo "Staged files:"
+          ls -la staging/plugins
+
+      - name: Upload to server via SFTP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          port: ${{ secrets.SFTP_PORT }}
+          username: ${{ secrets.SFTP_USER }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          source: "staging/plugins/*"
+          target: "/home/container/plugins"
+          strip_components: 2
+          overwrite: true

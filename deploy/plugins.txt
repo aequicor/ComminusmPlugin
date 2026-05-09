@@ -1,0 +1,7 @@
+# Additional plugins to deploy alongside ComminusmPlugin.
+# Format (one per line):
+#   modrinth:<slug>       latest Paper-compatible version from Modrinth (auto-resolved)
+#   https://...jar        direct .jar URL (pinned)
+# Comments (#) and blank lines ignored.
+
+modrinth:viaversion
