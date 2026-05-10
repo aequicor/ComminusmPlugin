@@ -109,6 +109,8 @@
 | TC-User-01 | PASS | DEF-User-01: `WorkFrontService.deactivate()` не ломал блок баннера | bug | У игрока есть активированный Фронт | Старый баннер удалён из мира при деактивации Фронта |
 | TC-User-02 | PASS | DEF-User-02, DEF-User-03: `Component.contains()` style-sensitive — цветное имя не распознавалось | bug | У игрока есть активированный Ордер или Фронт | Флаг не выпадает при разрушении опорного блока посторонним игроком |
 | TC-User-03 | PASS | DEF-User-04: устаревший флаг с ID удалённого Ордера блокировал создание нового | bug | У игрока есть Ордер и он установлен; флаг удалён через GUI подтверждения | После удаления можно сразу создать новый Ордер (старый флаг не падает на землю, а если устаревший флаг уже в инвентаре — он автоматически удаляется) |
+| TC-User-04 | PASS | DEF-User-05: `BlockListener.onPlayerInteract` — `event.isCancelled = true` не гарантировал DENY на `useInteractedBlock` для интерактивных блоков (верстаки, двери, рычаги, сундуки). Fix: helper `denyPlayerInteract` явно вызывает `setUseInteractedBlock(DENY)` + `setUseItemInHand(DENY)` + `isCancelled = true` | bug | У игрока нет активированного Ордера и нет Фронта (или он находится вне их радиусов) | Любое взаимодействие с интерактивным блоком (верстак, дверь, рычаг, кнопка, сундук) отменено и игрок уведомлён |
+| TC-User-05 | PASS | DEF-User-06: `BlockListener.onPlayerInteract` — банер в любой руке (WHITE/RED) делал безусловный early return → bypass. Fix: ранний return обусловлен `(player.isSneaking || !block.type.isInteractable)` — пропускаем зональную проверку только если клик действительно ставит флаг | bug | У игрока нет Ордера/Фронта; в любой руке WHITE_BANNER или RED_BANNER; правый клик без shift по интерактивному блоку (сундук, верстак, дверь) | Взаимодействие отменено (открытие сундука не происходит). Установка флага по-прежнему работает на не-интерактивных блоках или при шифт-клике |
 
 ---
 
@@ -120,6 +122,8 @@
 | DEF-User-02 | VERF | Order/Front flag drops when support block broken (missing WHITE_BANNER check) | 2026-05-05 | 2026-05-05 |
 | DEF-User-03 | VERF | Component.contains() style-sensitive — gold-colored flag name not recognized by plain-text comparison, causing getFlagSupportInfo() to miss the banner | 2026-05-05 | 2026-05-05 |
 | DEF-User-04 | VERF | Obsolete WHITE_BANNER flag with deleted Order ID dropped on deletion; player auto-picks it up, hasOrderFlagInInventory() returns true, blocking new Order creation | 2026-05-05 | 2026-05-05 |
+| DEF-User-05 | FIXED | Player outside Order/Front zones can still interact with blocks (open crafting table, doors, levers, chests). `BlockListener.onPlayerInteract` cancellation did not force `useInteractedBlock = DENY`. Fixed by helper `denyPlayerInteract(event)` calling `setUseInteractedBlock(Event.Result.DENY)` + `setUseItemInHand(Event.Result.DENY)` + `isCancelled = true` in both deny-branches. Regression test: `BlockListenerInteractDenialTest` (6 cases) | 2026-05-10 | 2026-05-10 |
+| DEF-User-06 | FIXED | Banner-in-hand bypass: `BlockListener.onPlayerInteract` did `return` whenever main- or off-hand held WHITE/RED_BANNER, regardless of clicked-block type. Holding any banner and right-clicking a chest/crafting table/door in Wilderness opened it. Fixed by gating the early return on `(player.isSneaking || !block.type.isInteractable)` — skip the zone check only when the click would actually place the banner. Regression test: `BlockListenerInteractDenialTest` (4 new cases: chest+banner-mainhand, table+banner-offhand, stone+banner allow, chest+banner+sneak allow) | 2026-05-10 | 2026-05-10 |
 
 ---
 
@@ -163,3 +167,22 @@
 **To be:**
 
 Флаг остаётся на месте. Только взладелец может сломать флаг
+
+## TC-User-04: Игрок вне Ордера/Фронта может взаимодействовать с предметами
+
+**Pre-requirements:**
+
+* У игрока нет активированного Ордера и нет активированного Фронта (либо игрок находится вне радиусов своих зон)
+
+**Steps:**
+
+1. поставить верстак (или дверь, рычаг, кнопку, сундук) в дикой местности
+2. кликнуть по нему правой кнопкой мыши
+
+**As is:**
+
+Открывается интерфейс верстака, открывается/закрывается дверь, срабатывает рычаг — взаимодействие проходит как обычно
+
+**To be:**
+
+Взаимодействие отменено; игрок получает сообщение «§cНесанкционированное взаимодействие, товарищ! Получите Ордер или активируйте Трудовой Фронт через §e/партия»

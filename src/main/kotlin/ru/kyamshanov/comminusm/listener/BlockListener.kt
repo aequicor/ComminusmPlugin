@@ -13,6 +13,7 @@ package ru.kyamshanov.comminusm.listener
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Material
+import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
@@ -316,12 +317,20 @@ class BlockListener(
         val player = event.player
         val uuid = player.uniqueId
 
-        // Allow flag placement — OrderFlagListener/FrontFlagListener will handle interactions with their own flags
+        // Allow flag placement — OrderFlagListener/FrontFlagListener will handle interactions with their own flags.
+        // Skip the zone check ONLY when the right-click would actually place the banner: either the player is
+        // sneaking (vanilla forces item-use over block-activation) or the clicked block is not interactable
+        // (otherwise the click activates the block — chest, door, lever — and must respect zone rules).
         val mainHandItem = player.inventory.itemInMainHand
         val offHandItem = player.inventory.itemInOffHand
-        if (mainHandItem.type == Material.WHITE_BANNER || mainHandItem.type == Material.RED_BANNER ||
-            offHandItem.type == Material.WHITE_BANNER || offHandItem.type == Material.RED_BANNER
-        ) {
+        val holdingBanner =
+            mainHandItem.type == Material.WHITE_BANNER || mainHandItem.type == Material.RED_BANNER ||
+                offHandItem.type == Material.WHITE_BANNER || offHandItem.type == Material.RED_BANNER
+        // Material.isInteractable is @Deprecated in Paper 1.21 with no public-API replacement;
+        // the heuristic is precise enough for distinguishing banner-placement clicks from block-activation clicks.
+        @Suppress("DEPRECATION")
+        val blockIsInteractable = block.type.isInteractable
+        if (holdingBanner && (player.isSneaking || !blockIsInteractable)) {
             return
         }
 
@@ -338,7 +347,7 @@ class BlockListener(
         val allOrders = findOrdersInWorldUseCase(world.name)
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
-                event.isCancelled = true
+                denyPlayerInteract(event)
                 player.sendMessage(Component.text("§cЧужая жилплощадь, товарищ!"))
                 return
             }
@@ -351,8 +360,17 @@ class BlockListener(
         }
 
         // 4. Outside all zones → DENY
-        event.isCancelled = true
+        denyPlayerInteract(event)
         sendOutsideZoneInteractMessage(player, uuid)
+    }
+
+    // Paper's `event.isCancelled = true` does not always force `useInteractedBlock` and
+    // `useItemInHand` to DENY for interactive blocks (crafting tables, doors, levers, chests).
+    // Set both results explicitly so the action is denied regardless of handler order.
+    private fun denyPlayerInteract(event: PlayerInteractEvent) {
+        event.setUseInteractedBlock(Event.Result.DENY)
+        event.setUseItemInHand(Event.Result.DENY)
+        event.isCancelled = true
     }
 
     private fun sendOutsideZoneInteractMessage(
