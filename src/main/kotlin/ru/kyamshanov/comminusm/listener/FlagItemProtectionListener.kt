@@ -3,38 +3,67 @@
 package ru.kyamshanov.comminusm.listener
 
 import org.bukkit.Material
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 
 class FlagItemProtectionListener : Listener {
     @EventHandler
     fun onDrop(event: PlayerDropItemEvent) {
         val stack = event.itemDrop.itemStack
-        if (FlagItemProtectionListener.isOrderFlag(stack) || FlagItemProtectionListener.isFrontFlag(stack)) {
+        if (isOrderFlag(stack) || isFrontFlag(stack)) {
             event.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(event: InventoryClickEvent) {
-        val current = event.currentItem ?: return
+        val whoClicked = event.whoClicked
+        val view = event.view
+        val current = event.currentItem
         val cursor = event.cursor
 
-        if (event.clickedInventory != null && event.clickedInventory != event.whoClicked.inventory) {
-            if (FlagItemProtectionListener.isOrderFlag(cursor) || FlagItemProtectionListener.isFrontFlag(cursor)) {
+        if (event.clickedInventory != null && event.clickedInventory != whoClicked.inventory) {
+            if (isOrderFlag(cursor) || isFrontFlag(cursor)) {
                 event.isCancelled = true
                 return
             }
         }
 
-        if (event.isShiftClick) {
-            if (FlagItemProtectionListener.isOrderFlag(current) || FlagItemProtectionListener.isFrontFlag(current)) {
-                if (event.clickedInventory != event.whoClicked.inventory) {
+        if (event.isShiftClick && (isOrderFlag(current) || isFrontFlag(current))) {
+            if (event.clickedInventory == whoClicked.inventory && view.topInventory != whoClicked.inventory) {
+                event.isCancelled = true
+                return
+            }
+        }
+
+        if (event.action == InventoryAction.HOTBAR_SWAP || event.action == InventoryAction.HOTBAR_MOVE_AND_READD) {
+            if (view.topInventory != whoClicked.inventory) {
+                val hotbarItem = (whoClicked as? Player)?.inventory?.getItem(event.hotbarButton)
+                if (isOrderFlag(current) || isFrontFlag(current) || isOrderFlag(hotbarItem) || isFrontFlag(hotbarItem)) {
                     event.isCancelled = true
+                    return
                 }
             }
+        }
+    }
+
+    @EventHandler
+    fun onInventoryDrag(event: InventoryDragEvent) {
+        val view = event.view
+        if (view.topInventory == event.whoClicked.inventory) return
+        val topSize = view.topInventory.size
+        val draggedToExternal = event.rawSlots.any { it < topSize }
+        if (draggedToExternal && (isOrderFlag(event.oldCursor) || isFrontFlag(event.oldCursor))) {
+            event.isCancelled = true
+            return
+        }
+        if (event.newItems.any { (slot, item) -> slot < topSize && (isOrderFlag(item) || isFrontFlag(item)) }) {
+            event.isCancelled = true
         }
     }
 
