@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
@@ -31,11 +31,11 @@ class CommuneOrderMenu(
     private val getOrderByIdUseCase: GetOrderByIdUseCase,
     private val plugin: Plugin,
 ) : Listener {
-
     private val orderIdKey = NamespacedKey(plugin, OrderMenu.ORDER_ID_PDC_KEY)
 
     private fun extractOrderId(topInventory: Inventory): Long? =
-        topInventory.getItem(OrderMenu.INFO_SLOT)
+        topInventory
+            .getItem(OrderMenu.INFO_SLOT)
             ?.itemMeta
             ?.persistentDataContainer
             ?.get(orderIdKey, PersistentDataType.LONG)
@@ -62,10 +62,10 @@ class CommuneOrderMenu(
     private fun buildParticipantsButton(topInventory: Inventory): ItemStack {
         val skull =
             GuiUtils.namedItem(
-                "§6Участники",
+                "<gold>Участники",
                 Material.PLAYER_HEAD,
-                "§7Управление участниками ордера",
-                "§8Нажми чтобы открыть",
+                "<gray>Управление участниками ордера",
+                "<dark_gray>Нажми чтобы открыть",
             )
 
         val orderId = extractOrderId(topInventory)
@@ -100,14 +100,15 @@ class CommuneOrderMenu(
         val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
 
         // TC-121: Allow access if player is a native member OR the order leader
+        val mm = MiniMessage.miniMessage()
         if (nativeOrders.isEmpty() && !isLeader) {
-            player.sendMessage(Component.text("§cВы не член этого ордера"))
+            player.sendMessage(mm.deserialize("<red>Вы не член этого ордера"))
             return
         }
 
         val orderId = extractOrderId(event.view.topInventory)
         if (orderId == null) {
-            player.sendMessage(Component.text("§cОшибка при открытии меню участников"))
+            player.sendMessage(mm.deserialize("<red>Ошибка при открытии меню участников"))
             return
         }
 

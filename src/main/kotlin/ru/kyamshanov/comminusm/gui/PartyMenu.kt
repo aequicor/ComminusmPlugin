@@ -1,8 +1,8 @@
-@file:Suppress("LongParameterList")
+@file:Suppress("LongParameterList", "MaxLineLength")
 
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -36,11 +36,12 @@ class PartyMenu(
     private val treasuryMenu: TreasuryMenu? = null,
 ) : Listener {
     fun open(player: Player) {
+        val mm = MiniMessage.miniMessage()
         val inv =
             Bukkit.createInventory(
                 null,
                 GuiConstants.PARTY_MENU_INVENTORY_SIZE,
-                Component.text("§8Партийные услуги"),
+                mm.deserialize("<dark_gray>Партийные услуги"),
             )
         GuiUtils.fillBorder(inv)
 
@@ -51,12 +52,12 @@ class PartyMenu(
         inv.setItem(
             GuiConstants.PARTY_MENU_ORDER_SLOT,
             GuiUtils.namedItem(
-                if (hasOrder) "§eУправление Ордером" else "§aПолучить Ордер",
+                if (hasOrder) "<yellow>Управление Ордером" else "<green>Получить Ордер",
                 Material.WHITE_BANNER,
                 if (hasOrder) {
-                    "§7Управление вашей жилплощадью"
+                    "<gray>Управление вашей жилплощадью"
                 } else {
-                    "§7Партия выделит вам жилплощадь"
+                    "<gray>Партия выделит вам жилплощадь"
                 },
             ),
         )
@@ -64,12 +65,12 @@ class PartyMenu(
         inv.setItem(
             GuiConstants.PARTY_MENU_FRONT_SLOT,
             GuiUtils.namedItem(
-                "§6Трудовой фронт",
+                "<gold>Трудовой фронт",
                 Material.NETHERITE_PICKAXE,
                 if (hasFront) {
-                    "§7Управление трудовым фронтом"
+                    "<gray>Управление трудовым фронтом"
                 } else {
-                    "§7Активировать трудовой фронт"
+                    "<gray>Активировать трудовой фронт"
                 },
             ),
         )
@@ -77,9 +78,9 @@ class PartyMenu(
         inv.setItem(
             GuiConstants.PARTY_MENU_TREASURY_SLOT,
             GuiUtils.namedItem(
-                "§eКазна",
+                "<yellow>Казна",
                 Material.CHEST,
-                "§7Сдать ресурсы в общую казну",
+                "<gray>Сдать ресурсы в общую казну",
             ),
         )
 
@@ -87,9 +88,9 @@ class PartyMenu(
         inv.setItem(
             GuiConstants.PARTY_MENU_BALANCE_SLOT,
             GuiUtils.namedItem(
-                "§fТрудодни: §e$balance",
+                "<white>Трудодни: <yellow>$balance",
                 Material.EXPERIENCE_BOTTLE,
-                "§7Ваш трудовой баланс",
+                "<gray>Ваш трудовой баланс",
             ),
         )
 
@@ -137,26 +138,27 @@ class PartyMenu(
             FlagItemProtectionListener.removeAllOrderFlags(player)
         }
         val newOrder = orderService.create(player.uniqueId, player.name)
+        val mm = MiniMessage.miniMessage()
         if (newOrder != null) {
             issueFlagToPlayer(
                 player,
                 ItemStack(Material.WHITE_BANNER),
-                "§aФлаг Ордера №${newOrder.id}",
+                "<green>Флаг Ордера №${newOrder.id}",
                 listOf(
-                    Component.text("§7Установите флаг для активации Ордера"),
-                    Component.text("§7Владелец: §e${player.name}"),
+                    mm.deserialize("<gray>Установите флаг для активации Ордера"),
+                    mm.deserialize("<gray>Владелец: <yellow>${player.name}"),
                 ),
-                "§a☭ Партия выделила вам жилплощадь! Установите флаг на выбранной территории.",
+                "<green>☭ Партия выделила вам жилплощадь! Установите флаг на выбранной территории.",
             )
         } else {
-            player.sendMessage(Component.text("§cУ вас уже есть Ордер, товарищ."))
+            player.sendMessage(mm.deserialize("<red>У вас уже есть Ордер, товарищ."))
         }
     }
 
     private fun handleFrontClick(player: Player) {
         val workFrontService = this.workFrontService
         if (workFrontService == null) {
-            player.sendMessage(Component.text("§cТрудовой фронт временно недоступен, товарищ."))
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Трудовой фронт временно недоступен, товарищ."))
             return
         }
         val front = getWorkFrontByOwnerUseCase(player.uniqueId)
@@ -173,21 +175,22 @@ class PartyMenu(
             player.closeInventory()
             return
         }
+        val mmFront = MiniMessage.miniMessage()
         if (FlagItemProtectionListener.hasFrontFlagInInventory(player)) {
             player.sendMessage(
-                Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."),
+                mmFront.deserialize("<red>У вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."),
             )
             return
         }
         issueFlagToPlayer(
             player,
             ItemStack(Material.RED_BANNER),
-            "§6Флаг Трудового Фронта",
+            "<gold>Флаг Трудового Фронта",
             listOf(
-                Component.text("§7Установите флаг для активации"),
-                Component.text("§7Радиус добычи: §e${config.frontRadius} §7блоков"),
+                mmFront.deserialize("<gray>Установите флаг для активации"),
+                mmFront.deserialize("<gray>Радиус добычи: <yellow>${config.frontRadius} <gray>блоков"),
             ),
-            "§6☭ Установите флаг для активации Трудового Фронта, товарищ!",
+            "<gold>☭ Установите флаг для активации Трудового Фронта, товарищ!",
         )
     }
 
@@ -195,27 +198,28 @@ class PartyMenu(
         player: Player,
         flag: ItemStack,
         displayName: String,
-        lore: List<Component>,
+        lore: List<net.kyori.adventure.text.Component>,
         successMessage: String,
     ) {
+        val mm = MiniMessage.miniMessage()
         val meta = flag.itemMeta
-        meta.displayName(Component.text(displayName))
+        meta.displayName(mm.deserialize(displayName))
         meta.lore(lore)
         flag.itemMeta = meta
         val inv = player.inventory
         when {
             inv.itemInOffHand.type == Material.AIR -> {
                 inv.setItemInOffHand(flag)
-                player.sendMessage(Component.text(successMessage))
+                player.sendMessage(mm.deserialize(successMessage))
             }
             inv.firstEmpty() != -1 -> {
                 inv.addItem(flag)
-                player.sendMessage(Component.text(successMessage))
+                player.sendMessage(mm.deserialize(successMessage))
             }
             else -> {
                 player.sendMessage(
-                    Component.text(
-                        "§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага!",
+                    mm.deserialize(
+                        "<red>Товарищ, освободите хотя бы 1 слот в инвентаре для флага!",
                     ),
                 )
             }
@@ -259,8 +263,8 @@ class PartyMenu(
                     inv.firstEmpty() != -1 -> inv.addItem(flagItem)
                     else -> {
                         player.sendMessage(
-                            Component.text(
-                                "§eОсвободите место в инвентаре, чтобы получить ваш флаг.",
+                            MiniMessage.miniMessage().deserialize(
+                                "<yellow>Освободите место в инвентаре, чтобы получить ваш флаг.",
                             ),
                         )
                         // Marker still exists but cannot deliver — block new flag issuance
@@ -269,8 +273,8 @@ class PartyMenu(
                 }
                 pdc.remove(pendingKey)
                 player.sendMessage(
-                    Component.text(
-                        "§6☭ Ваш флаг Трудового Фронта возвращён!",
+                    MiniMessage.miniMessage().deserialize(
+                        "<gold>☭ Ваш флаг Трудового Фронта возвращён!",
                     ),
                 )
                 return true
@@ -304,16 +308,17 @@ class PartyMenu(
                 val rest = payload.substring(colonIdx + 1)
                 when {
                     rest.startsWith("FRONT:") -> {
+                        val mmSentinel = MiniMessage.miniMessage()
                         val flag = ItemStack(Material.RED_BANNER)
                         val meta = flag.itemMeta
                         meta.displayName(
-                            Component.text("§6Флаг Трудового Фронта"),
+                            mmSentinel.deserialize("<gold>Флаг Трудового Фронта"),
                         )
                         meta.lore(
                             listOf(
-                                Component.text("§7Установите в новом месте"),
-                                Component.text(
-                                    "§7Радиус добычи: §e${config.frontRadius} §7блоков",
+                                mmSentinel.deserialize("<gray>Установите в новом месте"),
+                                mmSentinel.deserialize(
+                                    "<gray>Радиус добычи: <yellow>${config.frontRadius} <gray>блоков",
                                 ),
                             ),
                         )

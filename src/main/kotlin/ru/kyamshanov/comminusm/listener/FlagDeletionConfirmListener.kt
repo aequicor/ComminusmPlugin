@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.listener
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -40,11 +40,12 @@ class FlagDeletionConfirmListener(
                     }
                 }
 
-                player.sendMessage(Component.text("§c☭ Ордер аннулирован."))
+                val mm = MiniMessage.miniMessage()
+                player.sendMessage(mm.deserialize("<red>☭ Ордер аннулирован."))
                 player.closeInventory()
             }
             CANCEL_SLOT -> {
-                player.sendMessage(Component.text("§aУдаление отменено, товарищ."))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Удаление отменено, товарищ."))
                 player.closeInventory()
             }
         }

@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -19,21 +19,22 @@ class TreasuryMenu(
 ) : Listener {
     private val submitItem =
         GuiUtils.namedItem(
-            "§aСдать ресурсы в казну",
+            "<green>Сдать ресурсы в казну",
             Material.EMERALD,
-            "§7Партия оценит ваш вклад в общее дело!",
+            "<gray>Партия оценит ваш вклад в общее дело!",
         )
 
     fun open(player: Player) {
+        val mm = MiniMessage.miniMessage()
         val inv =
             Bukkit.createInventory(
                 null,
                 GuiConstants.TREASURY_MENU_INVENTORY_SIZE,
-                Component.text("§8Казна трудового коллектива"),
+                mm.deserialize("<dark_gray>Казна трудового коллектива"),
             )
         GuiUtils.fillBorder(inv)
 
-        inv.setItem(GuiConstants.TREASURY_MENU_BACK_SLOT, GuiUtils.namedItem("§cНазад", Material.BARRIER))
+        inv.setItem(GuiConstants.TREASURY_MENU_BACK_SLOT, GuiUtils.namedItem("<red>Назад", Material.BARRIER))
         inv.setItem(GuiConstants.TREASURY_MENU_SUBMIT_SLOT, submitItem)
 
         player.openInventory(inv)
@@ -78,17 +79,18 @@ class TreasuryMenu(
             inv.setItem(slot, null)
         }
 
+        val mm = MiniMessage.miniMessage()
         if (totalEarned > 0) {
             incrementWorkdaysUseCase(player.uniqueId, totalEarned)
             player.sendMessage(
-                Component.text(
-                    "§a☭ Партия благодарит за вклад! Зачислено §e$totalEarned §aтрудодней.",
+                mm.deserialize(
+                    "<green>☭ Партия благодарит за вклад! Зачислено <yellow>$totalEarned <green>трудодней.",
                 ),
             )
             val currentBalance = getWorkdaysBalanceUseCase(player.uniqueId)
-            player.sendMessage(Component.text("§7Текущий баланс: §e$currentBalance §7трудодней."))
+            player.sendMessage(mm.deserialize("<gray>Текущий баланс: <yellow>$currentBalance <gray>трудодней."))
         } else {
-            player.sendMessage(Component.text("§cВ казне нет подходящих ресурсов, товарищ."))
+            player.sendMessage(mm.deserialize("<red>В казне нет подходящих ресурсов, товарищ."))
         }
     }
 

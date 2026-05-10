@@ -10,7 +10,7 @@
 
 package ru.kyamshanov.comminusm.listener
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Material
 import org.bukkit.event.Event
@@ -68,7 +68,7 @@ class BlockListener(
                 event.isCancelled = true
                 return when {
                     order.ownerUuid != uuid -> {
-                        player.sendMessage(Component.text("§cНельзя сломать чужой флаг Ордера, товарищ!"))
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Нельзя сломать чужой флаг Ордера, товарищ!"))
                         true
                     }
                     else -> {
@@ -111,7 +111,7 @@ class BlockListener(
                 f.ownerUuid != uuid
             ) {
                 event.isCancelled = true
-                player.sendMessage(Component.text("§cНельзя сломать чужой флаг Фронта, товарищ!"))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Нельзя сломать чужой флаг Фронта, товарищ!"))
                 return true
             }
         }
@@ -123,19 +123,20 @@ class BlockListener(
         uuid: UUID,
         front: ru.kyamshanov.comminusm.model.WorkFront,
     ) {
+        val mm = MiniMessage.miniMessage()
         val frontRadius = front.radius
         checkNotNull(workFrontService) { "workFrontService must not be null" }.deactivate(uuid)
         val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
         val meta = flag.itemMeta
-        meta.displayName(Component.text("§6Флаг Трудового Фронта"))
+        meta.displayName(mm.deserialize("<gold>Флаг Трудового Фронта"))
         meta.lore(
             listOf(
-                Component.text("§7Установите в новом месте"),
-                Component.text("§7Радиус добычи: §e$frontRadius §7блоков"),
+                mm.deserialize("<gray>Установите в новом месте"),
+                mm.deserialize("<gray>Радиус добычи: <yellow>$frontRadius <gray>блоков"),
             ),
         )
         flag.itemMeta = meta
-        giveOrNotify(player, flag, "§6☭ Трудовой Фронт удалён. Флаг добавлен в инвентарь.")
+        giveOrNotify(player, flag, "<gold>☭ Трудовой Фронт удалён. Флаг добавлен в инвентарь.")
     }
 
     private fun handleFlagSupportBreak(
@@ -172,7 +173,7 @@ class BlockListener(
                 true
             }
             else -> {
-                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Ордера, товарищ!"))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Нельзя разрушить опору чужого флага Ордера, товарищ!"))
                 true
             }
         }
@@ -199,7 +200,7 @@ class BlockListener(
                 true
             }
             else -> {
-                player.sendMessage(Component.text("§cНельзя разрушить опору чужого флага Фронта, товарищ!"))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Нельзя разрушить опору чужого флага Фронта, товарищ!"))
                 true
             }
         }
@@ -220,10 +221,8 @@ class BlockListener(
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
                 event.isCancelled = true
-                player.sendMessage(
-                    Component.text(
-                        "§cЧужая жилплощадь, товарищ! Обратитесь в партию за собственным Ордером.",
-                    ),
+                player.sendActionBar(
+                    MiniMessage.miniMessage().deserialize("<red>Чужая жилплощадь! Свой Ордер — <yellow>/партия</yellow></red>"),
                 )
                 return
             }
@@ -233,15 +232,12 @@ class BlockListener(
             return
         }
         event.isCancelled = true
-        val message =
-            if (hasOrder(uuid)) {
-                "§cВы находитесь вне вашей жилплощади, товарищ! " +
-                    "Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия"
-            } else {
-                "§cНесанкционированная добыча ресурсов, товарищ! " +
-                    "Получите Ордер или активируйте Трудовой Фронт через §e/партия"
-            }
-        player.sendMessage(Component.text(message))
+        val mm = MiniMessage.miniMessage()
+        if (hasOrder(uuid)) {
+            player.sendActionBar(mm.deserialize("<red>Вне зоны Ордера! Трудовой Фронт — <yellow>/партия</yellow></red>"))
+        } else {
+            player.sendActionBar(mm.deserialize("<red>Нет трудового фронта! Получить - <yellow>/партия</yellow></red>"))
+        }
     }
 
     @EventHandler
@@ -270,7 +266,9 @@ class BlockListener(
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
                 event.isCancelled = true
-                player.sendMessage(Component.text("§cЧужая жилплощадь, товарищ!"))
+                player.sendActionBar(
+                    MiniMessage.miniMessage().deserialize("<red>Чужая жилплощадь! Свой Ордер — <yellow>/партия</yellow></red>"),
+                )
                 return
             }
         }
@@ -290,20 +288,11 @@ class BlockListener(
         player: org.bukkit.entity.Player,
         uuid: UUID,
     ) {
+        val mm = MiniMessage.miniMessage()
         if (hasOrder(uuid)) {
-            player.sendMessage(
-                Component.text(
-                    "§cВы находитесь вне вашей жилплощади, товарищ! " +
-                        "Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия",
-                ),
-            )
+            player.sendActionBar(mm.deserialize("<red>Вне зоны Ордера! Трудовой Фронт — <yellow>/партия</yellow></red>"))
         } else {
-            player.sendMessage(
-                Component.text(
-                    "§cНесанкционированное строительство, товарищ! " +
-                        "Стройте только на своей жилплощади или в зоне Трудового Фронта через §e/партия",
-                ),
-            )
+            player.sendActionBar(mm.deserialize("<red>Нет трудового фронта! Получить - <yellow>/партия</yellow></red>"))
         }
     }
 
@@ -324,8 +313,11 @@ class BlockListener(
         val mainHandItem = player.inventory.itemInMainHand
         val offHandItem = player.inventory.itemInOffHand
         val holdingBanner =
-            mainHandItem.type == Material.WHITE_BANNER || mainHandItem.type == Material.RED_BANNER ||
-                offHandItem.type == Material.WHITE_BANNER || offHandItem.type == Material.RED_BANNER
+            mainHandItem.type == Material.WHITE_BANNER ||
+                mainHandItem.type == Material.RED_BANNER ||
+                offHandItem.type == Material.WHITE_BANNER ||
+                offHandItem.type == Material.RED_BANNER
+
         // Material.isInteractable is @Deprecated in Paper 1.21 with no public-API replacement;
         // the heuristic is precise enough for distinguishing banner-placement clicks from block-activation clicks.
         @Suppress("DEPRECATION")
@@ -348,7 +340,9 @@ class BlockListener(
         for (order in allOrders) {
             if (order.ownerUuid != uuid && order.centerWorld == world.name && isInsideOrder(order, loc)) {
                 denyPlayerInteract(event)
-                player.sendMessage(Component.text("§cЧужая жилплощадь, товарищ!"))
+                player.sendActionBar(
+                    MiniMessage.miniMessage().deserialize("<red>Чужая жилплощадь! Свой Ордер — <yellow>/партия</yellow></red>"),
+                )
                 return
             }
         }
@@ -377,20 +371,11 @@ class BlockListener(
         player: org.bukkit.entity.Player,
         uuid: UUID,
     ) {
+        val mm = MiniMessage.miniMessage()
         if (hasOrder(uuid)) {
-            player.sendMessage(
-                Component.text(
-                    "§cВы находитесь вне вашей жилплощади, товарищ! " +
-                        "Вернитесь в зону Ордера или активируйте Трудовой Фронт через §e/партия",
-                ),
-            )
+            player.sendActionBar(mm.deserialize("<red>Вне зоны Ордера! Трудовой Фронт — <yellow>/партия</yellow></red>"))
         } else {
-            player.sendMessage(
-                Component.text(
-                    "§cНесанкционированное взаимодействие, товарищ! " +
-                        "Получите Ордер или активируйте Трудовой Фронт через §e/партия",
-                ),
-            )
+            player.sendActionBar(mm.deserialize("<red>Нет трудового фронта! Получить - <yellow>/партия</yellow></red>"))
         }
     }
 
@@ -533,21 +518,22 @@ class BlockListener(
         item: org.bukkit.inventory.ItemStack,
         successMsg: String,
     ) {
+        val mm = MiniMessage.miniMessage()
         val inv = player.inventory
         when {
             inv.itemInOffHand.type == org.bukkit.Material.AIR -> {
                 inv.setItemInOffHand(item)
-                player.sendMessage(Component.text(successMsg))
+                player.sendMessage(mm.deserialize(successMsg))
             }
             inv.firstEmpty() != -1 -> {
                 inv.addItem(item)
-                player.sendMessage(Component.text(successMsg))
+                player.sendMessage(mm.deserialize(successMsg))
             }
             else -> {
                 player.sendMessage(
-                    Component.text(
-                        "§e⚠ Ваш инвентарь переполнен, товарищ! Флаг не потерян.\n" +
-                            "§7Получите его через меню §e/партия",
+                    mm.deserialize(
+                        "<yellow>⚠ Ваш инвентарь переполнен, товарищ! Флаг не потерян.\n" +
+                            "<gray>Получите его через меню <yellow>/партия",
                     ),
                 )
             }
@@ -555,24 +541,25 @@ class BlockListener(
     }
 
     private fun showDeleteOrderConfirmation(player: org.bukkit.entity.Player) {
-        val inv = org.bukkit.Bukkit.createInventory(null, 9, Component.text("§cПодтверждение удаления"))
+        val mm = MiniMessage.miniMessage()
+        val inv = org.bukkit.Bukkit.createInventory(null, 9, mm.deserialize("<red>Подтверждение удаления"))
 
         inv.setItem(
             2,
             GuiUtils.namedItem(
-                "§aДа, удалить Ордер",
+                "<green>Да, удалить Ордер",
                 Material.LIME_CONCRETE,
-                "§7Это действие необратимо!",
-                "§7Флаг будет уничтожен.",
+                "<gray>Это действие необратимо!",
+                "<gray>Флаг будет уничтожен.",
             ),
         )
 
         inv.setItem(
             6,
             GuiUtils.namedItem(
-                "§cНет, оставить",
+                "<red>Нет, оставить",
                 Material.RED_CONCRETE,
-                "§7Вернуться без изменений",
+                "<gray>Вернуться без изменений",
             ),
         )
 

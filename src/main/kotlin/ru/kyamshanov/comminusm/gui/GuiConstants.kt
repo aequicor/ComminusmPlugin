@@ -93,23 +93,23 @@ object GuiConstants {
     const val INVENTORY_SPLIT_FACTOR = 64
     const val ZERO_AMOUNT = 0
 
-    // Color codes for text (deprecated, prefer Component API)
-    const val COLOR_RED = "§c"
-    const val COLOR_YELLOW = "§e"
-    const val COLOR_GRAY = "§7"
-    const val COLOR_WHITE = "§f"
-    const val COLOR_GOLD = "§6"
+    // Color codes for text (MiniMessage format)
+    const val COLOR_RED = "<red>"
+    const val COLOR_YELLOW = "<yellow>"
+    const val COLOR_GRAY = "<gray>"
+    const val COLOR_WHITE = "<white>"
+    const val COLOR_GOLD = "<gold>"
 
     // Common text patterns
-    const val BACK_TEXT = "§cНазад"
-    const val ADMIN_PANEL_TITLE = "§cАдмин-панель"
-    const val DELETE_WARNING = "§7Внимание: это действие необратимо!"
-    const val DELETE_ORDERS_TEXT = "§cУдалить все Ордера"
-    const val DELETE_FRONTS_TEXT = "§cУдалить все Фронты"
-    const val STATS_TEXT = "§eСтатистика мира"
-    const val ORDERS_DELETED_TEXT = "§c☭ Все Ордера в мире удалены."
-    const val FRONTS_DELETED_TEXT = "§c☭ Все Фронты в мире удалены."
-    const val STATS_PREFIX = "§e☭ Статистика мира "
-    const val ORDERS_PREFIX = "§7  Ордеров: §e"
-    const val FRONTS_PREFIX = "§7  Фронтов: §e"
+    const val BACK_TEXT = "<red>Назад"
+    const val ADMIN_PANEL_TITLE = "<red>Админ-панель"
+    const val DELETE_WARNING = "<gray>Внимание: это действие необратимо!"
+    const val DELETE_ORDERS_TEXT = "<red>Удалить все Ордера"
+    const val DELETE_FRONTS_TEXT = "<red>Удалить все Фронты"
+    const val STATS_TEXT = "<yellow>Статистика мира"
+    const val ORDERS_DELETED_TEXT = "<red>☭ Все Ордера в мире удалены."
+    const val FRONTS_DELETED_TEXT = "<red>☭ Все Фронты в мире удалены."
+    const val STATS_PREFIX = "<yellow>☭ Статистика мира "
+    const val ORDERS_PREFIX = "<gray>  Ордеров: <yellow>"
+    const val FRONTS_PREFIX = "<gray>  Фронтов: <yellow>"
 }

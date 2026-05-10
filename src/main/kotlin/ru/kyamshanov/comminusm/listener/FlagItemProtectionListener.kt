@@ -1,4 +1,4 @@
-@file:Suppress("ReturnCount")
+@file:Suppress("ReturnCount", "CyclomaticComplexMethod", "ComplexCondition", "MaxLineLength")
 
 package ru.kyamshanov.comminusm.listener
 

@@ -1,5 +1,6 @@
 package ru.kyamshanov.comminusm.command
 
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
@@ -42,6 +43,7 @@ class CommuneCommand(
 
     companion object {
         private const val MAX_MESSAGE_LENGTH = 256
+        private val mm = MiniMessage.miniMessage()
     }
 
     override fun onCommand(
@@ -51,7 +53,7 @@ class CommuneCommand(
         args: Array<String>,
     ): Boolean {
         if (sender !is Player) {
-            sender.sendMessage("§cЭта команда доступна только игрокам")
+            sender.sendMessage(mm.deserialize("<red>Эта команда доступна только игрокам"))
             return true
         }
 
@@ -60,7 +62,7 @@ class CommuneCommand(
         val validationError = validatePreconditions(playerUuid)
 
         return if (validationError != null) {
-            player.sendMessage(validationError)
+            player.sendMessage(mm.deserialize(validationError))
             true
         } else {
             val playerCommune = getPlayerCommune(playerUuid)
@@ -80,8 +82,8 @@ class CommuneCommand(
     private fun validatePreconditions(playerUuid: UUID): String? {
         val playerCommune = getPlayerCommune(playerUuid)
         return when {
-            playerCommune == null -> "§cВы не состоите ни в одной коммуне"
-            isMuted(playerUuid) -> "§cВы в муте и не можете писать в коммуне"
+            playerCommune == null -> "<red>Вы не состоите ни в одной коммуне"
+            isMuted(playerUuid) -> "<red>Вы в муте и не можете писать в коммуне"
             else -> null
         }
     }
@@ -107,9 +109,9 @@ class CommuneCommand(
         val currentMode = getToggleModeUseCase(playerUuid)
         communeChatService.setToggleMode(playerUuid, !currentMode)
         if (!currentMode) {
-            player.sendMessage("§aВы в режиме чата коммуны. Введите /cc для выхода")
+            player.sendMessage(mm.deserialize("<green>Вы в режиме чата коммуны. Введите /cc для выхода"))
         } else {
-            player.sendMessage("§aВы вышли из режима чата коммуны")
+            player.sendMessage(mm.deserialize("<green>Вы вышли из режима чата коммуны"))
         }
         return true
     }
@@ -126,7 +128,7 @@ class CommuneCommand(
 
         // Check 4: Message length ≤ 256 chars (CC-08)
         if (messageText.trim().length > MAX_MESSAGE_LENGTH) {
-            player.sendMessage("§cСообщение слишком длинное")
+            player.sendMessage(mm.deserialize("<red>Сообщение слишком длинное"))
             return true
         }
 
@@ -140,7 +142,7 @@ class CommuneCommand(
             true
         } catch (e: IllegalStateException) {
             logger.warning("Failed to broadcast commune message: ${e.message}")
-            player.sendMessage("§cОшибка при отправке сообщения")
+            player.sendMessage(mm.deserialize("<red>Ошибка при отправке сообщения"))
             true
         }
     }

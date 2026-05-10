@@ -1,6 +1,8 @@
+@file:Suppress("MaxLineLength")
+
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -40,20 +42,20 @@ class CommunePartyMenu(
             inv.setItem(
                 COMMUNE_BUTTON_SLOT,
                 GuiUtils.namedItem(
-                    "§aКоммуна",
+                    "<green>Коммуна",
                     Material.PAPER,
-                    "§7Управление альянсом ордеров",
-                    "§8Нажми чтобы открыть",
+                    "<gray>Управление альянсом ордеров",
+                    "<dark_gray>Нажми чтобы открыть",
                 ),
             )
         } else {
             inv.setItem(
                 COMMUNE_BUTTON_SLOT,
                 GuiUtils.namedItem(
-                    "§7Коммуна",
+                    "<gray>Коммуна",
                     Material.PAPER,
-                    "§7Коммуну создаёт лидер ордера",
-                    "§8(Отключено)",
+                    "<gray>Коммуну создаёт лидер ордера",
+                    "<dark_gray>(Отключено)",
                 ),
             )
         }
@@ -74,7 +76,7 @@ class CommunePartyMenu(
 
         val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
         if (!isLeader) {
-            player.sendMessage(Component.text("§cТолько лидер ордера может управлять коммуной"))
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Только лидер ордера может управлять коммуной"))
             return
         }
 
@@ -93,10 +95,11 @@ class CommunePartyMenu(
 
     @Suppress("ReturnCount")
     private fun openCommuneMenu(player: Player) {
+        val mm = MiniMessage.miniMessage()
         // Get the player's order
         val order = getOrderByOwnerUseCase(player.uniqueId)
         if (order == null) {
-            player.sendMessage(Component.text("§cВы не владеете ордером"))
+            player.sendMessage(mm.deserialize("<red>Вы не владеете ордером"))
             return
         }
 
@@ -111,11 +114,11 @@ class CommunePartyMenu(
         val result = communeService.createCommune(order.id, player.uniqueId)
         when (result) {
             is ru.kyamshanov.comminusm.commune.model.Result.Success -> {
-                player.sendMessage(Component.text("§aКоммуна создана!"))
+                player.sendMessage(mm.deserialize("<green>Коммуна создана!"))
                 communeMenu.open(player, result.data.id)
             }
             is ru.kyamshanov.comminusm.commune.model.Result.Failure -> {
-                player.sendMessage(Component.text("§cОшибка: ${result.error}"))
+                player.sendMessage(mm.deserialize("<red>Ошибка: ${result.error}"))
             }
         }
     }

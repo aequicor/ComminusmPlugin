@@ -2,7 +2,7 @@
 
 package ru.kyamshanov.comminusm.listener
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.event.EventHandler
@@ -44,7 +44,9 @@ class FrontFlagListener(
 
         if (event.block.type == Material.RED_WALL_BANNER) {
             event.isCancelled = true
-            event.player.sendMessage(Component.text("§cФлаг нужно устанавливать на горизонтальную поверхность, товарищ!"))
+            event.player.sendMessage(
+                MiniMessage.miniMessage().deserialize("<red>Флаг нужно устанавливать на горизонтальную поверхность, товарищ!"),
+            )
             return
         }
 
@@ -52,18 +54,19 @@ class FrontFlagListener(
         val location = event.block.location
         val world = checkNotNull(location.world) { "World is null" }.name
 
+        val mm = MiniMessage.miniMessage()
         // Check: player must have an Order
         val order = orderService.findByOwner(player.uniqueId)
         if (order == null) {
             event.isCancelled = true
-            player.sendMessage(Component.text("§cУ вас нет Ордера, товарищ. Сначала получите жилплощадь через §e/партия"))
+            player.sendMessage(mm.deserialize("<red>У вас нет Ордера, товарищ. Сначала получите жилплощадь через <yellow>/партия"))
             return
         }
 
         // Check: Order must be activated
         if (order.centerWorld == null) {
             event.isCancelled = true
-            player.sendMessage(Component.text("§cВаш Ордер ещё не активирован. Установите флаг Ордера на территории."))
+            player.sendMessage(mm.deserialize("<red>Ваш Ордер ещё не активирован. Установите флаг Ордера на территории."))
             return
         }
 
@@ -72,7 +75,7 @@ class FrontFlagListener(
         for (otherOrder in allOrders) {
             if (otherOrder.ownerUuid != player.uniqueId && isInsideOrder(otherOrder, location)) {
                 event.isCancelled = true
-                player.sendMessage(Component.text("§cНельзя установить Фронт на чужой жилплощади, товарищ!"))
+                player.sendMessage(mm.deserialize("<red>Нельзя установить Фронт на чужой жилплощади, товарищ!"))
                 return
             }
         }
@@ -103,7 +106,7 @@ class FrontFlagListener(
         val checkResult = flagActivationHelper.checkPreconditions(bannerBlock, config, manager)
         if (checkResult is ActivationCheckResult.Denied) {
             event.isCancelled = true
-            player.sendMessage(Component.text("§c${checkResult.reason}"))
+            player.sendMessage(mm.deserialize("<red>${checkResult.reason}"))
             return
         }
         val chunkKey = (checkResult as ActivationCheckResult.Ok).chunkKey
@@ -112,16 +115,16 @@ class FrontFlagListener(
         val isRelocation = oldFront != null
         val successMsg =
             if (isRelocation) {
-                "§6☭ Старый Трудовой Фронт закрыт. Новый Трудовой Фронт активирован! Радиус: §e25 §6блоков."
+                "<gold>☭ Старый Трудовой Фронт закрыт. Новый Трудовой Фронт активирован! Радиус: <yellow>25 <gold>блоков."
             } else {
-                "§6☭ Трудовой Фронт активирован! Радиус: §e25 §6блоков. Партия ждёт перевыполнения нормы!"
+                "<gold>☭ Трудовой Фронт активирован! Радиус: <yellow>25 <gold>блоков. Партия ждёт перевыполнения нормы!"
             }
 
         fun proceedWithActivation(acquiredLock: ReentrantLock) {
             val supportBlock = bannerBlock.world.getBlockAt(bannerBlock.x, bannerBlock.y - 1, bannerBlock.z)
             if (manager.isFlagPosition(supportBlock)) {
                 acquiredLock.unlock()
-                player.sendMessage(Component.text("§cДанная позиция уже занята флагом."))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Данная позиция уже занята флагом."))
                 return
             }
             val ownerName = flagActivationHelper.resolveOwnerName(ownerUuid)
@@ -140,10 +143,10 @@ class FrontFlagListener(
                     workFrontService.activate(ownerUuid, world, location.blockX, location.blockY, location.blockZ)
                 },
                 onSuccess = { p ->
-                    p?.sendMessage(Component.text(successMsg))
+                    p?.sendMessage(MiniMessage.miniMessage().deserialize(successMsg))
                 },
                 onDbFailure = { p ->
-                    p?.sendMessage(Component.text("§cОшибка активации Трудового Фронта. Попробуйте ещё раз."))
+                    p?.sendMessage(MiniMessage.miniMessage().deserialize("<red>Ошибка активации Трудового Фронта. Попробуйте ещё раз."))
                 },
             )
         }
@@ -153,7 +156,7 @@ class FrontFlagListener(
                 plugin,
                 Runnable {
                     if (!lock.tryLock()) {
-                        player.sendMessage(Component.text("§cПопробуйте ещё раз."))
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Попробуйте ещё раз."))
                         return@Runnable
                     }
                     proceedWithActivation(lock)

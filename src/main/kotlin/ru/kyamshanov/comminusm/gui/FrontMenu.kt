@@ -2,7 +2,7 @@
 
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -27,40 +27,41 @@ class FrontMenu(
         player: Player,
         front: WorkFront,
     ) {
-        val inv = Bukkit.createInventory(null, 45, Component.text("§8Трудовой Фронт"))
+        val mm = MiniMessage.miniMessage()
+        val inv = Bukkit.createInventory(null, 45, mm.deserialize("<dark_gray>Трудовой Фронт"))
         GuiUtils.fillBorder(inv)
 
         inv.setItem(
             infoSlot,
             GuiUtils.namedItem(
-                "§6Трудовой Фронт",
+                "<gold>Трудовой Фронт",
                 Material.RED_BANNER,
-                "§7Владелец: §e${player.name}",
-                "§7Мир: §e${front.centerWorld}",
+                "<gray>Владелец: <yellow>${player.name}",
+                "<gray>Мир: <yellow>${front.centerWorld}",
             ),
         )
 
         inv.setItem(
             radiusSlot,
             GuiUtils.namedItem(
-                "§aРадиус добычи",
+                "<green>Радиус добычи",
                 Material.COMPASS,
-                "§7Радиус: §e${front.radius} §7блоков",
-                "§7Размер: §e${front.size}×${front.size}×${front.size}",
+                "<gray>Радиус: <yellow>${front.radius} <gray>блоков",
+                "<gray>Размер: <yellow>${front.size}×${front.size}×${front.size}",
             ),
         )
 
         inv.setItem(
             moveSlot,
             GuiUtils.namedItem(
-                "§cПеренести Фронт",
+                "<red>Перенести Фронт",
                 Material.TNT,
-                "§7Выдаст новый флаг для переноса",
-                "§7Текущий фронт будет закрыт",
+                "<gray>Выдаст новый флаг для переноса",
+                "<gray>Текущий фронт будет закрыт",
             ),
         )
 
-        inv.setItem(backSlot, GuiUtils.namedItem("§cНазад", Material.BARRIER))
+        inv.setItem(backSlot, GuiUtils.namedItem("<red>Назад", Material.BARRIER))
 
         player.openInventory(inv)
     }
@@ -75,19 +76,20 @@ class FrontMenu(
 
         when (event.slot) {
             moveSlot -> {
+                val mm = MiniMessage.miniMessage()
                 if (FlagItemProtectionListener.hasFrontFlagInInventory(player)) {
-                    player.sendMessage(Component.text("§cУ вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."))
+                    player.sendMessage(mm.deserialize("<red>У вас уже есть флаг Трудового Фронта, товарищ! Установите его в мире."))
                     return
                 }
                 val frontRadius = getWorkFrontByOwnerUseCase(player.uniqueId)?.radius ?: 25
                 deactivateWorkFrontUseCase(player.uniqueId)
                 val flag = org.bukkit.inventory.ItemStack(Material.RED_BANNER)
                 val meta = flag.itemMeta
-                meta.displayName(Component.text("§6Флаг Трудового Фронта"))
+                meta.displayName(mm.deserialize("<gold>Флаг Трудового Фронта"))
                 meta.lore(
                     listOf(
-                        Component.text("§7Установите в новом месте"),
-                        Component.text("§7Радиус добычи: §e$frontRadius §7блоков"),
+                        mm.deserialize("<gray>Установите в новом месте"),
+                        mm.deserialize("<gray>Радиус добычи: <yellow>$frontRadius <gray>блоков"),
                     ),
                 )
                 flag.itemMeta = meta
@@ -95,14 +97,14 @@ class FrontMenu(
                 when {
                     inv.itemInOffHand.type == Material.AIR -> {
                         inv.setItemInOffHand(flag)
-                        player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                        player.sendMessage(mm.deserialize("<gold>☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
                     }
                     inv.firstEmpty() != -1 -> {
                         inv.addItem(flag)
-                        player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                        player.sendMessage(mm.deserialize("<gold>☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
                     }
                     else -> {
-                        player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Фронта!"))
+                        player.sendMessage(mm.deserialize("<red>Товарищ, освободите хотя бы 1 слот в инвентаре для флага Фронта!"))
                     }
                 }
                 player.closeInventory()

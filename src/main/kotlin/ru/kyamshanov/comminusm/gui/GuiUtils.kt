@@ -3,6 +3,7 @@
 package ru.kyamshanov.comminusm.gui
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
@@ -28,11 +29,12 @@ object GuiUtils {
         material: Material,
         vararg lore: String,
     ): ItemStack {
+        val mm = MiniMessage.miniMessage()
         val item = ItemStack(material)
         val meta = item.itemMeta
-        meta.displayName(Component.text(name))
+        meta.displayName(mm.deserialize(name))
         if (lore.isNotEmpty()) {
-            meta.lore(lore.map { Component.text(it) })
+            meta.lore(lore.map { mm.deserialize(it) })
         }
         item.itemMeta = meta
         return item

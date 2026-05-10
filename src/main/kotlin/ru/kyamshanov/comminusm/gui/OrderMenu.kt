@@ -2,7 +2,6 @@
 
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -60,15 +59,17 @@ class OrderMenu(
         order: Order,
     ) {
         val displayName = order.name.ifBlank { "${order.id}" }
-        val inv = Bukkit.createInventory(null, 45, Component.text("§8Ордер - $displayName"))
+        val mm = MiniMessage.miniMessage()
+        val inv = Bukkit.createInventory(null, 45, mm.deserialize("<dark_gray>Ордер - $displayName"))
         GuiUtils.fillBorder(inv)
 
-        val infoItem = GuiUtils.namedItem(
-            "§e$displayName",
-            Material.WHITE_BANNER,
-            "§7Уровень: §e${order.level}/${getMaxOrderLevelUseCase()}",
-            "§7Владелец: §e${player.name}",
-        )
+        val infoItem =
+            GuiUtils.namedItem(
+                "<yellow>$displayName",
+                Material.WHITE_BANNER,
+                "<gray>Уровень: <yellow>${order.level}/${getMaxOrderLevelUseCase()}",
+                "<gray>Владелец: <yellow>${player.name}",
+            )
         plugin?.let { p ->
             val meta = infoItem.itemMeta
             meta?.persistentDataContainer?.set(
@@ -83,11 +84,11 @@ class OrderMenu(
         inv.setItem(
             sizeSlot,
             GuiUtils.namedItem(
-                "§aТерритория",
+                "<green>Территория",
                 Material.GLASS,
-                "§7Размер: §e${order.size}×${order.size}",
-                "§7Радиус: §e${order.radius} §7блоков",
-                if (order.centerWorld != null) "§7Мир: §e${order.centerWorld}" else "§cНе активирован",
+                "<gray>Размер: <yellow>${order.size}×${order.size}",
+                "<gray>Радиус: <yellow>${order.radius} <gray>блоков",
+                if (order.centerWorld != null) "<gray>Мир: <yellow>${order.centerWorld}" else "<red>Не активирован",
             ),
         )
 
@@ -97,19 +98,19 @@ class OrderMenu(
             inv.setItem(
                 renameSlot,
                 GuiUtils.namedItem(
-                    "§eПереименовать ордер",
+                    "<yellow>Переименовать ордер",
                     Material.ANVIL,
-                    "§7Изменить название ордера",
-                    "§7Текущее: §f${order.name.ifBlank { "${order.id}" }}",
+                    "<gray>Изменить название ордера",
+                    "<gray>Текущее: <white>${order.name.ifBlank { "${order.id}" }}",
                 ),
             )
         } else {
             inv.setItem(
                 renameSlot,
                 GuiUtils.namedItem(
-                    "§7Переименовать ордер",
+                    "<gray>Переименовать ордер",
                     Material.ANVIL,
-                    "§cТолько лидер может менять название ордера",
+                    "<red>Только лидер может менять название ордера",
                 ),
             )
         }
@@ -122,11 +123,11 @@ class OrderMenu(
             inv.setItem(
                 upgradeSlot,
                 GuiUtils.namedItem(
-                    "§6Улучшить до уровня $nextLevel",
+                    "<gold>Улучшить до уровня $nextLevel",
                     Material.NETHER_STAR,
-                    "§7Новый размер: §e${newRadius * 2 + 1}×${newRadius * 2 + 1}",
-                    "§7Стоимость: §e$cost §7трудодней",
-                    "§7Ваш баланс: §e$balance §7трудодней",
+                    "<gray>Новый размер: <yellow>${newRadius * 2 + 1}×${newRadius * 2 + 1}",
+                    "<gray>Стоимость: <yellow>$cost <gray>трудодней",
+                    "<gray>Ваш баланс: <yellow>$balance <gray>трудодней",
                 ),
             )
         }
@@ -134,13 +135,13 @@ class OrderMenu(
         inv.setItem(
             restoreSlot,
             GuiUtils.namedItem(
-                "§dВосстановить флаг",
+                "<light_purple>Восстановить флаг",
                 Material.PAPER,
-                "§7Флаг вернётся в центр участка",
+                "<gray>Флаг вернётся в центр участка",
             ),
         )
 
-        inv.setItem(backSlot, GuiUtils.namedItem("§cНазад", Material.BARRIER))
+        inv.setItem(backSlot, GuiUtils.namedItem("<red>Назад", Material.BARRIER))
 
         // Home button — shown only to the order owner when the flag is active (AC-01, AC-02)
         val fsm = flagStabilityManager
@@ -172,16 +173,16 @@ class OrderMenu(
         return when (buttonState) {
             HomeButtonState.ACTIVE ->
                 GuiUtils.namedItem(
-                    "§aВернуться домой",
+                    "<green>Вернуться домой",
                     Material.COMPASS,
-                    "§7Нажмите, чтобы начать телепортацию",
-                    "§7Стойте неподвижно 30 сек.",
+                    "<gray>Нажмите, чтобы начать телепортацию",
+                    "<gray>Стойте неподвижно 30 сек.",
                 )
             HomeButtonState.DISABLED_DIFFERENT_WORLD ->
                 GuiUtils.namedItem(
-                    "§7Вернуться домой",
+                    "<gray>Вернуться домой",
                     Material.COMPASS,
-                    "§cФлаг в другом мире — телепорт недоступен",
+                    "<red>Флаг в другом мире — телепорт недоступен",
                 )
             HomeButtonState.HIDDEN -> null
         }
@@ -226,7 +227,7 @@ class OrderMenu(
                 val domainOrder = getOrderByOwnerUseCase(player.uniqueId) ?: return
                 // Permission re-check: only the owner can open rename (AC-11, AC-12)
                 if (domainOrder.ownerUuid != player.uniqueId) {
-                    player.sendActionBar(Component.text("§cТолько лидер может менять название ордера"))
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Только лидер может менять название ордера"))
                     return
                 }
                 val presentationOrder = DomainToModelAdapter.toPresentationModel(domainOrder)
@@ -235,11 +236,12 @@ class OrderMenu(
             }
             upgradeSlot -> {
                 val result = upgradeOrderUseCase(player.uniqueId)
+                val mm = MiniMessage.miniMessage()
                 if (result is ru.kyamshanov.comminusm.domain.value_objects.Result.Success) {
                     val updatedOrder = DomainToModelAdapter.toPresentationModel(result.data)
                     player.sendMessage(
-                        Component.text(
-                            "§a☭ Партия расширила вашу жилплощадь до уровня ${updatedOrder.level}. Слава труду!",
+                        mm.deserialize(
+                            "<green>☭ Партия расширила вашу жилплощадь до уровня ${updatedOrder.level}. Слава труду!",
                         ),
                     )
                     open(player, updatedOrder)
@@ -251,28 +253,31 @@ class OrderMenu(
                         val balance = getWorkdaysBalanceUseCase(player.uniqueId)
                         val missing = cost - balance
                         player.sendMessage(
-                            Component.text(
-                                "§cНедостаточно трудодней, товарищ. Не хватает: §e$missing",
+                            mm.deserialize(
+                                "<red>Недостаточно трудодней, товарищ. Не хватает: <yellow>$missing",
                             ),
                         )
                     }
                 }
             }
             restoreSlot -> {
+                val mmRestore = MiniMessage.miniMessage()
                 val order = getOrderByOwnerUseCase(player.uniqueId)
                 if (order == null) {
-                    player.sendMessage(Component.text("§cУ вас нет активного Ордера, товарищ."))
+                    player.sendMessage(mmRestore.deserialize("<red>У вас нет активного Ордера, товарищ."))
                     player.closeInventory()
                     return
                 }
                 if (order.centerWorld == null) {
-                    player.sendMessage(Component.text("§cВаш Ордер ещё не активирован. Установите флаг на территории, товарищ."))
+                    player.sendMessage(mmRestore.deserialize("<red>Ваш Ордер ещё не активирован. Установите флаг на территории, товарищ."))
                     player.closeInventory()
                     return
                 }
                 val world = Bukkit.getWorld(order.centerWorld)
                 if (world == null) {
-                    player.sendMessage(Component.text("§cМир §e${order.centerWorld} §cне найден. Обратитесь к администратору."))
+                    player.sendMessage(
+                        mmRestore.deserialize("<red>Мир <yellow>${order.centerWorld} <red>не найден. Обратитесь к администратору."),
+                    )
                     player.closeInventory()
                     return
                 }
@@ -287,7 +292,7 @@ class OrderMenu(
                     state.update()
                 }
 
-                player.sendMessage(Component.text("§a☭ Флаг Ордера восстановлен на вашем участке, товарищ!"))
+                player.sendMessage(mmRestore.deserialize("<green>☭ Флаг Ордера восстановлен на вашем участке, товарищ!"))
             }
             homeSlot -> {
                 val clickedItem = event.currentItem ?: return

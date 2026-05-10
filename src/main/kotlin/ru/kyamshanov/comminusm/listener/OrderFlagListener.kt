@@ -2,7 +2,7 @@
 
 package ru.kyamshanov.comminusm.listener
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.event.EventHandler
@@ -38,7 +38,9 @@ class OrderFlagListener(
 
         if (event.block.type == Material.WHITE_WALL_BANNER) {
             event.isCancelled = true
-            event.player.sendMessage(Component.text("§cФлаг нужно устанавливать на горизонтальную поверхность, товарищ!"))
+            event.player.sendMessage(
+                MiniMessage.miniMessage().deserialize("<red>Флаг нужно устанавливать на горизонтальную поверхность, товарищ!"),
+            )
             return
         }
 
@@ -46,15 +48,16 @@ class OrderFlagListener(
         val ownerUuid = player.uniqueId
         val order = orderService.findByOwner(ownerUuid)
 
+        val mm = MiniMessage.miniMessage()
         if (order == null) {
             event.isCancelled = true
-            player.sendMessage(Component.text("§cУ вас нет Ордера, товарищ. Получите его через §e/партия"))
+            player.sendMessage(mm.deserialize("<red>У вас нет Ордера, товарищ. Получите его через <yellow>/партия"))
             return
         }
 
         if (order.centerWorld != null) {
             event.isCancelled = true
-            player.sendMessage(Component.text("§cВаш Ордер уже активирован, товарищ!"))
+            player.sendMessage(mm.deserialize("<red>Ваш Ордер уже активирован, товарищ!"))
             return
         }
 
@@ -65,7 +68,7 @@ class OrderFlagListener(
         val checkResult = flagActivationHelper.checkPreconditions(bannerBlock, config, manager)
         if (checkResult is ActivationCheckResult.Denied) {
             event.isCancelled = true
-            player.sendMessage(Component.text("§c${checkResult.reason}"))
+            player.sendMessage(mm.deserialize("<red>${checkResult.reason}"))
             return
         }
         val chunkKey = (checkResult as ActivationCheckResult.Ok).chunkKey
@@ -75,7 +78,7 @@ class OrderFlagListener(
             val supportBlock = bannerBlock.world.getBlockAt(bannerBlock.x, bannerBlock.y - 1, bannerBlock.z)
             if (manager.isFlagPosition(supportBlock)) {
                 acquiredLock.unlock()
-                player.sendMessage(Component.text("§cДанная позиция уже занята флагом."))
+                player.sendMessage(mm.deserialize("<red>Данная позиция уже занята флагом."))
                 return
             }
             val ownerName = flagActivationHelper.resolveOwnerName(ownerUuid)
@@ -98,13 +101,13 @@ class OrderFlagListener(
                 },
                 onSuccess = { p ->
                     p?.sendMessage(
-                        Component.text(
-                            "§a☭ Ордер №${order.id} активирован! Ваша жилплощадь: §e${order.size}×${order.size} §aблоков.",
+                        mm.deserialize(
+                            "<green>☭ Ордер №${order.id} активирован! Ваша жилплощадь: <yellow>${order.size}×${order.size} <green>блоков.",
                         ),
                     )
                 },
                 onDbFailure = { p ->
-                    p?.sendMessage(Component.text("§cОшибка активации Ордера. Попробуйте ещё раз."))
+                    p?.sendMessage(mm.deserialize("<red>Ошибка активации Ордера. Попробуйте ещё раз."))
                 },
             )
         }
@@ -114,7 +117,7 @@ class OrderFlagListener(
                 plugin,
                 Runnable {
                     if (!lock.tryLock()) {
-                        player.sendMessage(Component.text("§cПопробуйте ещё раз."))
+                        player.sendMessage(mm.deserialize("<red>Попробуйте ещё раз."))
                         return@Runnable
                     }
                     proceedWithActivation(lock)

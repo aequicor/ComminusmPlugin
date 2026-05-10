@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -32,7 +32,8 @@ class OrderMembersMenu(
     ) {
         val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
 
-        val inv = Bukkit.createInventory(null, 45, Component.text("§8Участники ордера №$orderId"))
+        val mm = MiniMessage.miniMessage()
+        val inv = Bukkit.createInventory(null, 45, mm.deserialize("<dark_gray>Участники ордера №$orderId"))
         GuiUtils.fillBorder(inv)
 
         // Header: member count
@@ -40,9 +41,9 @@ class OrderMembersMenu(
         inv.setItem(
             HEADER_SLOT,
             GuiUtils.namedItem(
-                "§6Участники",
+                "<gold>Участники",
                 Material.PAPER,
-                "§7Количество: §e${members.size}",
+                "<gray>Количество: <yellow>${members.size}",
             ),
         )
 
@@ -58,19 +59,19 @@ class OrderMembersMenu(
 
             val grantedViaText =
                 when (member.grantedVia) {
-                    "native" -> "§aНативный"
-                    "commune" -> "§eКоммунный"
-                    else -> "§7Неизвестно"
+                    "native" -> "<green>Нативный"
+                    "commune" -> "<yellow>Коммунный"
+                    else -> "<gray>Неизвестно"
                 }
 
             val playerName = Bukkit.getOfflinePlayer(member.playerUuid).name ?: "Неизвестный игрок"
             inv.setItem(
                 slot,
                 GuiUtils.namedItem(
-                    "§7$playerName",
+                    "<gray>$playerName",
                     Material.PLAYER_HEAD,
                     grantedViaText,
-                    if (isLeader) "§8Нажми для исключения" else "§8(Только для лидера)",
+                    if (isLeader) "<dark_gray>Нажми для исключения" else "<dark_gray>(Только для лидера)",
                 ),
             )
             occupiedMemberSlots.add(slot)
@@ -83,15 +84,15 @@ class OrderMembersMenu(
             inv.setItem(
                 INVITE_BUTTON_SLOT,
                 GuiUtils.namedItem(
-                    "§eПригласить участника",
+                    "<yellow>Пригласить участника",
                     Material.NETHER_STAR,
-                    "§7Пригласить игрока в этот ордер",
+                    "<gray>Пригласить игрока в этот ордер",
                 ),
             )
         }
 
         // Back
-        inv.setItem(BACK_BUTTON_SLOT, GuiUtils.namedItem("§cНазад", Material.BARRIER))
+        inv.setItem(BACK_BUTTON_SLOT, GuiUtils.namedItem("<red>Назад", Material.BARRIER))
 
         // Deferred to avoid cursor shift when called from InventoryClickEvent
         Bukkit.getScheduler().runTask(plugin, Runnable { player.openInventory(inv) })
@@ -114,11 +115,11 @@ class OrderMembersMenu(
             }
             event.slot == INVITE_BUTTON_SLOT -> {
                 // Show invite player menu
-                player.sendMessage(Component.text("§aПригласить участника (планируется)"))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Пригласить участника (планируется)"))
             }
             event.slot in occupiedMemberSlots -> {
                 // If leader: remove member
-                player.sendMessage(Component.text("§aУдалить участника (планируется)"))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Удалить участника (планируется)"))
             }
         }
     }

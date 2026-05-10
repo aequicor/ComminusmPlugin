@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList", "MaxLineLength")
+
 package ru.kyamshanov.comminusm.listener
 
 import io.mockk.clearAllMocks

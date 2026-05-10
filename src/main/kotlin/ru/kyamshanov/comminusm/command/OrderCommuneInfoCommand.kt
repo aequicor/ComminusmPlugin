@@ -1,5 +1,8 @@
+@file:Suppress("MaxLineLength")
+
 package ru.kyamshanov.comminusm.command
 
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -31,6 +34,8 @@ class OrderCommuneInfoCommand(
     private val communeService: CommuneService,
     private val startupComplete: () -> Boolean = { true }, // Injected startup check
 ) : CommandExecutor {
+    private val mm = MiniMessage.miniMessage()
+
     override fun onCommand(
         sender: CommandSender,
         cmd: Command,
@@ -69,7 +74,7 @@ class OrderCommuneInfoCommand(
             val orderId = parseOrderId(args[0], sender) ?: return null
             orderRepository.findById(orderId).also { order ->
                 if (order == null) {
-                    sender.sendMessage("§cОрдер не найден")
+                    sender.sendMessage(mm.deserialize("<red>Ордер не найден"))
                 }
             }
         }
@@ -85,11 +90,11 @@ class OrderCommuneInfoCommand(
     ): String? =
         when {
             !startupComplete() -> {
-                sender.sendMessage("§8Система коммун инициализируется, попробуйте снова через несколько секунд")
+                sender.sendMessage(mm.deserialize("<dark_gray>Система коммун инициализируется, попробуйте снова через несколько секунд"))
                 "startup_error"
             }
             args.isEmpty() -> {
-                sender.sendMessage("§cИспользование: /order commune <id ордера>")
+                sender.sendMessage(mm.deserialize("<red>Использование: /order commune <id ордера>"))
                 "empty_args"
             }
             else -> null
@@ -106,7 +111,7 @@ class OrderCommuneInfoCommand(
         try {
             orderIdStr.toLong()
         } catch (e: NumberFormatException) {
-            sender.sendMessage("§cОрдер не найден")
+            sender.sendMessage(mm.deserialize("<red>Ордер не найден"))
             null
         }
 
@@ -118,7 +123,7 @@ class OrderCommuneInfoCommand(
         order: Order,
     ): Boolean {
         val ownerName = Bukkit.getOfflinePlayer(order.ownerUuid).name ?: "Unknown"
-        sender.sendMessage("§7Ордер (ID: ${order.id}, владелец: $ownerName) не состоит ни в одной коммуне")
+        sender.sendMessage(mm.deserialize("<gray>Ордер (ID: ${order.id}, владелец: $ownerName) не состоит ни в одной коммуне"))
         return true
     }
 
@@ -142,15 +147,15 @@ class OrderCommuneInfoCommand(
                 }
             }
 
-        sender.sendMessage("§8═════════════════════")
-        sender.sendMessage("§eОрдер ID: §7${order.id}")
+        sender.sendMessage(mm.deserialize("<dark_gray>═════════════════════"))
+        sender.sendMessage(mm.deserialize("<yellow>Ордер ID: <gray>${order.id}"))
 
         val ownerName = Bukkit.getOfflinePlayer(order.ownerUuid).name ?: "Unknown"
-        sender.sendMessage("§eВладелец: §7$ownerName")
+        sender.sendMessage(mm.deserialize("<yellow>Владелец: <gray>$ownerName"))
 
-        sender.sendMessage("§eВ коммуне: §aДА")
-        sender.sendMessage("§eСоюзники: §7${orderInfos.joinToString(", ")}")
-        sender.sendMessage("§8═════════════════════")
+        sender.sendMessage(mm.deserialize("<yellow>В коммуне: <green>ДА"))
+        sender.sendMessage(mm.deserialize("<yellow>Союзники: <gray>${orderInfos.joinToString(", ")}"))
+        sender.sendMessage(mm.deserialize("<dark_gray>═════════════════════"))
         return true
     }
 }

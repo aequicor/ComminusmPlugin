@@ -52,7 +52,8 @@ class OrderRenameMenu(
         pendingChatInputs[player.uniqueId] = order.id
         player.closeInventory()
         player.sendMessage(
-            Component.text("Введите новое название ордера в чат", NamedTextColor.YELLOW)
+            Component
+                .text("Введите новое название ордера в чат", NamedTextColor.YELLOW)
                 .append(Component.text(" (", NamedTextColor.GRAY))
                 .append(Component.text(CANCEL_KEYWORD, NamedTextColor.RED))
                 .append(Component.text(" — отмена):", NamedTextColor.GRAY)),

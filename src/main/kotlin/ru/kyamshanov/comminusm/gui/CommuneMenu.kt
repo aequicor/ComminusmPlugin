@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.gui
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -34,23 +34,24 @@ class CommuneMenu(
         player: Player,
         communeId: UUID,
     ) {
+        val mm = MiniMessage.miniMessage()
         val commune =
             communeService.getCommune(communeId)
-                ?: return player.sendMessage(Component.text("§cКоммуна не найдена"))
+                ?: return player.sendMessage(mm.deserialize("<red>Коммуна не найдена"))
 
         val isLeader = checkOrderLeadershipUseCase(player.uniqueId)
 
-        val inv = Bukkit.createInventory(null, 45, Component.text("§8Коммуна"))
+        val inv = Bukkit.createInventory(null, 45, mm.deserialize("<dark_gray>Коммуна"))
         GuiUtils.fillBorder(inv)
 
         // Header: commune info
         inv.setItem(
             HEADER_SLOT,
             GuiUtils.namedItem(
-                "§aКоммуна",
+                "<green>Коммуна",
                 Material.PAPER,
-                "§7Участники: §e${commune.orderIds.size}",
-                "§7ID: §e${commune.id}",
+                "<gray>Участники: <yellow>${commune.orderIds.size}",
+                "<gray>ID: <yellow>${commune.id}",
             ),
         )
 
@@ -66,10 +67,10 @@ class CommuneMenu(
             inv.setItem(
                 slot,
                 GuiUtils.namedItem(
-                    "§6Ордер №${order.id}",
+                    "<gold>Ордер №${order.id}",
                     Material.WHITE_BANNER,
-                    "§7Владелец: §e${Bukkit.getOfflinePlayer(order.ownerUuid).name}",
-                    "§7Уровень: §e${order.level}",
+                    "<gray>Владелец: <yellow>${Bukkit.getOfflinePlayer(order.ownerUuid).name}",
+                    "<gray>Уровень: <yellow>${order.level}",
                 ),
             )
             slot++
@@ -87,10 +88,10 @@ class CommuneMenu(
             inv.setItem(
                 INVITATIONS_SLOT,
                 GuiUtils.namedItem(
-                    "§cВходящее приглашение",
+                    "<red>Входящее приглашение",
                     Material.REDSTONE,
-                    "§7Количество: §e${allInvitations.size}",
-                    "§7Нажми для управления",
+                    "<gray>Количество: <yellow>${allInvitations.size}",
+                    "<gray>Нажми для управления",
                 ),
             )
         }
@@ -100,24 +101,24 @@ class CommuneMenu(
             inv.setItem(
                 INVITE_BUTTON_SLOT,
                 GuiUtils.namedItem(
-                    "§eПригласить ордер",
+                    "<yellow>Пригласить ордер",
                     Material.NETHER_STAR,
-                    "§7Отправить приглашение союзнику",
+                    "<gray>Отправить приглашение союзнику",
                 ),
             )
             inv.setItem(
                 LEAVE_BUTTON_SLOT,
                 GuiUtils.namedItem(
-                    "§cПокинуть коммуну",
+                    "<red>Покинуть коммуну",
                     Material.RED_DYE,
-                    "§7Выйти из альянса",
-                    "§8Все cross-order права будут отозваны",
+                    "<gray>Выйти из альянса",
+                    "<dark_gray>Все cross-order права будут отозваны",
                 ),
             )
         }
 
         // Back button
-        inv.setItem(BACK_BUTTON_SLOT, GuiUtils.namedItem("§cНазад", Material.BARRIER))
+        inv.setItem(BACK_BUTTON_SLOT, GuiUtils.namedItem("<red>Назад", Material.BARRIER))
 
         Bukkit.getScheduler().runTask(plugin, Runnable { player.openInventory(inv) })
     }
@@ -135,10 +136,10 @@ class CommuneMenu(
                 Bukkit.getScheduler().runTask(plugin, Runnable { partyMenu.open(player) })
             }
             INVITE_BUTTON_SLOT -> {
-                player.sendMessage(Component.text("§aПригласить ордер (планируется)"))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Пригласить ордер (планируется)"))
             }
             LEAVE_BUTTON_SLOT -> {
-                player.sendMessage(Component.text("§aПокинуть коммуну (планируется)"))
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Покинуть коммуну (планируется)"))
             }
         }
     }

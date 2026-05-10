@@ -1,6 +1,6 @@
 package ru.kyamshanov.comminusm.listener
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -256,7 +256,7 @@ class FlagChunkListener(
                     stand.setVisible(false)
                     stand.setGravity(false)
                     stand.setMarker(true)
-                    stand.customName(Component.text("§6$flagType — §f$ownerName"))
+                    stand.customName(MiniMessage.miniMessage().deserialize("<gold>$flagType — <white>$ownerName"))
                     stand.isCustomNameVisible = true
                 }
             pdc.set(asKey, PersistentDataType.STRING, armorStand.uniqueId.toString())
