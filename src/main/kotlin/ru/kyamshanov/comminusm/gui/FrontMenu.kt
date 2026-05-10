@@ -91,11 +91,19 @@ class FrontMenu(
                     ),
                 )
                 flag.itemMeta = meta
-                if (player.inventory.firstEmpty() == -1) {
-                    player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Фронта!"))
-                } else {
-                    player.inventory.addItem(flag)
-                    player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                val inv = player.inventory
+                when {
+                    inv.itemInOffHand.type == Material.AIR -> {
+                        inv.setItemInOffHand(flag)
+                        player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                    }
+                    inv.firstEmpty() != -1 -> {
+                        inv.addItem(flag)
+                        player.sendMessage(Component.text("§6☭ Старый Фронт закрыт. Установите новый флаг, товарищ!"))
+                    }
+                    else -> {
+                        player.sendMessage(Component.text("§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага Фронта!"))
+                    }
                 }
                 player.closeInventory()
             }

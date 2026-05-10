@@ -202,15 +202,23 @@ class PartyMenu(
         meta.displayName(Component.text(displayName))
         meta.lore(lore)
         flag.itemMeta = meta
-        if (player.inventory.firstEmpty() == -1) {
-            player.sendMessage(
-                Component.text(
-                    "§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага!",
-                ),
-            )
-        } else {
-            player.inventory.addItem(flag)
-            player.sendMessage(Component.text(successMessage))
+        val inv = player.inventory
+        when {
+            inv.itemInOffHand.type == Material.AIR -> {
+                inv.setItemInOffHand(flag)
+                player.sendMessage(Component.text(successMessage))
+            }
+            inv.firstEmpty() != -1 -> {
+                inv.addItem(flag)
+                player.sendMessage(Component.text(successMessage))
+            }
+            else -> {
+                player.sendMessage(
+                    Component.text(
+                        "§cТоварищ, освободите хотя бы 1 слот в инвентаре для флага!",
+                    ),
+                )
+            }
         }
         player.closeInventory()
     }
@@ -245,17 +253,20 @@ class PartyMenu(
                         return false
                     }
 
-                if (player.inventory.firstEmpty() < 0) {
-                    player.sendMessage(
-                        Component.text(
-                            "§eОсвободите место в инвентаре, чтобы получить ваш флаг.",
-                        ),
-                    )
-                    // Marker still exists but cannot deliver — block new flag issuance
-                    return true
+                val inv = player.inventory
+                when {
+                    inv.itemInOffHand.type == Material.AIR -> inv.setItemInOffHand(flagItem)
+                    inv.firstEmpty() != -1 -> inv.addItem(flagItem)
+                    else -> {
+                        player.sendMessage(
+                            Component.text(
+                                "§eОсвободите место в инвентаре, чтобы получить ваш флаг.",
+                            ),
+                        )
+                        // Marker still exists but cannot deliver — block new flag issuance
+                        return true
+                    }
                 }
-
-                player.inventory.addItem(flagItem)
                 pdc.remove(pendingKey)
                 player.sendMessage(
                     Component.text(
