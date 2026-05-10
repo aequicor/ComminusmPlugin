@@ -317,8 +317,11 @@ class BlockListener(
         val uuid = player.uniqueId
 
         // Allow flag placement — OrderFlagListener/FrontFlagListener will handle interactions with their own flags
-        val heldItem = player.inventory.itemInMainHand
-        if (heldItem.type == Material.WHITE_BANNER || heldItem.type == Material.RED_BANNER) {
+        val mainHandItem = player.inventory.itemInMainHand
+        val offHandItem = player.inventory.itemInOffHand
+        if (mainHandItem.type == Material.WHITE_BANNER || mainHandItem.type == Material.RED_BANNER ||
+            offHandItem.type == Material.WHITE_BANNER || offHandItem.type == Material.RED_BANNER
+        ) {
             return
         }
 
@@ -504,27 +507,32 @@ class BlockListener(
     )
 
     /**
-     * Try to add [item] to player's inventory. Falls back to dropping on ground
-     * only when inventory is full, with an overflow warning.
+     * Try to add [item] to player's inventory.
+     * Priority: offHand (if empty) → main inventory → notify only (never drop on ground).
      */
     private fun giveOrNotify(
         player: org.bukkit.entity.Player,
         item: org.bukkit.inventory.ItemStack,
         successMsg: String,
     ) {
-        if (player.inventory.firstEmpty() == -1) {
-            // Inventory full — fallback to ground with warning, but flag still NOT lost:
-            // player can retrieve it anytime via /партия
-            player.world.dropItemNaturally(player.location, item)
-            player.sendMessage(
-                Component.text(
-                    "§e⚠ Ваш инвентарь переполнен, товарищ! Флаг выброшен на землю.\n" +
-                        "§7Вы всегда можете получить новый флаг через меню §e/партия",
-                ),
-            )
-        } else {
-            player.inventory.addItem(item)
-            player.sendMessage(Component.text(successMsg))
+        val inv = player.inventory
+        when {
+            inv.itemInOffHand.type == org.bukkit.Material.AIR -> {
+                inv.setItemInOffHand(item)
+                player.sendMessage(Component.text(successMsg))
+            }
+            inv.firstEmpty() != -1 -> {
+                inv.addItem(item)
+                player.sendMessage(Component.text(successMsg))
+            }
+            else -> {
+                player.sendMessage(
+                    Component.text(
+                        "§e⚠ Ваш инвентарь переполнен, товарищ! Флаг не потерян.\n" +
+                            "§7Получите его через меню §e/партия",
+                    ),
+                )
+            }
         }
     }
 

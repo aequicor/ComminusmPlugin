@@ -17,7 +17,7 @@ kotlin {
 }
 
 group = "ru.kyamshanov.minecraft"
-version = "1.0-SNAPSHOT"
+version = "1.0.4"
 
 // Allow overriding Paper API version via Gradle property `papermcApiVersion`.
 val papermcApiVersion: String = project.findProperty("papermcApiVersion")?.toString() ?: "1.21.11-R0.1-SNAPSHOT"

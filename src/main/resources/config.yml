@@ -32,7 +32,7 @@ private-system:
       DIRT: 1
 flag:
   supportBlockMaterial: BEDROCK
-  minAirAbove: 2
+  minAirAbove: 1
   titleFormat: "§6{type} — §f{player}"
   maxPerChunk: 50
   allowedWorlds:

@@ -97,8 +97,8 @@ class PluginConfig(
 
     companion object {
         // Flag configuration defaults
-        const val DEFAULT_FLAG_MIN_AIR_ABOVE = 2
-        const val MIN_FLAG_AIR_ABOVE = 1
+        const val DEFAULT_FLAG_MIN_AIR_ABOVE = 1
+        const val MIN_FLAG_AIR_ABOVE = 0
         const val DEFAULT_FLAG_MAX_PER_CHUNK = 50
         const val DEFAULT_FLAG_STARTUP_SCAN_BATCH_SIZE = 10
         const val MIN_FLAG_STARTUP_SCAN_BATCH_SIZE = 1

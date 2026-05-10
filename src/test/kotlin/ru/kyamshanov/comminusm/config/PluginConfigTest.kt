@@ -34,13 +34,13 @@ class PluginConfigTest {
     }
 
     @Test
-    fun `MIN_FLAG_AIR_ABOVE is 1`() {
-        assertEquals(1, PluginConfig.MIN_FLAG_AIR_ABOVE)
+    fun `MIN_FLAG_AIR_ABOVE is 0`() {
+        assertEquals(0, PluginConfig.MIN_FLAG_AIR_ABOVE)
     }
 
     @Test
-    fun `DEFAULT_FLAG_MIN_AIR_ABOVE is 2`() {
-        assertEquals(2, PluginConfig.DEFAULT_FLAG_MIN_AIR_ABOVE)
+    fun `DEFAULT_FLAG_MIN_AIR_ABOVE is 1`() {
+        assertEquals(1, PluginConfig.DEFAULT_FLAG_MIN_AIR_ABOVE)
     }
 
     @Test
