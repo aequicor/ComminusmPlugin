@@ -1,5 +1,5 @@
 name: ComminusmPlugin
-version: '1.0-SNAPSHOT'
+version: '${version}'
 main: ru.kyamshanov.comminusm.plugin.ComminusmPlugin
 api-version: '1.21'
 commands:
